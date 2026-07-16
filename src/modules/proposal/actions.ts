@@ -59,12 +59,14 @@ export async function createProposal(input: unknown) {
 
   revalidatePath("/admin/propostas")
   if (data.leadId) revalidatePath(`/admin/leads/${data.leadId}`)
-  return proposal
+  // O campo `value` é um Decimal do Prisma — não é serializável de volta
+  // para um Client Component via Server Action, então devolvemos só o id.
+  return { id: proposal.id }
 }
 
 export async function updateProposalStatus(id: string, status: ProposalStatus) {
   const session = await requireProposalManage()
-  const proposal = await proposalRepository.updateProposalStatus(id, status)
+  await proposalRepository.updateProposalStatus(id, status)
 
   await logActivity({
     userId: session.user.id,
@@ -74,5 +76,4 @@ export async function updateProposalStatus(id: string, status: ProposalStatus) {
   })
 
   revalidatePath("/admin/propostas")
-  return proposal
 }

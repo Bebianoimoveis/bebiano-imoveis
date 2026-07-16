@@ -44,7 +44,11 @@ export async function createProperty(input: unknown) {
   })
 
   revalidatePropertyPaths()
-  return property
+  // Nunca retornar o objeto Prisma completo para um Client Component: campos
+  // Decimal (price, condoFee...) não são serializáveis pelo React Server
+  // Actions e quebram silenciosamente a promise no client (ex: router.push
+  // após criar nunca executa). Devolver só o que o formulário precisa.
+  return { id: property.id }
 }
 
 export async function updateProperty(id: string, input: unknown) {
@@ -64,7 +68,7 @@ export async function updateProperty(id: string, input: unknown) {
   })
 
   revalidatePropertyPaths(property.slug)
-  return property
+  return { id: property.id }
 }
 
 export async function changePropertyStatus(id: string, status: PropertyStatus) {
@@ -85,7 +89,6 @@ export async function changePropertyStatus(id: string, status: PropertyStatus) {
   })
 
   revalidatePropertyPaths(property.slug)
-  return property
 }
 
 export async function archiveProperty(id: string) {
@@ -104,7 +107,6 @@ export async function archiveProperty(id: string) {
   })
 
   revalidatePropertyPaths()
-  return property
 }
 
 export async function duplicateProperty(id: string) {
@@ -124,7 +126,7 @@ export async function duplicateProperty(id: string) {
   })
 
   revalidatePropertyPaths()
-  return duplicate
+  return { id: duplicate.id }
 }
 
 export async function addPropertyImages(

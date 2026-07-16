@@ -75,12 +75,13 @@ export async function createFinancialEntry(input: unknown) {
   })
 
   revalidatePath("/admin/financeiro")
-  return entry
+  // `amount` é Decimal — não devolver o objeto Prisma inteiro ao client.
+  return { id: entry.id }
 }
 
 export async function markFinancialEntryAsPaid(id: string) {
   const session = await requireFinancialManage()
-  const entry = await financialRepository.markEntryAsPaid(id)
+  await financialRepository.markEntryAsPaid(id)
 
   await logActivity({
     userId: session.user.id,
@@ -90,5 +91,4 @@ export async function markFinancialEntryAsPaid(id: string) {
   })
 
   revalidatePath("/admin/financeiro")
-  return entry
 }

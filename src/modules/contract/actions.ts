@@ -49,7 +49,7 @@ export async function generateContractFromProposal(proposalId: string) {
   }
 
   const existing = await contractRepository.findContractByProposalId(proposalId)
-  if (existing) return existing
+  if (existing) return { id: existing.id }
 
   const contract = await contractRepository.createContract({
     value: proposal.value,
@@ -70,12 +70,13 @@ export async function generateContractFromProposal(proposalId: string) {
 
   revalidatePath("/admin/contratos")
   revalidatePath("/admin/propostas")
-  return contract
+  // `value` é Decimal — não devolver o objeto Prisma inteiro ao client.
+  return { id: contract.id }
 }
 
 export async function updateContractStatus(id: string, status: ContractStatus) {
   const session = await requireContractManage()
-  const contract = await contractRepository.updateContractStatus(id, status)
+  await contractRepository.updateContractStatus(id, status)
 
   await logActivity({
     userId: session.user.id,
@@ -85,5 +86,4 @@ export async function updateContractStatus(id: string, status: ContractStatus) {
   })
 
   revalidatePath("/admin/contratos")
-  return contract
 }
