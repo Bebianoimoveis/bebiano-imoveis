@@ -1,0 +1,48 @@
+import Link from "next/link"
+
+import { siteConfig } from "@/config/site"
+
+export function Footer() {
+  const year = new Date().getFullYear()
+
+  return (
+    <footer className="border-t border-border/60 bg-secondary/30">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
+        <div className="space-y-2">
+          <p className="font-heading text-lg font-semibold tracking-tight text-primary">
+            {siteConfig.name}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {siteConfig.city} - {siteConfig.state}
+          </p>
+        </div>
+
+        <div className="space-y-2 text-sm">
+          <p className="font-medium">Navegação</p>
+          <div className="flex flex-col gap-1 text-muted-foreground">
+            <Link href="/imoveis" className="hover:text-foreground">
+              Todos os imóveis
+            </Link>
+            <Link href="/comprar" className="hover:text-foreground">
+              Comprar
+            </Link>
+            <Link href="/alugar" className="hover:text-foreground">
+              Alugar
+            </Link>
+          </div>
+        </div>
+
+        <div className="space-y-2 text-sm">
+          <p className="font-medium">Contato</p>
+          <div className="flex flex-col gap-1 text-muted-foreground">
+            {siteConfig.whatsapp ? <p>WhatsApp: {siteConfig.whatsapp}</p> : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
+        © {year} {siteConfig.name}. Todos os direitos reservados.
+      </div>
+    </footer>
+  )
+}

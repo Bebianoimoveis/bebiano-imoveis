@@ -1,0 +1,491 @@
+// Bebiano Imóveis — schema de banco de dados
+// Sistema interno single-tenant (sem multi-empresa / sem planos).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Autenticação, papéis e permissões
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  active       Boolean   @default(true)
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id])
+  realtor      Realtor?
+  createdLeads Lead[]              @relation("LeadCreatedBy")
+  createdProperties Property[]     @relation("PropertyCreatedBy")
+  interactions LeadInteraction[]
+  activityLogs ActivityLog[]
+  notifications Notification[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  @@index([roleId])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique // ADMIN, MANAGER, REALTOR, FINANCIAL
+  users       User[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+}
+
+model Permission {
+  id    String           @id @default(cuid())
+  key   String           @unique // ex: "property.publish", "financial.view"
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+// ---------------------------------------------------------------------------
+// Corretores e clientes
+// ---------------------------------------------------------------------------
+
+model Realtor {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  phone     String
+  photoUrl  String?
+  creci     String?
+  bio       String?
+  active    Boolean   @default(true)
+  properties Property[]
+  leads      Lead[]
+  appointments Appointment[]
+  proposals    Proposal[]
+  contracts    Contract[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  phone     String
+  notes     String?
+  leads     Lead[]
+  appointments Appointment[]
+  proposals    Proposal[]
+  contracts    Contract[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([phone])
+}
+
+// ---------------------------------------------------------------------------
+// Localização e taxonomias de imóveis
+// ---------------------------------------------------------------------------
+
+model City {
+  id            String         @id @default(cuid())
+  name          String
+  state         String
+  neighborhoods Neighborhood[]
+  properties    Property[]
+
+  @@unique([name, state])
+}
+
+model Neighborhood {
+  id         String     @id @default(cuid())
+  name       String
+  cityId     String
+  city       City       @relation(fields: [cityId], references: [id])
+  properties Property[]
+
+  @@unique([name, cityId])
+}
+
+model PropertyType {
+  id         String     @id @default(cuid())
+  name       String     @unique // Apartamento, Casa, Terreno, Sala Comercial...
+  properties Property[]
+}
+
+model PropertyFeature {
+  id         String                     @id @default(cuid())
+  name       String                     @unique // Piscina, Portaria 24h, Churrasqueira...
+  properties PropertyFeatureOnProperty[]
+}
+
+model PropertyFeatureOnProperty {
+  propertyId String
+  featureId  String
+  property   Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  feature    PropertyFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([propertyId, featureId])
+}
+
+enum Purpose {
+  SALE
+  RENT
+}
+
+enum PropertyStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  RESERVED
+  SOLD
+  RENTED
+  UNAVAILABLE
+  ARCHIVED
+}
+
+enum AddressVisibility {
+  FULL
+  APPROXIMATE
+  NEIGHBORHOOD_ONLY
+}
+
+// ---------------------------------------------------------------------------
+// Imóveis
+// ---------------------------------------------------------------------------
+
+model Property {
+  id          String         @id @default(cuid())
+  code        String         @unique // código interno, ex: BB-1024
+  title       String
+  slug        String         @unique
+  description String
+
+  purpose Purpose
+  status  PropertyStatus @default(DRAFT)
+  featured Boolean       @default(false)
+
+  typeId String
+  type   PropertyType @relation(fields: [typeId], references: [id])
+
+  price    Decimal  @db.Decimal(12, 2)
+  condoFee Decimal? @db.Decimal(12, 2)
+  iptu     Decimal? @db.Decimal(12, 2)
+
+  cityId         String
+  city           City          @relation(fields: [cityId], references: [id])
+  neighborhoodId String
+  neighborhood   Neighborhood  @relation(fields: [neighborhoodId], references: [id])
+
+  addressVisibility AddressVisibility @default(NEIGHBORHOOD_ONLY)
+  street            String?
+  number            String?
+  latitude          Decimal?          @db.Decimal(10, 7)
+  longitude         Decimal?          @db.Decimal(10, 7)
+
+  builtArea    Decimal? @db.Decimal(8, 2)
+  totalArea    Decimal? @db.Decimal(8, 2)
+  bedrooms     Int      @default(0)
+  suites       Int      @default(0)
+  bathrooms    Int      @default(0)
+  parkingSpots Int      @default(0)
+
+  acceptsFinancing Boolean @default(false)
+  acceptsFgts      Boolean @default(false)
+  furnished        Boolean @default(false)
+  gatedCommunity   Boolean @default(false)
+
+  videoUrl String?
+
+  // Incrementado a cada acesso à página pública do imóvel — usado no
+  // relatório de "imóveis mais visualizados" do dashboard.
+  viewCount Int @default(0)
+
+  realtorId String?
+  realtor   Realtor? @relation(fields: [realtorId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("PropertyCreatedBy", fields: [createdById], references: [id])
+
+  images   PropertyImage[]
+  features PropertyFeatureOnProperty[]
+  leads    Lead[]
+  appointments Appointment[]
+  proposals    Proposal[]
+  contracts    Contract[]
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([status, purpose])
+  @@index([cityId, neighborhoodId])
+  @@index([featured])
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  url        String // URL do Cloudinary
+  publicId   String // public_id do Cloudinary, necessário para exclusão/transformação
+  order      Int      @default(0)
+  isCover    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+// ---------------------------------------------------------------------------
+// CRM — leads, interações e contatos públicos
+// ---------------------------------------------------------------------------
+
+enum LeadStage {
+  NEW
+  FIRST_CONTACT
+  QUALIFIED
+  VISIT_SCHEDULED
+  PROPOSAL
+  NEGOTIATION
+  DOCUMENTATION
+  CLOSED
+  LOST
+}
+
+model Lead {
+  id         String    @id @default(cuid())
+  name       String
+  phone      String
+  email      String?
+  origin     String // ex: "site", "whatsapp", "indicação"
+  stage      LeadStage @default(NEW)
+  notes      String?
+  nextActionAt DateTime?
+
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+
+  realtorId String?
+  realtor   Realtor? @relation(fields: [realtorId], references: [id])
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  createdById String?
+  createdBy   User?   @relation("LeadCreatedBy", fields: [createdById], references: [id])
+
+  interactions LeadInteraction[]
+  appointments Appointment[]
+  proposals    Proposal[]
+
+  createdAt          DateTime  @default(now())
+  lastInteractionAt  DateTime  @default(now())
+  deletedAt          DateTime?
+
+  @@index([stage])
+  @@index([realtorId])
+  @@index([propertyId])
+}
+
+enum LeadInteractionType {
+  CALL
+  WHATSAPP
+  EMAIL
+  VISIT
+  NOTE
+}
+
+model LeadInteraction {
+  id          String               @id @default(cuid())
+  leadId      String
+  lead        Lead                 @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id])
+  type        LeadInteractionType
+  description String
+  createdAt   DateTime             @default(now())
+
+  @@index([leadId])
+}
+
+// Registro bruto e imutável de todo formulário público (auditoria/anti-spam).
+// Um Lead é criado automaticamente a partir de cada ContactRequest.
+model ContactRequest {
+  id         String   @id @default(cuid())
+  name       String
+  phone      String
+  email      String?
+  message    String?
+  propertyId String?
+  source     String // ex: "property_page", "contact_page", "hero_search"
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Agenda
+// ---------------------------------------------------------------------------
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  DONE
+  CANCELED
+  NO_SHOW
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  leadId      String?
+  lead        Lead?             @relation(fields: [leadId], references: [id])
+  clientId    String?
+  client      Client?           @relation(fields: [clientId], references: [id])
+  propertyId  String?
+  property    Property?         @relation(fields: [propertyId], references: [id])
+  realtorId   String
+  realtor     Realtor           @relation(fields: [realtorId], references: [id])
+  scheduledAt DateTime
+  status      AppointmentStatus @default(SCHEDULED)
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([realtorId, scheduledAt])
+}
+
+// ---------------------------------------------------------------------------
+// Propostas e contratos
+// ---------------------------------------------------------------------------
+
+enum ProposalStatus {
+  OPEN
+  ACCEPTED
+  REJECTED
+  CANCELED
+}
+
+model Proposal {
+  id         String         @id @default(cuid())
+  propertyId String
+  property   Property       @relation(fields: [propertyId], references: [id])
+  leadId     String?
+  lead       Lead?          @relation(fields: [leadId], references: [id])
+  clientId   String
+  client     Client         @relation(fields: [clientId], references: [id])
+  realtorId  String
+  realtor    Realtor        @relation(fields: [realtorId], references: [id])
+  value      Decimal        @db.Decimal(12, 2)
+  status     ProposalStatus @default(OPEN)
+  notes      String?
+  contract   Contract?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([propertyId])
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELED
+}
+
+model Contract {
+  id         String         @id @default(cuid())
+  proposalId String         @unique
+  proposal   Proposal       @relation(fields: [proposalId], references: [id])
+  propertyId String
+  property   Property       @relation(fields: [propertyId], references: [id])
+  clientId   String
+  client     Client         @relation(fields: [clientId], references: [id])
+  realtorId  String
+  realtor    Realtor        @relation(fields: [realtorId], references: [id])
+  value      Decimal        @db.Decimal(12, 2)
+  status     ContractStatus @default(DRAFT)
+  fileUrl    String? // contrato assinado, armazenado no Cloudinary (resource_type: raw)
+  signedAt   DateTime?
+  financialEntries FinancialEntry[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Financeiro
+// ---------------------------------------------------------------------------
+
+enum FinancialEntryType {
+  INCOME
+  EXPENSE
+}
+
+model FinancialEntry {
+  id         String             @id @default(cuid())
+  type       FinancialEntryType
+  category   String // ex: "Comissão", "Aluguel de sala", "Marketing"
+  amount     Decimal            @db.Decimal(12, 2)
+  contractId String?
+  contract   Contract?          @relation(fields: [contractId], references: [id])
+  dueDate    DateTime
+  paidAt     DateTime?
+  createdAt  DateTime           @default(now())
+
+  @@index([type, dueDate])
+}
+
+// ---------------------------------------------------------------------------
+// Sistema
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String // ex: "property.publish"
+  entityType String // ex: "Property"
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+// Configuração única do site (singleton — sempre uma única linha).
+model SiteSettings {
+  id          String   @id @default(cuid())
+  phone       String
+  whatsapp    String
+  email       String
+  address     String
+  socialLinks Json?
+  aboutText   String?
+  updatedAt   DateTime @updatedAt
+}
