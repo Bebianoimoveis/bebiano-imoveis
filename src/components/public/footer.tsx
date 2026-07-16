@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 
 import { siteConfig } from "@/config/site"
@@ -9,9 +10,13 @@ export function Footer() {
     <footer className="border-t border-border/60 bg-secondary/30">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
         <div className="space-y-2">
-          <p className="font-heading text-lg font-semibold tracking-tight text-primary">
-            {siteConfig.name}
-          </p>
+          <Image
+            src="/images/logo.png"
+            alt={siteConfig.name}
+            width={97}
+            height={80}
+            className="h-16 w-auto"
+          />
           <p className="text-sm text-muted-foreground">
             {siteConfig.city} - {siteConfig.state}
           </p>

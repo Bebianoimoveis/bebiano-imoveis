@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import {
   LayoutDashboard,
@@ -53,10 +54,15 @@ export function AdminSidebar({ user, permissions }: AdminSidebarProps) {
   return (
     <aside className="flex w-64 flex-col border-r border-border/60 bg-sidebar text-sidebar-foreground">
       <div className="px-6 py-6">
-        <p className="font-heading text-lg font-semibold tracking-tight text-sidebar-accent">
-          Bebiano Imóveis
-        </p>
-        <p className="mt-1 text-xs text-sidebar-foreground/60">
+        <Image
+          src="/images/logo.png"
+          alt="Bebiano Imóveis"
+          width={73}
+          height={60}
+          priority
+          className="h-14 w-auto"
+        />
+        <p className="mt-2 text-xs text-sidebar-foreground/60">
           {user.name} · {user.roleName}
         </p>
       </div>
