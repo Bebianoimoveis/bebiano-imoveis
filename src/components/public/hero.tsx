@@ -49,7 +49,7 @@ export function Hero({ cities }: { cities: City[] }) {
         initial="hidden"
         animate="visible"
         variants={container}
-        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-32 pb-16 sm:px-6 sm:pt-40"
+        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-32 pb-28 sm:px-6 sm:pt-40 sm:pb-36"
       >
         <motion.p
           variants={item}
