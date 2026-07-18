@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Combobox } from "@/components/ui/combobox"
 import {
   Select,
   SelectContent,
@@ -42,18 +43,18 @@ export function HeroSearch({ cities }: { cities: City[] }) {
 
       <div className="hidden h-8 w-px bg-border sm:block" />
 
-      <Select value={cityId} onValueChange={setCityId}>
-        <SelectTrigger className="h-12 border-0 bg-transparent shadow-none sm:flex-1">
-          <SelectValue placeholder="Selecione a cidade" />
-        </SelectTrigger>
-        <SelectContent>
-          {cities.map((city) => (
-            <SelectItem key={city.id} value={city.id}>
-              {city.name} - {city.state}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Combobox
+        value={cityId}
+        onValueChange={setCityId}
+        placeholder="Selecione a cidade"
+        searchPlaceholder="Buscar cidade..."
+        emptyMessage="Nenhuma cidade encontrada."
+        triggerClassName="h-12 border-0 shadow-none sm:flex-1"
+        options={cities.map((city) => ({
+          value: city.id,
+          label: `${city.name} - ${city.state}`,
+        }))}
+      />
 
       <Button onClick={handleSearch} size="lg" className="h-12 sm:w-auto">
         <Search className="size-4" />
