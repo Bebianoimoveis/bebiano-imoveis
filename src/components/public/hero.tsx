@@ -14,7 +14,7 @@ type City = { id: string; name: string; state: string }
 
 const container = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
 }
 
 const item = {
@@ -28,22 +28,33 @@ const item = {
 
 export function Hero({ cities }: { cities: City[] }) {
   return (
-    <section className="relative flex min-h-screen items-end overflow-hidden bg-primary">
-      <Parallax className="absolute inset-0" strength={100}>
-        <Image
-          src="/images/hero-bg.jpg"
-          alt="Fachada de casa moderna ao entardecer"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+    <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-primary">
+      <Parallax className="absolute inset-0" strength={80}>
+        {/* "Câmera respirando": zoom quase imperceptível, independente do
+            parallax de scroll (que já cuida do eixo Y) — puramente
+            decorativo, roda sempre, não reage a interação. */}
+        <motion.div
+          className="size-full"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+        >
+          <Image
+            src="/images/hero-team.jpg"
+            alt="Equipe Bebiano Imóveis"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[50%_10%] contrast-[1.08] saturate-[0.9] brightness-[0.97] sepia-[0.06]"
+          />
+        </motion.div>
       </Parallax>
 
-      {/* Overlay escuro para legibilidade do texto, com leve tom vinho para
-          reforçar a marca sem depender de cor sólida sobre a foto. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/20" />
-      <div className="absolute inset-0 bg-primary/15 mix-blend-multiply" />
+      {/* Overlay: mais escuro embaixo (onde fica todo o texto e a busca),
+          suavizando para cima — com uma leve mistura vinho da marca em vez
+          de preto puro, para a foto nunca parecer "colada" atrás do
+          conteúdo. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/10" />
+      <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
 
       <motion.div
         initial="hidden"
@@ -61,39 +72,44 @@ export function Hero({ cities }: { cities: City[] }) {
           variants={item}
           className="font-heading mt-4 max-w-3xl text-balance text-5xl font-semibold tracking-tight text-white sm:text-7xl"
         >
-          Encontre o imóvel certo para o seu próximo capítulo
+          Mais do que imóveis. Encontramos o lugar certo para sua história.
         </motion.h1>
         <motion.p
           variants={item}
           className="mt-5 max-w-lg text-lg text-white/80"
         >
           A {siteConfig.name} conecta você aos melhores imóveis para comprar
-          ou alugar na região, com atendimento próximo e transparente.
+          ou alugar na região, com atendimento próximo, transparente e
+          especializado.
         </motion.p>
 
         <motion.div variants={item} className="mt-8 flex flex-wrap gap-4">
-          <Button
-            asChild
-            size="lg"
-            className="bg-gold text-accent-foreground hover:bg-gold-light"
-          >
-            <Link href="/imoveis">Ver imóveis disponíveis</Link>
-          </Button>
-          {siteConfig.whatsapp ? (
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
             <Button
               asChild
               size="lg"
-              variant="outline"
-              className="border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white"
+              className="bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25"
             >
-              <a
-                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Falar com um corretor
-              </a>
+              <Link href="/imoveis">Ver imóveis disponíveis</Link>
             </Button>
+          </motion.div>
+          {siteConfig.whatsapp ? (
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white"
+              >
+                <a
+                  href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Falar com um corretor
+                </a>
+              </Button>
+            </motion.div>
           ) : null}
         </motion.div>
 
@@ -106,7 +122,7 @@ export function Hero({ cities }: { cities: City[] }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.1, duration: 0.6 }}
-        className="pointer-events-none absolute bottom-6 left-1/2 z-10 -translate-x-1/2 sm:bottom-10"
+        className="pointer-events-none absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 sm:bottom-10 sm:block"
       >
         <motion.div
           animate={{ y: [0, 8, 0] }}
