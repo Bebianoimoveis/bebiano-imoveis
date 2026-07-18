@@ -51,7 +51,7 @@ export function Header() {
       <div className="mx-auto flex h-18 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-2.5">
           <Image
-            src="/images/icon-mark.png"
+            src="/images/icon-mark-v2.png"
             alt=""
             width={36}
             height={36}
@@ -121,7 +121,7 @@ export function Header() {
           >
             <div className="flex h-18 items-center justify-between px-4 sm:px-6">
               <Image
-                src="/images/icon-mark.png"
+                src="/images/icon-mark-v2.png"
                 alt=""
                 width={36}
                 height={36}
