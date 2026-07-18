@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
-import { AnimatePresence, motion } from "motion/react"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
@@ -91,48 +91,43 @@ function SelectContent({
   align = "center",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
-  const open = React.useContext(SelectOpenContext)
-
   return (
     <SelectPrimitive.Portal>
-      <AnimatePresence>
-        {open ? (
-          <SelectPrimitive.Content
-            forceMount
-            data-slot="select-content"
-            data-align-trigger={position === "item-aligned"}
-            asChild
-            position={position}
-            align={align}
-            {...props}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98, y: -6, filter: "blur(4px)" }}
-              animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 0.98, y: -4, filter: "blur(4px)" }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className={cn(
-                "relative z-50 max-h-(--radix-select-content-available-height) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-xl border border-border/50 bg-popover/95 text-popover-foreground shadow-xl shadow-black/10 ring-1 ring-foreground/5 backdrop-blur-xl",
-                position === "popper" &&
-                  "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-                className
-              )}
-            >
-              <SelectScrollUpButton />
-              <SelectPrimitive.Viewport
-                data-position={position}
-                className={cn(
-                  "p-1.5",
-                  "data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)"
-                )}
-              >
-                {children}
-              </SelectPrimitive.Viewport>
-              <SelectScrollDownButton />
-            </motion.div>
-          </SelectPrimitive.Content>
-        ) : null}
-      </AnimatePresence>
+      {/* Importante: sem forceMount/AnimatePresence aqui. O SelectValue do
+          Radix só sabe exibir o rótulo do item selecionado depois que o
+          respectivo SelectItemText é montado dentro do Content pelo menos
+          uma vez — isso acontece através do ciclo de vida interno do
+          próprio Radix (via @radix-ui/react-presence, que detecta a
+          duração da animação CSS e só desmonta depois que ela termina).
+          Assumir esse mount/unmount manualmente (como fizemos antes com
+          `{open && ...}` + Motion) quebra esse registro e o valor
+          selecionado nunca aparece no trigger. Por isso a animação aqui é
+           100% CSS (data-state do Radix + tw-animate-css), não Motion. */}
+      <SelectPrimitive.Content
+        data-slot="select-content"
+        data-align-trigger={position === "item-aligned"}
+        position={position}
+        align={align}
+        className={cn(
+          "relative z-50 max-h-(--radix-select-content-available-height) min-w-36 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-xl border border-border/50 bg-popover/95 text-popover-foreground shadow-xl shadow-black/10 ring-1 ring-foreground/5 backdrop-blur-xl duration-200 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[align-trigger=true]:animate-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:blur-in data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:blur-out",
+          position === "popper" &&
+            "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+          className
+        )}
+        {...props}
+      >
+        <SelectScrollUpButton />
+        <SelectPrimitive.Viewport
+          data-position={position}
+          className={cn(
+            "p-1.5",
+            "data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)"
+          )}
+        >
+          {children}
+        </SelectPrimitive.Viewport>
+        <SelectScrollDownButton />
+      </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
 }
