@@ -4,11 +4,11 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { AnimatePresence, motion } from "motion/react"
-import { Menu, X } from "lucide-react"
+import { Menu } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { NavLink } from "@/components/motion/nav-link"
+import { MobileNav } from "@/components/public/mobile-nav"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 
@@ -110,53 +110,7 @@ export function Header() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {isOpen ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-50 flex flex-col bg-background md:hidden"
-          >
-            <div className="flex h-18 items-center justify-between px-4 sm:px-6">
-              <Image
-                src="/images/icon-mark-v3.png"
-                alt=""
-                width={36}
-                height={36}
-                className="size-9"
-              />
-              <button
-                type="button"
-                aria-label="Fechar menu"
-                onClick={() => setIsOpen(false)}
-                className="text-foreground"
-              >
-                <X className="size-6" />
-              </button>
-            </div>
-            <nav className="flex flex-1 flex-col justify-center gap-2 px-6 pb-24">
-              {NAV_LINKS.map((link, index) => (
-                <motion.div
-                  key={link.href}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.08 * index, duration: 0.4 }}
-                >
-                  <Link
-                    href={link.href}
-                    className="font-heading block py-3 text-3xl font-semibold tracking-tight text-foreground"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                </motion.div>
-              ))}
-            </nav>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <MobileNav open={isOpen} onClose={() => setIsOpen(false)} />
     </header>
   )
 }
