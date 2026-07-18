@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-jakarta);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -40,6 +40,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-gold: var(--color-gold);
+  --color-gold-light: var(--color-gold-light);
+  --color-gold-dark: var(--color-gold-dark);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -51,27 +53,30 @@
 
 :root {
   /* Bebiano Imóveis — identidade visual: vinho como cor principal,
-     branco/tons claros como base, dourado apenas em detalhes discretos. */
-  --color-gold: oklch(0.78 0.1 85);
+     off-white/preto/cinza-escuro como base, dourado (extraído da logo
+     oficial, #F3C45E → #C8953F) apenas em detalhes discretos. */
+  --color-gold: oklch(0.8 0.12 80);
+  --color-gold-light: oklch(0.87 0.1 85);
+  --color-gold-dark: oklch(0.68 0.12 70);
 
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.19 0.01 20);
+  --background: oklch(0.99 0.003 75);
+  --foreground: oklch(0.16 0.006 20);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.01 20);
+  --card-foreground: oklch(0.16 0.006 20);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.19 0.01 20);
-  --primary: oklch(0.32 0.13 18);
-  --primary-foreground: oklch(0.985 0.005 20);
-  --secondary: oklch(0.97 0.008 30);
-  --secondary-foreground: oklch(0.32 0.13 18);
-  --muted: oklch(0.97 0.006 30);
-  --muted-foreground: oklch(0.48 0.015 25);
-  --accent: oklch(0.78 0.1 85);
-  --accent-foreground: oklch(0.22 0.02 30);
+  --popover-foreground: oklch(0.16 0.006 20);
+  --primary: oklch(0.28 0.115 18);
+  --primary-foreground: oklch(0.99 0.003 75);
+  --secondary: oklch(0.96 0.006 60);
+  --secondary-foreground: oklch(0.28 0.115 18);
+  --muted: oklch(0.96 0.005 60);
+  --muted-foreground: oklch(0.45 0.012 30);
+  --accent: oklch(0.8 0.12 80);
+  --accent-foreground: oklch(0.2 0.02 40);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.01 30);
-  --input: oklch(0.91 0.01 30);
-  --ring: oklch(0.32 0.13 18);
+  --border: oklch(0.9 0.008 40);
+  --input: oklch(0.9 0.008 40);
+  --ring: oklch(0.28 0.115 18);
   --chart-1: oklch(0.32 0.13 18);
   --chart-2: oklch(0.78 0.1 85);
   --chart-3: oklch(0.556 0.02 25);
@@ -89,7 +94,9 @@
 }
 
 .dark {
-  --color-gold: oklch(0.78 0.1 85);
+  --color-gold: oklch(0.8 0.12 80);
+  --color-gold-light: oklch(0.87 0.1 85);
+  --color-gold-dark: oklch(0.68 0.12 70);
 
   --background: oklch(0.15 0.012 20);
   --foreground: oklch(0.96 0.006 30);
@@ -132,6 +139,13 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-sans scroll-smooth;
   }
+  ::selection {
+    @apply bg-primary/15 text-primary;
+  }
+}
+
+@utility text-balance {
+  text-wrap: balance;
 }

@@ -3,8 +3,10 @@ import { Building2, HandCoins, ShieldCheck, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/shared/empty-state"
-import { HeroSearch } from "@/components/public/hero-search"
+import { Hero } from "@/components/public/hero"
 import { PropertyCard } from "@/components/public/property-card"
+import { Reveal } from "@/components/motion/reveal"
+import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import {
   listFeaturedProperties,
   listRecentProperties,
@@ -44,105 +46,111 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="border-b border-border/60 bg-secondary/30">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <div className="max-w-2xl space-y-4">
-            <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-              Encontre o imóvel certo em {siteConfig.city}
-            </h1>
-            <p className="text-muted-foreground">
-              A {siteConfig.name} conecta você aos melhores imóveis para comprar
-              ou alugar na região, com atendimento próximo e transparente.
-            </p>
-          </div>
-          <div className="mt-8 max-w-3xl">
-            <HeroSearch cities={cities} />
-          </div>
-        </div>
-      </section>
+      <Hero cities={cities} />
 
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="mb-8 flex items-center justify-between">
-          <h2 className="font-heading text-2xl font-semibold tracking-tight">
-            Imóveis em destaque
-          </h2>
-          <Button variant="ghost" asChild>
+      {/* Espaço extra no topo para acomodar a busca flutuante que "quebra"
+          a borda inferior do Hero (ver Hero: -mb-24 no card de busca). */}
+      <section className="mx-auto max-w-6xl px-4 pt-32 pb-16 sm:px-6 sm:pt-36">
+        <Reveal className="mb-10 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
+              Selecionados a dedo
+            </p>
+            <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
+              Imóveis em destaque
+            </h2>
+          </div>
+          <Button variant="ghost" asChild className="hidden sm:inline-flex">
             <Link href="/imoveis">Ver todos</Link>
           </Button>
-        </div>
+        </Reveal>
 
         {featured.length === 0 ? (
-          <EmptyState
-            icon={Building2}
-            title="Nenhum imóvel em destaque no momento"
-            description="Assim que um imóvel for marcado como destaque no painel, ele aparece aqui."
-          />
+          <Reveal>
+            <EmptyState
+              icon={Building2}
+              title="Nenhum imóvel em destaque no momento"
+              description="Assim que um imóvel for marcado como destaque no painel, ele aparece aqui."
+            />
+          </Reveal>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <StaggerItem key={property.id}>
+                <PropertyCard property={property} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         )}
       </section>
 
       {recent.length > 0 ? (
-        <section className="border-t border-border/60 bg-secondary/20">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-            <h2 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
-              Imóveis recentes
-            </h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="border-t border-border/60 bg-secondary/30">
+          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+            <Reveal>
+              <h2 className="font-heading mb-10 text-3xl font-semibold tracking-tight">
+                Imóveis recentes
+              </h2>
+            </Reveal>
+            <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {recent.slice(0, 4).map((property) => (
-                <PropertyCard key={property.id} property={property} />
+                <StaggerItem key={property.id}>
+                  <PropertyCard property={property} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGroup>
           </div>
         </section>
       ) : null}
 
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-2 md:items-center">
-          <div className="space-y-4">
-            <h2 className="font-heading text-2xl font-semibold tracking-tight">
+      <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+        <div className="grid gap-12 md:grid-cols-2 md:items-center md:gap-16">
+          <Reveal>
+            <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
+              Quem somos
+            </p>
+            <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight text-balance">
               Sobre a {siteConfig.name}
             </h2>
-            <p className="text-muted-foreground">
+            <p className="mt-4 text-muted-foreground">
               Somos uma imobiliária de {siteConfig.city}, {siteConfig.state},
               dedicada a tornar o processo de comprar, vender ou alugar um
               imóvel mais simples e confiável. Nossa equipe acompanha cada
               etapa da negociação com atenção aos detalhes que fazem diferença
               para você.
             </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2">
+          </Reveal>
+          <StaggerGroup className="grid gap-8 sm:grid-cols-2">
             {DIFERENCIAIS.map((item) => (
-              <div key={item.title} className="space-y-2">
-                <item.icon className="size-6 text-primary" />
+              <StaggerItem key={item.title} className="space-y-3">
+                <div className="flex size-11 items-center justify-center rounded-full bg-primary/8">
+                  <item.icon className="size-5 text-primary" />
+                </div>
                 <p className="font-medium">{item.title}</p>
                 <p className="text-sm text-muted-foreground">
                   {item.description}
                 </p>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
-      <section className="border-t border-border/60 bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-16 text-center sm:px-6">
-          <h2 className="font-heading text-2xl font-semibold tracking-tight">
+      <section className="relative overflow-hidden border-t border-border/60 bg-primary text-primary-foreground">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklch,var(--color-gold)_12%,transparent),transparent_60%)]" />
+        <Reveal className="relative mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-24 text-center sm:px-6">
+          <h2 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Quer anunciar ou negociar um imóvel?
           </h2>
-          <p className="max-w-xl text-primary-foreground/85">
+          <p className="max-w-xl text-primary-foreground/80">
             Fale com um de nossos corretores e receba uma avaliação sem
             compromisso.
           </p>
           {siteConfig.whatsapp ? (
             <Button
               asChild
-              variant="secondary"
-              className="bg-background text-foreground hover:bg-background/90"
+              size="lg"
+              className="mt-2 bg-gold text-accent-foreground hover:bg-gold-light"
             >
               <a
                 href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
@@ -153,7 +161,7 @@ export default async function HomePage() {
               </a>
             </Button>
           ) : null}
-        </div>
+        </Reveal>
       </section>
     </div>
   )

@@ -29,9 +29,9 @@ export function HeroSearch({ cities }: { cities: City[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card p-4 shadow-sm sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/20 bg-white/95 p-3 shadow-2xl shadow-black/20 backdrop-blur-xl sm:flex-row sm:items-center sm:p-3">
       <Select value={purpose} onValueChange={setPurpose}>
-        <SelectTrigger className="sm:w-40">
+        <SelectTrigger className="h-12 border-0 bg-transparent shadow-none sm:w-36">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -40,8 +40,10 @@ export function HeroSearch({ cities }: { cities: City[] }) {
         </SelectContent>
       </Select>
 
+      <div className="hidden h-8 w-px bg-border sm:block" />
+
       <Select value={cityId} onValueChange={setCityId}>
-        <SelectTrigger className="sm:flex-1">
+        <SelectTrigger className="h-12 border-0 bg-transparent shadow-none sm:flex-1">
           <SelectValue placeholder="Selecione a cidade" />
         </SelectTrigger>
         <SelectContent>
@@ -53,7 +55,7 @@ export function HeroSearch({ cities }: { cities: City[] }) {
         </SelectContent>
       </Select>
 
-      <Button onClick={handleSearch} className="sm:w-auto">
+      <Button onClick={handleSearch} size="lg" className="h-12 sm:w-auto">
         <Search className="size-4" />
         Buscar imóveis
       </Button>
