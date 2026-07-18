@@ -97,7 +97,7 @@ export function Hero({ cities }: { cities: City[] }) {
           ) : null}
         </motion.div>
 
-        <motion.div variants={item} className="relative z-20 mt-14 -mb-24">
+        <motion.div variants={item} className="relative z-20 mt-14 -mb-12 sm:-mb-16">
           <HeroSearch cities={cities} />
         </motion.div>
       </motion.div>

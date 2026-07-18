@@ -50,7 +50,7 @@ export default async function HomePage() {
 
       {/* Espaço extra no topo para acomodar a busca flutuante que "quebra"
           a borda inferior do Hero (ver Hero: -mb-24 no card de busca). */}
-      <section className="mx-auto max-w-6xl px-4 pt-32 pb-16 sm:px-6 sm:pt-36">
+      <section className="mx-auto max-w-6xl px-4 pt-12 pb-16 sm:px-6 sm:pt-16">
         <Reveal className="mb-10 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
