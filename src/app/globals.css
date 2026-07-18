@@ -145,12 +145,15 @@
   ::selection {
     @apply bg-primary/15 text-primary;
   }
-  /* O Select do Radix não expõe a prop `modal` (ao contrário de Dropdown/
-     Popover) e sempre trava o scroll via react-remove-scroll, que injeta
-     `body[data-scroll-locked]{overflow:hidden!important}` dinamicamente.
-     Usamos o mesmo atributo + :has() para ganhar especificidade e manter
-     a barra de rolagem sempre visível. */
-  body[data-scroll-locked]:has([data-slot="select-content"]) {
+  /* Select/Dropdown/Popover/Dialog do Radix travam o scroll do body ao
+     abrir via react-remove-scroll, que injeta
+     `body[data-scroll-locked]{overflow:hidden!important}` dinamicamente —
+     isso esconde a barra de rolagem nativa e causa um salto horizontal de
+     layout ao abrir/fechar qualquer um desses componentes. Sobrescrevemos
+     globalmente para a barra nunca sumir, com maior especificidade que a
+     regra injetada (mesmo seletor de atributo + :root para desempatar
+     ordem de inserção no <head>). */
+  :root body[data-scroll-locked] {
     overflow: visible !important;
   }
 }
