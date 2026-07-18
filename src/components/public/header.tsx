@@ -56,7 +56,7 @@ export function Header() {
             width={36}
             height={36}
             priority
-            className="size-9"
+            className="size-9 translate-y-[3px]"
           />
           <span
             className={cn(

@@ -18,6 +18,7 @@ function Popover({
     <PopoverOpenContext.Provider value={open}>
       <PopoverPrimitive.Root
         data-slot="popover"
+        modal={false}
         onOpenChange={(next) => {
           setOpen(next)
           onOpenChange?.(next)

@@ -21,6 +21,7 @@ function DropdownMenu({
     <DropdownOpenContext.Provider value={open}>
       <DropdownMenuPrimitive.Root
         data-slot="dropdown-menu"
+        modal={false}
         onOpenChange={(next) => {
           setOpen(next)
           onOpenChange?.(next)

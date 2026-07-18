@@ -140,9 +140,18 @@
   }
   html {
     @apply font-sans scroll-smooth;
+    scrollbar-gutter: stable;
   }
   ::selection {
     @apply bg-primary/15 text-primary;
+  }
+  /* O Select do Radix não expõe a prop `modal` (ao contrário de Dropdown/
+     Popover) e sempre trava o scroll via react-remove-scroll, que injeta
+     `body[data-scroll-locked]{overflow:hidden!important}` dinamicamente.
+     Usamos o mesmo atributo + :has() para ganhar especificidade e manter
+     a barra de rolagem sempre visível. */
+  body[data-scroll-locked]:has([data-slot="select-content"]) {
+    overflow: visible !important;
   }
 }
 
