@@ -44,51 +44,54 @@ export function Hero({ cities }: { cities: City[] }) {
             fill
             priority
             sizes="100vw"
-            className="object-cover object-[50%_10%] contrast-[1.08] saturate-[0.9] brightness-[0.97] sepia-[0.06]"
+            className="object-cover object-[50%_10%] contrast-[1.1] saturate-[0.75] brightness-[0.9] sepia-[0.08] grayscale-[12%]"
           />
         </motion.div>
       </Parallax>
 
-      {/* Overlay: mais escuro embaixo (onde fica todo o texto e a busca),
-          suavizando para cima — com uma leve mistura vinho da marca em vez
-          de preto puro, para a foto nunca parecer "colada" atrás do
-          conteúdo. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/10" />
-      <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
+      {/* Overlay em três camadas: (1) vertical, mais escuro embaixo onde
+          fica todo o texto e a busca; (2) horizontal, mais escuro à
+          esquerda (coluna do texto) e mais aberto à direita, pra nunca
+          competir com os rostos da foto; (3) mistura vinho da marca em
+          tom mais forte que uma foto crua, lendo como grade/atmosfera
+          "de estúdio" em vez de flagrante de grupo. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/50 to-black/25" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+      <div className="absolute inset-0 bg-primary/30 mix-blend-multiply" />
 
       <motion.div
         initial="hidden"
         animate="visible"
         variants={container}
-        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-32 pb-28 sm:px-6 sm:pt-40 sm:pb-36"
+        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-24 pb-8 sm:px-6 sm:pt-40 sm:pb-36"
       >
         <motion.p
           variants={item}
-          className="text-sm font-medium tracking-[0.2em] text-gold-light uppercase"
+          className="text-xs font-medium tracking-[0.2em] text-gold-light uppercase sm:text-sm"
         >
           {siteConfig.city} · {siteConfig.state}
         </motion.p>
         <motion.h1
           variants={item}
-          className="font-heading mt-4 max-w-3xl text-balance text-5xl font-semibold tracking-tight text-white sm:text-7xl"
+          className="font-heading mt-3 max-w-3xl text-balance text-4xl font-semibold tracking-tight text-white sm:mt-4 sm:text-7xl"
         >
           Mais do que imóveis. Encontramos o lugar certo para sua história.
         </motion.h1>
         <motion.p
           variants={item}
-          className="mt-5 max-w-lg text-lg text-white/80"
+          className="mt-4 max-w-lg text-base text-white/80 sm:mt-5 sm:text-lg"
         >
           A {siteConfig.name} conecta você aos melhores imóveis para comprar
           ou alugar na região, com atendimento próximo, transparente e
           especializado.
         </motion.p>
 
-        <motion.div variants={item} className="mt-8 flex flex-wrap gap-4">
+        <motion.div variants={item} className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-4">
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
             <Button
               asChild
               size="lg"
-              className="bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25"
+              className="w-full bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:w-auto"
             >
               <Link href="/imoveis">Ver imóveis disponíveis</Link>
             </Button>
@@ -99,7 +102,7 @@ export function Hero({ cities }: { cities: City[] }) {
                 asChild
                 size="lg"
                 variant="outline"
-                className="border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white"
+                className="w-full border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white sm:w-auto"
               >
                 <a
                   href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
@@ -113,7 +116,7 @@ export function Hero({ cities }: { cities: City[] }) {
           ) : null}
         </motion.div>
 
-        <motion.div variants={item} className="relative z-20 mt-14 -mb-12 sm:-mb-16">
+        <motion.div variants={item} className="relative z-20 mt-8 sm:mt-14 sm:-mb-12 lg:-mb-16">
           <HeroSearch cities={cities} />
         </motion.div>
       </motion.div>
