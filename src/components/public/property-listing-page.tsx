@@ -1,5 +1,6 @@
 import { Building2 } from "lucide-react"
 
+import { BackButton } from "@/components/shared/back-button"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Pagination } from "@/components/shared/pagination"
 import { PropertyCard } from "@/components/public/property-card"
@@ -63,6 +64,7 @@ export async function PropertyListingPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <BackButton className="mb-4" />
       <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
         {title}
       </h1>

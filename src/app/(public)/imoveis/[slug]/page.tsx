@@ -5,6 +5,7 @@ import { BedDouble, Car, Ruler, ShowerHead } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { BackButton } from "@/components/shared/back-button"
 import { PropertyGallery } from "@/components/public/property-gallery"
 import { PropertyCard } from "@/components/public/property-card"
 import { PropertyContactForm } from "@/components/public/property-contact-form"
@@ -68,6 +69,7 @@ export default async function PropertyDetailPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <BackButton className="mb-6" />
       <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
         <div className="space-y-8">
           <PropertyGallery images={property.images} title={property.title} />

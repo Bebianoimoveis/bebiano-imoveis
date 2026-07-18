@@ -5,9 +5,10 @@ import { createPortal } from "react-dom"
 import Image from "next/image"
 import Link from "next/link"
 import { AnimatePresence, motion } from "motion/react"
-import { MessageCircle, X } from "lucide-react"
+import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 import { siteConfig } from "@/config/site"
 
 const NAV_LINKS = [
@@ -98,7 +99,7 @@ export function MobileNav({
                   rel="noopener noreferrer"
                   onClick={onClose}
                 >
-                  <MessageCircle className="size-4" />
+                  <WhatsAppIcon className="size-4" />
                   Falar com um corretor
                 </a>
               </Button>

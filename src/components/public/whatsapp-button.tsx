@@ -1,6 +1,5 @@
-import { MessageCircle } from "lucide-react"
-
 import { siteConfig } from "@/config/site"
+import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 
 export function WhatsAppButton() {
   if (!siteConfig.whatsapp) return null
@@ -18,7 +17,7 @@ export function WhatsAppButton() {
       aria-label="Falar no WhatsApp"
       className="fixed bottom-5 right-5 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105"
     >
-      <MessageCircle className="size-6" />
+      <WhatsAppIcon className="size-6" />
     </a>
   )
 }
