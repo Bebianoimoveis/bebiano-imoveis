@@ -1,12 +1,12 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
 import { motion } from "motion/react"
 import { ArrowDown } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Parallax } from "@/components/motion/parallax"
+import { HeroBackground } from "@/components/public/hero-background"
 import { HeroSearch } from "@/components/public/hero-search"
 import { siteConfig } from "@/config/site"
 
@@ -38,14 +38,7 @@ export function Hero({ cities }: { cities: City[] }) {
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
         >
-          <Image
-            src="/images/hero-team.jpg"
-            alt="Equipe Bebiano Imóveis"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-[50%_10%] contrast-[1.1] saturate-[0.75] brightness-[0.9] sepia-[0.08] grayscale-[12%]"
-          />
+          <HeroBackground />
         </motion.div>
       </Parallax>
 
