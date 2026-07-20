@@ -3,7 +3,11 @@ import Link from "next/link"
 import { Mail } from "lucide-react"
 
 import { InstagramIcon } from "@/components/shared/instagram-icon"
+import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 import { siteConfig } from "@/config/site"
+
+const SOCIAL_LINK_CLASS =
+  "flex size-12 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-all duration-200 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground"
 
 export function Footer() {
   const year = new Date().getFullYear()
@@ -39,28 +43,37 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="space-y-2 text-sm">
+        <div className="space-y-3 text-sm">
           <p className="font-medium">Contato</p>
-          <div className="flex flex-col gap-1 text-muted-foreground">
-            {siteConfig.whatsapp ? <p>WhatsApp: {siteConfig.whatsapp}</p> : null}
+          <div className="flex items-center gap-3">
+            {siteConfig.whatsapp ? (
+              <a
+                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Falar no WhatsApp"
+                className={SOCIAL_LINK_CLASS}
+              >
+                <WhatsAppIcon className="size-5" />
+              </a>
+            ) : null}
             <a
               href={`mailto:${siteConfig.email}`}
-              className="inline-flex items-center gap-2 transition-colors hover:text-foreground"
+              aria-label="Enviar e-mail"
+              className={SOCIAL_LINK_CLASS}
             >
-              <Mail className="size-4" />
-              {siteConfig.email}
+              <Mail className="size-5" />
+            </a>
+            <a
+              href={siteConfig.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram da Bebiano Imóveis"
+              className={SOCIAL_LINK_CLASS}
+            >
+              <InstagramIcon className="size-5" />
             </a>
           </div>
-          <a
-            href={siteConfig.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Instagram da Bebiano Imóveis"
-            className="mt-1 inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
-          >
-            <InstagramIcon className="size-4" />
-            @bebianoimoveis
-          </a>
         </div>
       </div>
 
