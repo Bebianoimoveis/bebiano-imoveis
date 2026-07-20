@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ScrollLockGuard } from "@/components/shared/scroll-lock-guard";
+import { ScrollRestorationGuard } from "@/components/shared/scroll-restoration-guard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ScrollLockGuard />
+        <ScrollRestorationGuard />
         {children}
         <Toaster />
       </body>
