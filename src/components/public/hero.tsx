@@ -60,31 +60,30 @@ export function Hero({ cities }: { cities: City[] }) {
       >
         <motion.p
           variants={item}
-          className="text-xs font-medium tracking-[0.2em] text-gold-light uppercase sm:text-sm"
+          className="text-[0.65rem] font-medium tracking-[0.2em] text-gold-light uppercase sm:text-sm"
         >
           {siteConfig.city} · {siteConfig.state}
         </motion.p>
         <motion.h1
           variants={item}
-          className="font-heading mt-3 max-w-3xl text-balance text-4xl font-semibold tracking-tight text-white sm:mt-4 sm:text-7xl"
+          className="font-heading mt-2 max-w-3xl text-balance text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-white sm:mt-4 sm:text-7xl sm:leading-tight"
         >
           Mais do que imóveis. Encontramos o lugar certo para sua história.
         </motion.h1>
         <motion.p
           variants={item}
-          className="mt-4 max-w-lg text-base text-white/80 sm:mt-5 sm:text-lg"
+          className="mt-3 hidden max-w-lg text-base text-white/80 sm:mt-5 sm:block sm:text-lg"
         >
           A {siteConfig.name} conecta você aos melhores imóveis para comprar
           ou alugar na região, com atendimento próximo, transparente e
           especializado.
         </motion.p>
 
-        <motion.div variants={item} className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-4">
+        <motion.div variants={item} className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-4">
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
             <Button
               asChild
-              size="lg"
-              className="w-full bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:w-auto"
+              className="h-10 w-full px-5 text-sm bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
             >
               <Link href="/imoveis">Ver imóveis disponíveis</Link>
             </Button>
@@ -93,9 +92,8 @@ export function Hero({ cities }: { cities: City[] }) {
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
               <Button
                 asChild
-                size="lg"
                 variant="outline"
-                className="w-full border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white sm:w-auto"
+                className="h-10 w-full px-5 text-sm border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white sm:h-11 sm:w-auto sm:px-6 sm:text-base"
               >
                 <a
                   href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
@@ -109,7 +107,7 @@ export function Hero({ cities }: { cities: City[] }) {
           ) : null}
         </motion.div>
 
-        <motion.div variants={item} className="relative z-20 mt-8 sm:mt-14 sm:-mb-12 lg:-mb-16">
+        <motion.div variants={item} className="relative z-20 mt-6 sm:mt-14 sm:-mb-12 lg:-mb-16">
           <HeroSearch cities={cities} />
         </motion.div>
       </motion.div>
