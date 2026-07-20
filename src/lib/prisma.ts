@@ -22,6 +22,10 @@ export const prisma =
     adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }),
   })
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma
-}
+// Cacheado em `globalThis` em QUALQUER ambiente, inclusive produção: a
+// Vercel reaproveita a mesma instância de função (warm start) entre
+// requisições, e sem esse cache cada requisição recriava o PrismaClient
+// do zero — novo Pool, novo handshake WebSocket/TLS com o Neon — mesmo
+// numa função já "quente". Essa reconexão do zero a cada clique era a
+// causa raiz da lentidão sentida ao navegar entre as páginas do painel.
+globalForPrisma.prisma = prisma
