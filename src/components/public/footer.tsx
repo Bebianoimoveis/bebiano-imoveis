@@ -1,6 +1,8 @@
 import Image from "next/image"
 import Link from "next/link"
+import { Mail } from "lucide-react"
 
+import { InstagramIcon } from "@/components/shared/instagram-icon"
 import { siteConfig } from "@/config/site"
 
 export function Footer() {
@@ -41,7 +43,24 @@ export function Footer() {
           <p className="font-medium">Contato</p>
           <div className="flex flex-col gap-1 text-muted-foreground">
             {siteConfig.whatsapp ? <p>WhatsApp: {siteConfig.whatsapp}</p> : null}
+            <a
+              href={`mailto:${siteConfig.email}`}
+              className="inline-flex items-center gap-2 transition-colors hover:text-foreground"
+            >
+              <Mail className="size-4" />
+              {siteConfig.email}
+            </a>
           </div>
+          <a
+            href={siteConfig.instagram}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram da Bebiano Imóveis"
+            className="mt-1 inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+          >
+            <InstagramIcon className="size-4" />
+            @bebianoimoveis
+          </a>
         </div>
       </div>
 
