@@ -7,6 +7,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -136,7 +137,7 @@ export function UserFormDialog({
             <Label htmlFor="password">
               {mode === "create" ? "Senha" : "Nova senha (opcional)"}
             </Label>
-            <Input id="password" type="password" {...form.register("password")} />
+            <PasswordInput id="password" {...form.register("password")} />
             {form.formState.errors.password ? (
               <p className="text-sm text-destructive">
                 {form.formState.errors.password.message}
