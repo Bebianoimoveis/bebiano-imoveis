@@ -74,8 +74,18 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
-        © {year} {siteConfig.name}. Todos os direitos reservados.
+      <div className="flex flex-col items-center gap-1 border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between">
+        <p>
+          © {year} {siteConfig.name}. Todos os direitos reservados.
+        </p>
+        <a
+          href="https://g2genesys.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-colors hover:text-foreground"
+        >
+          Desenvolvido por G2 Genesys
+        </a>
       </div>
     </footer>
   )
