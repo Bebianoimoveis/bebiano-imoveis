@@ -14,7 +14,6 @@ import { siteConfig } from "@/config/site"
 const NAV_LINKS = [
   { href: "/imoveis", label: "Todos os imóveis" },
   { href: "/comprar", label: "Comprar" },
-  { href: "/alugar", label: "Alugar" },
 ]
 
 // Portal para document.body: o menu é `fixed inset-0`, mas se ficar

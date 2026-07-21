@@ -47,20 +47,6 @@ export function PropertyFilters({ cities }: { cities: City[] }) {
       />
 
       <Select
-        defaultValue={searchParams.get("purpose") ?? ALL}
-        onValueChange={(value) => updateParam("purpose", value)}
-      >
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Finalidade" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>Todas as finalidades</SelectItem>
-          <SelectItem value="SALE">Venda</SelectItem>
-          <SelectItem value="RENT">Locação</SelectItem>
-        </SelectContent>
-      </Select>
-
-      <Select
         defaultValue={searchParams.get("status") ?? ALL}
         onValueChange={(value) => updateParam("status", value)}
       >

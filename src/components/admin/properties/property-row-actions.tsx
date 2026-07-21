@@ -31,13 +31,11 @@ const NEXT_STATUS_OPTIONS: Partial<Record<PropertyStatus, { label: string; statu
   PUBLISHED: [
     { label: "Marcar como reservado", status: "RESERVED" },
     { label: "Marcar como vendido", status: "SOLD" },
-    { label: "Marcar como alugado", status: "RENTED" },
     { label: "Despublicar", status: "DRAFT" },
   ],
   RESERVED: [
     { label: "Voltar a publicado", status: "PUBLISHED" },
     { label: "Marcar como vendido", status: "SOLD" },
-    { label: "Marcar como alugado", status: "RENTED" },
   ],
   UNAVAILABLE: [{ label: "Voltar a publicado", status: "PUBLISHED" }],
 }

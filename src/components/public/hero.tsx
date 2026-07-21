@@ -74,9 +74,9 @@ export function Hero({ cities }: { cities: City[] }) {
           variants={item}
           className="mt-3 hidden max-w-lg text-base text-white/80 sm:mt-5 sm:block sm:text-lg"
         >
-          A {siteConfig.name} conecta você aos melhores imóveis para comprar
-          ou alugar na região, com atendimento próximo, transparente e
-          especializado.
+          A {siteConfig.name} conecta você aos melhores imóveis novos e
+          usados para comprar na região, com atendimento próximo,
+          transparente e especializado.
         </motion.p>
 
         <motion.div variants={item} className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-4">

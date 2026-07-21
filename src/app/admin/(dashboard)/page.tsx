@@ -42,7 +42,6 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard label="Imóveis publicados" value={String(metrics.propertyStatus.published)} />
         <StatCard label="Vendidos" value={String(metrics.propertyStatus.sold)} />
-        <StatCard label="Alugados" value={String(metrics.propertyStatus.rented)} />
         <StatCard label="Indisponíveis" value={String(metrics.propertyStatus.unavailable)} />
         <StatCard label="Novos leads (30 dias)" value={String(metrics.newLeads)} />
         <StatCard label="Visitas agendadas" value={String(metrics.upcomingAppointments)} />

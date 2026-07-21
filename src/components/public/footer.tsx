@@ -37,9 +37,6 @@ export function Footer() {
             <Link href="/comprar" className="hover:text-foreground">
               Comprar
             </Link>
-            <Link href="/alugar" className="hover:text-foreground">
-              Alugar
-            </Link>
           </div>
         </div>
 

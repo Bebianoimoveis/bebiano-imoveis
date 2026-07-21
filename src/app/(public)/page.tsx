@@ -114,10 +114,10 @@ export default async function HomePage() {
             </h2>
             <p className="mt-4 text-muted-foreground">
               Somos uma imobiliária de {siteConfig.city}, {siteConfig.state},
-              dedicada a tornar o processo de comprar, vender ou alugar um
-              imóvel mais simples e confiável. Nossa equipe acompanha cada
-              etapa da negociação com atenção aos detalhes que fazem diferença
-              para você.
+              dedicada a tornar o processo de comprar ou vender um imóvel
+              novo ou usado mais simples e confiável. Nossa equipe acompanha
+              cada etapa da negociação com atenção aos detalhes que fazem
+              diferença para você.
             </p>
           </Reveal>
           <StaggerGroup className="grid gap-8 sm:grid-cols-2">

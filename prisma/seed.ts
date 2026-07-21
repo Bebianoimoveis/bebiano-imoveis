@@ -87,9 +87,11 @@ const PROPERTY_TYPES = [
   "Casa",
   "Casa em Condomínio",
   "Terreno",
+  "Loteamento",
   "Sala Comercial",
   "Galpão",
   "Chácara",
+  "Sítio",
 ]
 
 const PROPERTY_FEATURES = [
