@@ -74,7 +74,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-1 border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground sm:flex-row sm:justify-between">
+      <div className="flex flex-col items-center gap-1 border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
         <p>
           © {year} {siteConfig.name}. Todos os direitos reservados.
         </p>
@@ -82,15 +82,8 @@ export function Footer() {
           href="https://g2genesys.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+          className="transition-colors hover:text-foreground"
         >
-          <Image
-            src="/images/g2genesys-icon.png"
-            alt=""
-            width={18}
-            height={18}
-            className="size-[18px] rounded-[5px]"
-          />
           Desenvolvido por G2 Genesys
         </a>
       </div>
