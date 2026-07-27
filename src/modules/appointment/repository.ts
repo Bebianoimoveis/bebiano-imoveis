@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma, AppointmentStatus } from "@/generated/prisma/client"
+import { upsertLeadByPhone } from "@/modules/lead/repository"
 
 const appointmentInclude = {
   realtor: { include: { user: true } },
@@ -50,12 +51,27 @@ type CreateVisitRequestInput = {
 // na Agenda para qualquer corretor reatribuir depois).
 export async function createVisitRequestWithLead(input: CreateVisitRequestInput) {
   return prisma.$transaction(async (tx) => {
-    const property = await tx.property.findUnique({
-      where: { id: input.propertyId },
-      select: { realtorId: true },
+    const now = new Date().toLocaleString("pt-BR")
+    const lead = await upsertLeadByPhone(tx, {
+      name: input.name,
+      phone: input.phone,
+      propertyId: input.propertyId,
+      note: `[${now}] Solicitou agendamento de visita.${input.message ? ` ${input.message}` : ""}`,
+      initialStage: "VISIT_SCHEDULED",
+      advanceToStage: "VISIT_SCHEDULED",
     })
 
-    let realtorId = property?.realtorId ?? null
+    // Respeita o corretor já vinculado ao lead (caso já exista de um
+    // contato anterior); só cai para o do imóvel/fallback se ainda não
+    // tiver nenhum.
+    let realtorId = lead.realtorId
+    if (!realtorId) {
+      const property = await tx.property.findUnique({
+        where: { id: input.propertyId },
+        select: { realtorId: true },
+      })
+      realtorId = property?.realtorId ?? null
+    }
     if (!realtorId) {
       const fallbackRealtor = await tx.realtor.findFirst({
         where: { active: true, deletedAt: null },
@@ -64,22 +80,13 @@ export async function createVisitRequestWithLead(input: CreateVisitRequestInput)
       })
       realtorId = fallbackRealtor?.id ?? null
     }
-
     if (!realtorId) {
       throw new Error("Nenhum corretor disponível para atribuir a visita.")
     }
 
-    const lead = await tx.lead.create({
-      data: {
-        name: input.name,
-        phone: input.phone,
-        origin: "site",
-        stage: "VISIT_SCHEDULED",
-        notes: input.message || null,
-        propertyId: input.propertyId,
-        realtorId,
-      },
-    })
+    if (lead.realtorId !== realtorId) {
+      await tx.lead.update({ where: { id: lead.id }, data: { realtorId } })
+    }
 
     const appointment = await tx.appointment.create({
       data: {

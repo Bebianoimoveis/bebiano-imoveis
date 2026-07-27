@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma, LeadStage } from "@/generated/prisma/client"
+import { LEAD_STAGES } from "@/modules/lead/schema"
+
+type TransactionClient = Prisma.TransactionClient
 
 const leadListInclude = {
   property: { select: { id: true, title: true, code: true, slug: true } },
@@ -28,6 +31,80 @@ type CreateContactRequestInput = {
   ipAddress?: string
 }
 
+function stageRank(stage: LeadStage): number {
+  const index = LEAD_STAGES.indexOf(stage)
+  return index === -1 ? 0 : index
+}
+
+type UpsertLeadByPhoneInput = {
+  name: string
+  phone: string
+  email?: string
+  propertyId?: string
+  note: string
+  // Estágio do lead quando ele é criado pela primeira vez.
+  initialStage: LeadStage
+  // Se já existir um lead com esse telefone, só avança o estágio dele
+  // para este valor — nunca "recua" um lead que já está mais adiante
+  // no funil (ex: não regride de "Proposta" pra "Primeiro contato" só
+  // porque a pessoa mandou outra mensagem de contato).
+  advanceToStage: LeadStage
+}
+
+// Núcleo da deduplicação de leads: qualquer formulário público (contato,
+// visita) passa por aqui em vez de criar um Lead direto. Sem isso, a
+// mesma pessoa preenchendo dois formulários diferentes (ou o mesmo duas
+// vezes) virava dois cards separados no Kanban — mesmo telefone, leads
+// duplicados. Casamos por telefone (dígitos, sem formatação) em vez de
+// pedir login/conta, que derrubaria a taxa de conversão do site.
+export async function upsertLeadByPhone(
+  tx: TransactionClient,
+  input: UpsertLeadByPhoneInput
+) {
+  const digits = input.phone.replace(/\D/g, "")
+  const existing = digits
+    ? await tx.lead.findFirst({
+        where: { phone: { contains: digits }, deletedAt: null },
+        orderBy: { createdAt: "desc" },
+      })
+    : null
+
+  if (!existing) {
+    const property = input.propertyId
+      ? await tx.property.findUnique({
+          where: { id: input.propertyId },
+          select: { realtorId: true },
+        })
+      : null
+
+    return tx.lead.create({
+      data: {
+        name: input.name,
+        phone: input.phone,
+        email: input.email || null,
+        origin: "site",
+        stage: input.initialStage,
+        notes: input.note,
+        propertyId: input.propertyId,
+        realtorId: property?.realtorId ?? null,
+      },
+    })
+  }
+
+  const shouldAdvanceStage = stageRank(input.advanceToStage) > stageRank(existing.stage)
+
+  return tx.lead.update({
+    where: { id: existing.id },
+    data: {
+      notes: existing.notes ? `${existing.notes}\n\n${input.note}` : input.note,
+      lastInteractionAt: new Date(),
+      stage: shouldAdvanceStage ? input.advanceToStage : undefined,
+      propertyId: existing.propertyId ?? input.propertyId,
+      email: existing.email ?? (input.email || null),
+    },
+  })
+}
+
 // Cria o registro bruto do formulário (auditoria/anti-spam) e o Lead
 // correspondente no CRM em uma única transação — o núcleo do fluxo
 // "visitante manda mensagem → vira lead automaticamente".
@@ -47,24 +124,17 @@ export async function createContactRequestWithLead(
       },
     })
 
-    const property = input.propertyId
-      ? await tx.property.findUnique({
-          where: { id: input.propertyId },
-          select: { realtorId: true },
-        })
-      : null
-
-    const lead = await tx.lead.create({
-      data: {
-        name: input.name,
-        phone: input.phone,
-        email: input.email || null,
-        origin: "site",
-        stage: "NEW",
-        notes: input.message || null,
-        propertyId: input.propertyId,
-        realtorId: property?.realtorId ?? null,
-      },
+    const now = new Date().toLocaleString("pt-BR")
+    const lead = await upsertLeadByPhone(tx, {
+      name: input.name,
+      phone: input.phone,
+      email: input.email,
+      propertyId: input.propertyId,
+      note: input.message
+        ? `[${now}] Mensagem pelo site: ${input.message}`
+        : `[${now}] Novo contato pelo site.`,
+      initialStage: "NEW",
+      advanceToStage: "FIRST_CONTACT",
     })
 
     return { contactRequest, lead }
