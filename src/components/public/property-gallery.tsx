@@ -56,16 +56,27 @@ export function PropertyGallery({
           type="button"
           onClick={() => setIsLightboxOpen(true)}
           aria-label="Ampliar foto"
-          className="absolute inset-0 z-0 cursor-zoom-in"
+          className="absolute inset-0 z-0 cursor-zoom-in overflow-hidden"
         >
-          <Image
-            src={active.url}
-            alt={title}
-            fill
-            priority
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 1024px) 100vw, 800px"
-          />
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={active.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={active.url}
+                alt={title}
+                fill
+                priority
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 1024px) 100vw, 800px"
+              />
+            </motion.div>
+          </AnimatePresence>
         </button>
 
         {images.length > 1 ? (
@@ -165,22 +176,29 @@ export function PropertyGallery({
               </>
             ) : null}
 
-            <motion.div
-              key={active.id}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
+            <div
               className="relative mx-auto aspect-16/9 w-full max-w-5xl px-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image
-                src={active.url}
-                alt={title}
-                fill
-                className="object-contain"
-                sizes="100vw"
-              />
-            </motion.div>
+              <AnimatePresence initial={false}>
+                <motion.div
+                  key={active.id}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute inset-x-4 inset-y-0"
+                >
+                  <Image
+                    src={active.url}
+                    alt={title}
+                    fill
+                    className="object-contain"
+                    sizes="100vw"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>
