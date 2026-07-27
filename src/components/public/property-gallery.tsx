@@ -149,33 +149,6 @@ export function PropertyGallery({
               </p>
             ) : null}
 
-            {images.length > 1 ? (
-              <>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    goToPrevious()
-                  }}
-                  aria-label="Foto anterior"
-                  className="absolute left-2 flex size-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 sm:left-4"
-                >
-                  <ChevronLeft className="size-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    goToNext()
-                  }}
-                  aria-label="Próxima foto"
-                  className="absolute right-2 flex size-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 sm:right-4"
-                >
-                  <ChevronRight className="size-6" />
-                </button>
-              </>
-            ) : null}
-
             <div
               className="relative mx-auto aspect-16/9 w-full max-w-5xl px-4"
               onClick={(e) => e.stopPropagation()}
