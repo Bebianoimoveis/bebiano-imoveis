@@ -28,6 +28,9 @@ export const propertyInputSchema = z.object({
 
   builtArea: z.coerce.number().positive().optional(),
   totalArea: z.coerce.number().positive().optional(),
+  // Só faz sentido para Apartamento (empreendimento com várias unidades à
+  // venda) — a UI só mostra o campo quando o tipo selecionado é esse.
+  availableUnits: z.coerce.number().int().positive().optional(),
   bedrooms: z.coerce.number().int().nonnegative().default(0),
   suites: z.coerce.number().int().nonnegative().default(0),
   bathrooms: z.coerce.number().int().nonnegative().default(0),

@@ -200,6 +200,9 @@ model Property {
 
   builtArea    Decimal? @db.Decimal(8, 2)
   totalArea    Decimal? @db.Decimal(8, 2)
+  // Só usado quando o tipo é Apartamento (empreendimento com várias
+  // unidades à venda) — null para os demais tipos.
+  availableUnits Int?
   bedrooms     Int      @default(0)
   suites       Int      @default(0)
   bathrooms    Int      @default(0)

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { after } from "next/server"
 import { notFound } from "next/navigation"
-import { BedDouble, Car, Ruler, ShowerHead } from "lucide-react"
+import { BedDouble, Building2, Car, Ruler, ShowerHead } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -141,6 +141,14 @@ export default async function PropertyDetailPage({
                 <Ruler className="size-5 text-primary" />
                 <p className="text-sm font-medium">
                   {property.builtArea.toString()} m²
+                </p>
+              </div>
+            ) : null}
+            {property.availableUnits ? (
+              <div className="flex flex-col items-center gap-1 text-center">
+                <Building2 className="size-5 text-primary" />
+                <p className="text-sm font-medium">
+                  {property.availableUnits} unidades disponíveis
                 </p>
               </div>
             ) : null}

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
@@ -77,6 +77,14 @@ export function PropertyForm({
     resolver: zodResolver(propertyInputSchema),
     defaultValues,
   })
+
+  // "Unidades disponíveis" só faz sentido para Apartamento (empreendimento
+  // com várias unidades à venda) — useWatch em vez de form.watch() inline
+  // porque o React Compiler não consegue memoizar corretamente uma leitura
+  // direta de watch() dentro do render.
+  const selectedTypeId = useWatch({ control: form.control, name: "typeId" })
+  const isApartment =
+    propertyTypes.find((type) => type.id === selectedTypeId)?.name === "Apartamento"
 
   async function handleCityChange(cityId: string) {
     form.setValue("cityId", cityId)
@@ -371,6 +379,7 @@ export function PropertyForm({
                 )}
               />
             </div>
+
           </TabsContent>
 
           <TabsContent value="caracteristicas" className="space-y-4">
@@ -473,6 +482,32 @@ export function PropertyForm({
                 )}
               />
             </div>
+
+            {isApartment ? (
+              <FormField
+                control={form.control}
+                name="availableUnits"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unidades disponíveis</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        className="max-w-40"
+                        {...field}
+                        value={toInputValue(field.value)}
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? undefined : e.target.value)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {(

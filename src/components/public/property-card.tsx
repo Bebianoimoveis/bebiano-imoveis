@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { BedDouble, Car, ImageOff, ShowerHead } from "lucide-react"
+import { BedDouble, Building2, Car, ImageOff, ShowerHead } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/format"
@@ -69,6 +69,12 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
             <span className="flex items-center gap-1.5">
               <Car className="size-4 shrink-0" strokeWidth={1.5} />
               {property.parkingSpots}
+            </span>
+          ) : null}
+          {property.availableUnits ? (
+            <span className="flex items-center gap-1.5">
+              <Building2 className="size-4 shrink-0" strokeWidth={1.5} />
+              {property.availableUnits} unidades
             </span>
           ) : null}
         </div>

@@ -23,6 +23,11 @@ async function requireSession() {
 function revalidatePropertyPaths(slug?: string) {
   revalidatePath("/admin/imoveis")
   revalidatePath("/imoveis")
+  // A home é estática por padrão (sem revalidate/dynamic) e mostra
+  // "Imóveis em destaque" — sem isso, publicar/despublicar/destacar um
+  // imóvel nunca aparecia lá até o próximo deploy.
+  revalidatePath("/")
+  revalidatePath("/comprar")
   if (slug) revalidatePath(`/imoveis/${slug}`)
 }
 
