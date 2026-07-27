@@ -51,20 +51,50 @@ export function PropertyGallery({
 
   return (
     <div className="space-y-3">
-      <button
-        type="button"
-        onClick={() => setIsLightboxOpen(true)}
-        className="group relative block aspect-16/9 w-full cursor-zoom-in overflow-hidden rounded-xl border border-border/60 bg-muted"
-      >
-        <Image
-          src={active.url}
-          alt={title}
-          fill
-          priority
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 1024px) 100vw, 800px"
-        />
-      </button>
+      <div className="group relative aspect-16/9 w-full overflow-hidden rounded-xl border border-border/60 bg-muted">
+        <button
+          type="button"
+          onClick={() => setIsLightboxOpen(true)}
+          aria-label="Ampliar foto"
+          className="absolute inset-0 z-0 cursor-zoom-in"
+        >
+          <Image
+            src={active.url}
+            alt={title}
+            fill
+            priority
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 1024px) 100vw, 800px"
+          />
+        </button>
+
+        {images.length > 1 ? (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToPrevious()
+              }}
+              aria-label="Foto anterior"
+              className="absolute top-1/2 left-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/30"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToNext()
+              }}
+              aria-label="Próxima foto"
+              className="absolute top-1/2 right-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/30"
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          </>
+        ) : null}
+      </div>
 
       {images.length > 1 ? (
         <div className="flex gap-2 overflow-x-auto pb-1">
