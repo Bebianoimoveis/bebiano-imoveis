@@ -18,6 +18,20 @@ export const contactRequestSchema = z.object({
 
 export type ContactRequestInput = z.infer<typeof contactRequestSchema>
 
+// Mesma proteção anti-spam do formulário de contato (honeypot + time-trap).
+export const visitRequestSchema = z.object({
+  name: z.string().min(2, "Informe seu nome."),
+  phone: z.string().min(8, "Informe um telefone válido."),
+  propertyId: z.string().min(1),
+  preferredDate: z.string().min(1, "Escolha uma data."),
+  preferredTime: z.string().min(1, "Escolha um horário."),
+  message: z.string().max(2000).nullish(),
+  honeypot: z.string().optional(),
+  startedAt: z.number(),
+})
+
+export type VisitRequestInput = z.infer<typeof visitRequestSchema>
+
 export const LEAD_STAGES = [
   "NEW",
   "FIRST_CONTACT",

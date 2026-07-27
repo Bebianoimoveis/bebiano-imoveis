@@ -1,16 +1,65 @@
 "use server"
 
+import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
+import { isRateLimited } from "@/lib/rate-limit"
 import type { Prisma, AppointmentStatus } from "@/generated/prisma/client"
 import {
   appointmentFiltersSchema,
   appointmentInputSchema,
 } from "@/modules/appointment/schema"
 import * as appointmentRepository from "@/modules/appointment/repository"
+import { visitRequestSchema } from "@/modules/lead/schema"
+import { submitPublicVisitRequest } from "@/modules/lead/service"
+import { SpamRejectedError } from "@/modules/lead/service"
+
+const VISIT_SUCCESS_MESSAGE =
+  "Visita solicitada! Em breve um corretor confirma o horário com você."
+
+export type SubmitVisitState = {
+  status: "idle" | "success" | "error"
+  message?: string
+}
+
+// Uso público — sem autenticação. Mesmo padrão de proteção do formulário
+// de contato: honeypot/time-trap (lead/service.ts) + rate limit por IP.
+export async function submitVisitRequest(
+  input: unknown
+): Promise<SubmitVisitState> {
+  const headerList = await headers()
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+
+  if (isRateLimited(`visit:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
+    return {
+      status: "error",
+      message: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+    }
+  }
+
+  const parsed = visitRequestSchema.safeParse(input)
+  if (!parsed.success) {
+    return { status: "error", message: "Verifique os dados informados." }
+  }
+
+  try {
+    await submitPublicVisitRequest(parsed.data)
+    return { status: "success", message: VISIT_SUCCESS_MESSAGE }
+  } catch (error) {
+    if (error instanceof SpamRejectedError) {
+      return { status: "success", message: VISIT_SUCCESS_MESSAGE }
+    }
+
+    console.error("submitVisitRequest failed", error)
+    return {
+      status: "error",
+      message: "Não foi possível agendar a visita. Tente novamente em instantes.",
+    }
+  }
+}
 
 async function requireSession() {
   const session = await auth()

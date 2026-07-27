@@ -35,6 +35,66 @@ export async function createAppointment(data: Prisma.AppointmentCreateInput) {
   return prisma.appointment.create({ data, include: appointmentInclude })
 }
 
+type CreateVisitRequestInput = {
+  name: string
+  phone: string
+  propertyId: string
+  scheduledAt: Date
+  message?: string
+}
+
+// Fluxo público "visitante pede visita → vira Lead + Appointment
+// pendente na Agenda". realtorId é obrigatório no Appointment, então
+// usamos o corretor já responsável pelo imóvel; se o imóvel não tiver
+// um vinculado, cai para o corretor ativo mais antigo (a visita aparece
+// na Agenda para qualquer corretor reatribuir depois).
+export async function createVisitRequestWithLead(input: CreateVisitRequestInput) {
+  return prisma.$transaction(async (tx) => {
+    const property = await tx.property.findUnique({
+      where: { id: input.propertyId },
+      select: { realtorId: true },
+    })
+
+    let realtorId = property?.realtorId ?? null
+    if (!realtorId) {
+      const fallbackRealtor = await tx.realtor.findFirst({
+        where: { active: true, deletedAt: null },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      })
+      realtorId = fallbackRealtor?.id ?? null
+    }
+
+    if (!realtorId) {
+      throw new Error("Nenhum corretor disponível para atribuir a visita.")
+    }
+
+    const lead = await tx.lead.create({
+      data: {
+        name: input.name,
+        phone: input.phone,
+        origin: "site",
+        stage: "VISIT_SCHEDULED",
+        notes: input.message || null,
+        propertyId: input.propertyId,
+        realtorId,
+      },
+    })
+
+    const appointment = await tx.appointment.create({
+      data: {
+        leadId: lead.id,
+        propertyId: input.propertyId,
+        realtorId,
+        scheduledAt: input.scheduledAt,
+        notes: input.message || null,
+      },
+    })
+
+    return { lead, appointment }
+  })
+}
+
 export async function updateAppointment(
   id: string,
   data: Prisma.AppointmentUpdateInput

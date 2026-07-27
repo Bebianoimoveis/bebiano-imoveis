@@ -10,6 +10,7 @@ import { PropertyDescription } from "@/components/public/property-description"
 import { PropertyGallery } from "@/components/public/property-gallery"
 import { PropertyCard } from "@/components/public/property-card"
 import { PropertyContactForm } from "@/components/public/property-contact-form"
+import { PropertyVisitDialog } from "@/components/public/property-visit-dialog"
 import { ShareButton } from "@/components/public/share-button"
 import {
   getPublicPropertyBySlug,
@@ -187,6 +188,11 @@ export default async function PropertyDetailPage({
               </a>
             </Button>
           ) : null}
+
+          <PropertyVisitDialog
+            propertyId={property.id}
+            propertyTitle={property.title}
+          />
 
           <div className="border-t border-border/60 pt-4">
             <PropertyContactForm
