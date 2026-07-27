@@ -87,8 +87,11 @@ export function PropertyForm({
     propertyTypes.find((type) => type.id === selectedTypeId)?.name === "Apartamento"
 
   async function handleCityChange(cityId: string) {
-    form.setValue("cityId", cityId)
-    form.setValue("neighborhoodId", "")
+    // shouldValidate: sem isso, setValue não limpa um erro de validação
+    // que já estava sendo exibido (ex: "Selecione a cidade" continuava
+    // aparecendo mesmo depois do CEP preencher a cidade corretamente).
+    form.setValue("cityId", cityId, { shouldValidate: true })
+    form.setValue("neighborhoodId", "", { shouldValidate: true })
     const list = await listNeighborhoods(cityId)
     setNeighborhoods(list)
     return list
@@ -104,7 +107,7 @@ export function PropertyForm({
   // atuação), só a rua é preenchida e o resto fica pra seleção manual.
   async function handleCepLookup(rawValue: string) {
     const digits = rawValue.replace(/\D/g, "")
-    form.setValue("zipCode", digits)
+    form.setValue("zipCode", digits, { shouldValidate: true })
     if (digits.length !== 8) return
 
     setIsLookingUpCep(true)
@@ -118,7 +121,7 @@ export function PropertyForm({
       }
 
       if (data.logradouro) {
-        form.setValue("street", data.logradouro)
+        form.setValue("street", data.logradouro, { shouldValidate: true })
       }
 
       const normalize = (value: string) =>
@@ -149,7 +152,7 @@ export function PropertyForm({
         // tick, o Select do Radix não acha o item pra marcar como
         // selecionado, mesmo com o valor certo no form.
         await new Promise((resolve) => setTimeout(resolve, 0))
-        form.setValue("neighborhoodId", matchedNeighborhood.id)
+        form.setValue("neighborhoodId", matchedNeighborhood.id, { shouldValidate: true })
       }
     } catch {
       toast.error("Não foi possível buscar o CEP. Tente novamente.")
