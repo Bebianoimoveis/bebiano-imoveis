@@ -21,6 +21,7 @@ export const propertyInputSchema = z.object({
   addressVisibility: z
     .enum(["FULL", "APPROXIMATE", "NEIGHBORHOOD_ONLY"])
     .default("NEIGHBORHOOD_ONLY"),
+  zipCode: z.string().optional(),
   street: z.string().optional(),
   number: z.string().optional(),
   latitude: z.coerce.number().min(-90).max(90).optional(),

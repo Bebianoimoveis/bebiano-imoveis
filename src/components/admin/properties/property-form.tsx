@@ -91,6 +91,71 @@ export function PropertyForm({
     form.setValue("neighborhoodId", "")
     const list = await listNeighborhoods(cityId)
     setNeighborhoods(list)
+    return list
+  }
+
+  const [isLookingUpCep, setIsLookingUpCep] = useState(false)
+
+  // Autocompleta cidade/bairro/rua a partir do CEP via ViaCEP (serviço
+  // público, gratuito, sem chave de API) — economiza o trabalho de
+  // selecionar cidade e bairro manualmente quando o endereço bate com o
+  // que já está cadastrado. Cidade/bairro continuam editáveis depois:
+  // se o CEP não corresponder a nada da nossa base (ex: fora da área de
+  // atuação), só a rua é preenchida e o resto fica pra seleção manual.
+  async function handleCepLookup(rawValue: string) {
+    const digits = rawValue.replace(/\D/g, "")
+    form.setValue("zipCode", digits)
+    if (digits.length !== 8) return
+
+    setIsLookingUpCep(true)
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const data = await response.json()
+
+      if (data.erro) {
+        toast.error("CEP não encontrado.")
+        return
+      }
+
+      if (data.logradouro) {
+        form.setValue("street", data.logradouro)
+      }
+
+      const normalize = (value: string) =>
+        value
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .trim()
+          .toLowerCase()
+
+      const matchedCity = cities.find(
+        (city) =>
+          normalize(city.name) === normalize(data.localidade ?? "") &&
+          city.state === data.uf
+      )
+
+      if (!matchedCity) {
+        toast.info("CEP fora da área cadastrada — selecione cidade e bairro manualmente.")
+        return
+      }
+
+      const list = await handleCityChange(matchedCity.id)
+      const matchedNeighborhood = list.find(
+        (n) => normalize(n.name) === normalize(data.bairro ?? "")
+      )
+      if (matchedNeighborhood) {
+        // O <SelectContent> do bairro só recebe os novos itens depois que
+        // o setNeighborhoods() acima é processado pelo React — sem esse
+        // tick, o Select do Radix não acha o item pra marcar como
+        // selecionado, mesmo com o valor certo no form.
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        form.setValue("neighborhoodId", matchedNeighborhood.id)
+      }
+    } catch {
+      toast.error("Não foi possível buscar o CEP. Tente novamente.")
+    } finally {
+      setIsLookingUpCep(false)
+    }
   }
 
   async function onSubmit(values: PropertyInput) {
@@ -272,6 +337,26 @@ export function PropertyForm({
           </TabsContent>
 
           <TabsContent value="localizacao" className="space-y-4">
+            <FormField
+              control={form.control}
+              name="zipCode"
+              render={({ field }) => (
+                <FormItem className="max-w-52">
+                  <FormLabel>CEP</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={toInputValue(field.value)}
+                      onChange={(e) => handleCepLookup(e.target.value)}
+                      placeholder="00000-000"
+                      disabled={isLookingUpCep}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

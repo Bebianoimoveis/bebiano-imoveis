@@ -193,6 +193,7 @@ model Property {
   neighborhood   Neighborhood  @relation(fields: [neighborhoodId], references: [id])
 
   addressVisibility AddressVisibility @default(NEIGHBORHOOD_ONLY)
+  zipCode           String?
   street            String?
   number            String?
   latitude          Decimal?          @db.Decimal(10, 7)
