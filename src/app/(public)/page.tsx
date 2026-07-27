@@ -74,7 +74,7 @@ export default async function HomePage() {
             />
           </Reveal>
         ) : (
-          <StaggerGroup className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+          <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((property) => (
               <StaggerItem key={property.id}>
                 <PropertyCard property={property} />
@@ -92,7 +92,7 @@ export default async function HomePage() {
                 Imóveis recentes
               </h2>
             </Reveal>
-            <StaggerGroup className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {recent.slice(0, 4).map((property) => (
                 <StaggerItem key={property.id}>
                   <PropertyCard property={property} />
