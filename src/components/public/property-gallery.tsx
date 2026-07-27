@@ -77,7 +77,7 @@ export function PropertyGallery({
                 goToPrevious()
               }}
               aria-label="Foto anterior"
-              className="absolute top-1/2 left-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/30"
+              className="absolute top-1/2 left-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/8 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/15"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -88,7 +88,7 @@ export function PropertyGallery({
                 goToNext()
               }}
               aria-label="Próxima foto"
-              className="absolute top-1/2 right-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/20 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/30"
+              className="absolute top-1/2 right-3 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-white/8 text-white backdrop-blur-md transition-all hover:scale-105 hover:bg-white/15"
             >
               <ChevronRight className="size-5" />
             </button>
