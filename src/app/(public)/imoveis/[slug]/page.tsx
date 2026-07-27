@@ -6,6 +6,7 @@ import { BedDouble, Car, Ruler, ShowerHead } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BackButton } from "@/components/shared/back-button"
+import { PropertyDescription } from "@/components/public/property-description"
 import { PropertyGallery } from "@/components/public/property-gallery"
 import { PropertyCard } from "@/components/public/property-card"
 import { PropertyContactForm } from "@/components/public/property-contact-form"
@@ -144,12 +145,7 @@ export default async function PropertyDetailPage({
             ) : null}
           </div>
 
-          <div className="space-y-3">
-            <h2 className="font-heading text-lg font-semibold">Descrição</h2>
-            <p className="whitespace-pre-line text-muted-foreground">
-              {property.description}
-            </p>
-          </div>
+          <PropertyDescription description={property.description} />
 
           {property.features.length > 0 ? (
             <div className="space-y-3">
