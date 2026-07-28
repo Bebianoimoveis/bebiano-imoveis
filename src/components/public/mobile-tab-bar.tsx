@@ -24,7 +24,7 @@ export function MobileTabBar() {
   const { phone } = useAttributedWhatsapp()
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center border-t border-border/60 bg-background/95 backdrop-blur-md md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center border-t border-white/10 bg-primary/90 backdrop-blur-[18px] supports-backdrop-filter:bg-primary/80 md:hidden">
       {TABS.map((tab) => {
         const active = tab.match(pathname)
         const Icon = tab.icon
@@ -34,13 +34,13 @@ export function MobileTabBar() {
             href={tab.href}
             className={cn(
               "relative flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
-              active ? "text-primary" : "text-muted-foreground"
+              active ? "text-gold" : "text-white/60"
             )}
           >
             <span className="relative">
-              <Icon className={cn("size-5", active && "fill-primary/15")} strokeWidth={active ? 2.25 : 1.75} />
+              <Icon className={cn("size-5", active && "fill-gold/20")} strokeWidth={active ? 2.25 : 1.75} />
               {tab.href === "/favoritos" && favoriteIds.length > 0 ? (
-                <span className="absolute -top-1 -right-1.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-semibold text-primary-foreground">
+                <span className="absolute -top-1 -right-1.5 flex size-3.5 items-center justify-center rounded-full bg-white text-[8px] font-semibold text-primary">
                   {favoriteIds.length > 9 ? "9+" : favoriteIds.length}
                 </span>
               ) : null}
@@ -54,7 +54,7 @@ export function MobileTabBar() {
           href={`https://wa.me/${phone.replace(/\D/g, "")}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors"
+          className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-white/60 transition-colors"
         >
           <MessageCircle className="size-5" strokeWidth={1.75} />
           Contato
