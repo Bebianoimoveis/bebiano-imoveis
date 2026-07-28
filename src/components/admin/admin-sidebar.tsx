@@ -1,5 +1,9 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { motion } from "motion/react"
 import {
   LayoutDashboard,
   Building2,
@@ -18,78 +22,205 @@ import {
 
 import { signOutAction } from "@/modules/auth/actions"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Sheet } from "@/components/ui/sheet"
 import type { PermissionKey } from "@/lib/permissions"
+import { cn } from "@/lib/utils"
 
-type AdminSidebarProps = {
-  user: {
-    name?: string | null
-    roleName: string
-  }
-  permissions: Set<string>
+export type AdminSidebarUser = {
+  name?: string | null
+  roleName: string
 }
 
-const navItems: {
+type NavItem = {
   label: string
   href: string
   icon: typeof LayoutDashboard
   permission?: PermissionKey
-}[] = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Imóveis", href: "/admin/imoveis", icon: Building2, permission: "property.create" },
-  { label: "Leads", href: "/admin/leads", icon: Users2, permission: "lead.manage" },
-  { label: "Clientes", href: "/admin/clientes", icon: Contact, permission: "client.manage" },
-  { label: "Links dos Corretores", href: "/admin/corretores/links", icon: Link2, permission: "realtor.manage" },
-  { label: "Agenda", href: "/admin/agenda", icon: CalendarDays, permission: "appointment.manage" },
-  { label: "Propostas", href: "/admin/propostas", icon: FileText, permission: "proposal.manage" },
-  { label: "Contratos", href: "/admin/contratos", icon: FileSignature, permission: "contract.manage" },
-  { label: "Financeiro", href: "/admin/financeiro", icon: Wallet, permission: "financial.view" },
-  { label: "Relatórios", href: "/admin/relatorios", icon: BarChart3, permission: "report.view" },
-  { label: "Usuários", href: "/admin/usuarios", icon: UserCog, permission: "user.manage" },
-  { label: "Configurações", href: "/admin/configuracoes", icon: Settings, permission: "settings.manage" },
+}
+
+type NavGroup = {
+  label: string
+  items: NavItem[]
+}
+
+// Nomenclatura de "centro de operações" em vez de termos genéricos de
+// CRM — só o texto visível muda; módulos/rotas internos continuam com
+// os nomes técnicos de sempre.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Geral",
+    items: [
+      { label: "Visão Geral", href: "/admin", icon: LayoutDashboard },
+      { label: "Portfólio de Imóveis", href: "/admin/imoveis", icon: Building2, permission: "property.create" },
+      { label: "Central de Leads", href: "/admin/leads", icon: Users2, permission: "lead.manage" },
+      { label: "Clientes", href: "/admin/clientes", icon: Contact, permission: "client.manage" },
+      { label: "Links dos Corretores", href: "/admin/corretores/links", icon: Link2, permission: "realtor.manage" },
+    ],
+  },
+  {
+    label: "Negócios",
+    items: [
+      { label: "Agenda", href: "/admin/agenda", icon: CalendarDays, permission: "appointment.manage" },
+      { label: "Propostas", href: "/admin/propostas", icon: FileText, permission: "proposal.manage" },
+      { label: "Contratos", href: "/admin/contratos", icon: FileSignature, permission: "contract.manage" },
+      { label: "Gestão Financeira", href: "/admin/financeiro", icon: Wallet, permission: "financial.view" },
+    ],
+  },
+  {
+    label: "Gestão",
+    items: [
+      { label: "Usuários", href: "/admin/usuarios", icon: UserCog, permission: "user.manage" },
+      { label: "Inteligência de Negócios", href: "/admin/relatorios", icon: BarChart3, permission: "report.view" },
+      { label: "Configurações", href: "/admin/configuracoes", icon: Settings, permission: "settings.manage" },
+    ],
+  },
 ]
 
-export function AdminSidebar({ user, permissions }: AdminSidebarProps) {
-  const visibleItems = navItems.filter(
-    (item) => !item.permission || permissions.has(item.permission)
-  )
+function initials(name?: string | null) {
+  if (!name) return "?"
+  const parts = name.trim().split(/\s+/)
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase()
+}
+
+function SidebarContent({
+  user,
+  permissions,
+  pathname,
+  onNavigate,
+}: {
+  user: AdminSidebarUser
+  permissions: Set<string>
+  pathname: string
+  onNavigate?: () => void
+}) {
+  const groups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.permission || permissions.has(item.permission)),
+  })).filter((group) => group.items.length > 0)
 
   return (
-    <aside className="flex w-64 flex-col border-r border-border/60 bg-sidebar text-sidebar-foreground">
-      <div className="px-6 py-6">
+    <div className="flex h-full flex-col">
+      <div className="px-6 py-7">
         <Image
           src="/images/logo.png"
           alt="Bebiano Imóveis"
-          width={73}
-          height={60}
+          width={97}
+          height={80}
           priority
-          className="h-14 w-auto"
+          className="h-16 w-auto"
         />
-        <p className="mt-2 text-xs text-sidebar-foreground/60">
-          {user.name} · {user.roleName}
-        </p>
       </div>
-      <nav className="flex-1 space-y-1 px-3">
-        {visibleItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-primary/10 hover:text-sidebar-foreground"
-          >
-            <item.icon className="size-4" />
-            {item.label}
-          </Link>
+
+      <div className="mx-4 mb-5 flex items-center gap-3 rounded-2xl bg-secondary/60 p-3">
+        <Avatar size="default">
+          <AvatarFallback className="bg-primary/20 text-primary">
+            {initials(user.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
+          <p className="truncate text-xs text-muted-foreground">{user.roleName}</p>
+        </div>
+      </div>
+
+      <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+              {group.label}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive =
+                  item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href)
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onNavigate}
+                    className={cn(
+                      "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/15 text-foreground"
+                        : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+                    )}
+                  >
+                    {isActive ? (
+                      <motion.span
+                        layoutId="admin-nav-active"
+                        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                        className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 rounded-full bg-primary"
+                      />
+                    ) : null}
+                    <item.icon
+                      className={cn(
+                        "size-4 shrink-0 transition-colors",
+                        isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                      )}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
         ))}
       </nav>
+
       <form action={signOutAction} className="px-3 pb-6">
         <Button
           type="submit"
           variant="ghost"
-          className="w-full justify-start gap-3 text-sidebar-foreground/80 hover:text-sidebar-foreground"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
         >
           <LogOut className="size-4" />
           Sair
         </Button>
       </form>
+    </div>
+  )
+}
+
+export function AdminSidebar({
+  user,
+  permissions,
+}: {
+  user: AdminSidebarUser
+  permissions: Set<string>
+}) {
+  const pathname = usePathname()
+
+  return (
+    <aside className="hidden w-72 shrink-0 border-r border-border/60 bg-sidebar text-sidebar-foreground md:block">
+      <SidebarContent user={user} permissions={permissions} pathname={pathname} />
     </aside>
+  )
+}
+
+// Versão mobile — acionada por um botão na topbar, vive num Sheet
+// separado em vez de esconder a sidebar inteira sem alternativa.
+export function AdminMobileSidebar({
+  user,
+  permissions,
+  open,
+  onOpenChange,
+}: {
+  user: AdminSidebarUser
+  permissions: Set<string>
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  const pathname = usePathname()
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange} side="left" className="bg-sidebar text-sidebar-foreground">
+      <SidebarContent
+        user={user}
+        permissions={permissions}
+        pathname={pathname}
+        onNavigate={() => onOpenChange(false)}
+      />
+    </Sheet>
   )
 }

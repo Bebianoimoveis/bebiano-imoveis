@@ -34,11 +34,20 @@ async function buildScopes(session: Awaited<ReturnType<typeof requireSession>>) 
   }
 }
 
-export async function getDashboardMetrics() {
+// periodDays controla a janela do filtro de período do dashboard (7/30/90
+// dias) — cada KPI temporal (leads, propostas) é comparado com a janela
+// imediatamente anterior de mesmo tamanho, pra mostrar crescimento real
+// em vez de só o número absoluto.
+export async function getDashboardMetrics(periodDays = 30) {
   const session = await requireSession()
   const scopes = await buildScopes(session)
 
   const now = new Date()
+  const periodFrom = new Date(now)
+  periodFrom.setDate(periodFrom.getDate() - periodDays)
+  const previousFrom = new Date(periodFrom)
+  previousFrom.setDate(previousFrom.getDate() - periodDays)
+
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
 
@@ -47,19 +56,29 @@ export async function getDashboardMetrics() {
   const [
     propertyStatus,
     newLeads,
+    previousNewLeads,
     upcomingAppointments,
     openProposals,
+    newProposals,
+    previousNewProposals,
     salesInPeriod,
+    salesByMonthRaw,
     leadsByOrigin,
+    leadsByStage,
     topViewed,
     activity,
   ] = await Promise.all([
     reportRepository.countPropertiesByStatus(scopes.property),
-    reportRepository.countNewLeads(scopes.lead, 30),
+    reportRepository.countLeadsInRange(scopes.lead, periodFrom, now),
+    reportRepository.countLeadsInRange(scopes.lead, previousFrom, periodFrom),
     reportRepository.countUpcomingAppointments(scopes.appointment),
     reportRepository.countOpenProposals(scopes.proposal),
+    reportRepository.countProposalsInRange(scopes.proposal, periodFrom, now),
+    reportRepository.countProposalsInRange(scopes.proposal, previousFrom, periodFrom),
     reportRepository.sumSalesInPeriod(scopes.contract, monthStart, monthEnd),
+    reportRepository.salesByMonth(scopes.contract, 6),
     reportRepository.leadsByOrigin(scopes.lead),
+    reportRepository.leadsByStage(scopes.lead),
     reportRepository.topViewedProperties(scopes.property, 5),
     canViewReports
       ? reportRepository.recentActivity(10)
@@ -67,12 +86,18 @@ export async function getDashboardMetrics() {
   ])
 
   return {
+    periodDays,
     propertyStatus,
-    newLeads,
+    newLeads: { value: newLeads, previousValue: previousNewLeads },
     upcomingAppointments,
     openProposals,
+    newProposals: { value: newProposals, previousValue: previousNewProposals },
     salesInPeriod,
+    salesByMonth: [...salesByMonthRaw.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => ({ month, ...data })),
     leadsByOrigin,
+    leadsByStage,
     topViewed,
     activity,
   }

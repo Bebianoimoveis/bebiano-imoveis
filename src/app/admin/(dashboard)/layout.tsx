@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 
 import { auth } from "@/lib/auth"
 import { getPermissions } from "@/lib/permissions"
-import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { AdminShell } from "@/components/admin/admin-shell"
 
 export default async function AdminDashboardLayout({
   children,
@@ -20,9 +20,8 @@ export default async function AdminDashboardLayout({
   const permissions = await getPermissions(session.user)
 
   return (
-    <div className="flex min-h-screen">
-      <AdminSidebar user={session.user} permissions={permissions} />
-      <main className="flex-1 bg-secondary/20 p-6 md:p-8">{children}</main>
-    </div>
+    <AdminShell user={session.user} permissions={permissions}>
+      {children}
+    </AdminShell>
   )
 }

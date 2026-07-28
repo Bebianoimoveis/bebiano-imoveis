@@ -1,131 +1,125 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { EmptyState } from "@/components/shared/empty-state"
-import { Activity } from "lucide-react"
+import { Building2, CalendarCheck, DollarSign, FileText, Home, Ban } from "lucide-react"
+
+import { auth } from "@/lib/auth"
+import { getPermissions } from "@/lib/permissions"
 import { getDashboardMetrics } from "@/modules/report/actions"
 import { formatCurrency } from "@/lib/format"
+import { StatCard } from "@/components/admin/dashboard/stat-card"
+import { LeadsOriginChart } from "@/components/admin/dashboard/leads-origin-chart"
+import { SalesChart } from "@/components/admin/dashboard/sales-chart"
+import { LeadsFunnelChart } from "@/components/admin/dashboard/leads-funnel-chart"
+import { TopPropertiesCard } from "@/components/admin/dashboard/top-properties-card"
+import { ActivityTimeline } from "@/components/admin/dashboard/activity-timeline"
+import { QuickActions } from "@/components/admin/dashboard/quick-actions"
+import { PeriodSelect } from "@/components/admin/dashboard/period-select"
+import { DashboardSection } from "@/components/admin/dashboard/dashboard-section"
 
-const ORIGIN_LABELS: Record<string, string> = {
-  site: "Site",
-  whatsapp: "WhatsApp",
-  indicacao: "Indicação",
-}
+type SearchParams = Record<string, string | string[] | undefined>
 
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="border-border/60">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="font-heading text-2xl font-semibold">{value}</p>
-      </CardContent>
-    </Card>
-  )
-}
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
+  const params = await searchParams
+  const periodDays = Number(params.periodo) || 30
 
-export default async function AdminDashboardPage() {
-  const metrics = await getDashboardMetrics()
+  const session = await auth()
+  const [metrics, permissions] = await Promise.all([
+    getDashboardMetrics(periodDays),
+    getPermissions(session?.user),
+  ])
+
+  const firstName = session?.user?.name?.split(" ")[0] ?? "por aqui"
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          Dashboard
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Visão geral da operação da Bebiano Imóveis.
-        </p>
-      </div>
+      <DashboardSection index={0} className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">
+            Olá, {firstName}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Aqui está o resumo geral da Bebiano Imóveis.
+          </p>
+        </div>
+        <PeriodSelect periodDays={periodDays} />
+      </DashboardSection>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Imóveis publicados" value={String(metrics.propertyStatus.published)} />
-        <StatCard label="Vendidos" value={String(metrics.propertyStatus.sold)} />
-        <StatCard label="Indisponíveis" value={String(metrics.propertyStatus.unavailable)} />
-        <StatCard label="Novos leads (30 dias)" value={String(metrics.newLeads)} />
-        <StatCard label="Visitas agendadas" value={String(metrics.upcomingAppointments)} />
-        <StatCard label="Propostas abertas" value={String(metrics.openProposals)} />
+      <DashboardSection index={1} className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
+          icon={<Home className="size-5" />}
+          label="Imóveis publicados"
+          value={String(metrics.propertyStatus.published)}
+          description="Ativos no site"
+        />
+        <StatCard
+          icon={<DollarSign className="size-5" />}
           label="Vendas no mês"
           value={formatCurrency(metrics.salesInPeriod.total.toString())}
+          description={`${metrics.salesInPeriod.count} contrato(s)`}
         />
-      </div>
+        <StatCard
+          icon={<Ban className="size-5" />}
+          label="Imóveis indisponíveis"
+          value={String(metrics.propertyStatus.unavailable)}
+          description="Fora do ar"
+        />
+        <StatCard
+          icon={<Building2 className="size-5" />}
+          label="Novos leads"
+          value={String(metrics.newLeads.value)}
+          description={`Últimos ${periodDays} dias`}
+          currentValue={metrics.newLeads.value}
+          previousValue={metrics.newLeads.previousValue}
+        />
+        <StatCard
+          icon={<CalendarCheck className="size-5" />}
+          label="Visitas agendadas"
+          value={String(metrics.upcomingAppointments)}
+          description="Próximos agendamentos"
+        />
+        <StatCard
+          icon={<FileText className="size-5" />}
+          label="Propostas abertas"
+          value={String(metrics.openProposals)}
+          description={`${metrics.newProposals.value} nova(s) no período`}
+          currentValue={metrics.newProposals.value}
+          previousValue={metrics.newProposals.previousValue}
+        />
+      </DashboardSection>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base font-medium">Leads por origem</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.leadsByOrigin.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum lead ainda.</p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {metrics.leadsByOrigin.map((item) => (
-                  <li key={item.origin} className="flex items-center justify-between">
-                    <span className="text-muted-foreground">
-                      {ORIGIN_LABELS[item.origin] ?? item.origin}
-                    </span>
-                    <span className="font-medium">{item.count}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+      <DashboardSection index={2} className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[20px] border border-border/60 bg-card p-5 shadow-sm">
+          <h2 className="mb-4 font-heading text-base font-semibold">Leads por origem</h2>
+          <LeadsOriginChart data={metrics.leadsByOrigin} />
+        </div>
+        <div className="rounded-[20px] border border-border/60 bg-card p-5 shadow-sm">
+          <h2 className="mb-4 font-heading text-base font-semibold">Vendas no período</h2>
+          <SalesChart data={metrics.salesByMonth} />
+        </div>
+      </DashboardSection>
 
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base font-medium">
-              Imóveis mais visualizados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {metrics.topViewed.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nenhuma visualização registrada ainda.
-              </p>
-            ) : (
-              <ul className="space-y-2 text-sm">
-                {metrics.topViewed.map((property) => (
-                  <li key={property.id} className="flex items-center justify-between gap-4">
-                    <span className="truncate text-muted-foreground">
-                      {property.code} · {property.title}
-                    </span>
-                    <span className="shrink-0 font-medium">{property.viewCount}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardSection index={3} className="rounded-[20px] border border-border/60 bg-card p-5 shadow-sm">
+        <h2 className="mb-4 font-heading text-base font-semibold">Funil comercial</h2>
+        <LeadsFunnelChart data={metrics.leadsByStage} />
+      </DashboardSection>
 
-      <Card className="border-border/60">
-        <CardHeader>
-          <CardTitle className="text-base font-medium">Atividades recentes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {metrics.activity.length === 0 ? (
-            <EmptyState icon={Activity} title="Nenhuma atividade registrada ainda" />
-          ) : (
-            <ul className="space-y-3 text-sm">
-              {metrics.activity.map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-4">
-                  <span>
-                    <span className="font-medium">{item.user.name}</span>{" "}
-                    <span className="text-muted-foreground">{item.action}</span>
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {new Date(item.createdAt).toLocaleString("pt-BR")}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <DashboardSection index={4} className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[20px] border border-border/60 bg-card p-5 shadow-sm">
+          <h2 className="mb-3 font-heading text-base font-semibold">Imóveis mais visualizados</h2>
+          <TopPropertiesCard properties={metrics.topViewed} />
+        </div>
+        <div className="rounded-[20px] border border-border/60 bg-card p-5 shadow-sm">
+          <h2 className="mb-4 font-heading text-base font-semibold">Atividades recentes</h2>
+          <ActivityTimeline items={metrics.activity} />
+        </div>
+      </DashboardSection>
+
+      <DashboardSection index={5}>
+        <h2 className="mb-3 font-heading text-base font-semibold">Ações rápidas</h2>
+        <QuickActions permissions={permissions} />
+      </DashboardSection>
     </div>
   )
 }

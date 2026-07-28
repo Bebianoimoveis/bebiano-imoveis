@@ -27,6 +27,27 @@ export async function countNewLeads(scope: Scope, sinceDays: number) {
   })
 }
 
+export async function countLeadsInRange(scope: Scope, from: Date, to: Date) {
+  return prisma.lead.count({
+    where: { ...scopeWhere(scope), createdAt: { gte: from, lt: to }, deletedAt: null },
+  })
+}
+
+export async function countProposalsInRange(scope: Scope, from: Date, to: Date) {
+  return prisma.proposal.count({
+    where: { ...scopeWhere(scope), createdAt: { gte: from, lt: to } },
+  })
+}
+
+export async function leadsByStage(scope: Scope) {
+  const groups = await prisma.lead.groupBy({
+    by: ["stage"],
+    where: { ...scopeWhere(scope), deletedAt: null },
+    _count: true,
+  })
+  return groups.map((g) => ({ stage: g.stage, count: g._count }))
+}
+
 export async function countUpcomingAppointments(scope: Scope) {
   return prisma.appointment.count({
     where: {
@@ -69,7 +90,17 @@ export async function leadsByOrigin(scope: Scope) {
 export async function topViewedProperties(scope: Scope, take: number) {
   return prisma.property.findMany({
     where: { ...scopeWhere(scope), deletedAt: null, status: "PUBLISHED" },
-    select: { id: true, code: true, title: true, viewCount: true },
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      viewCount: true,
+      images: {
+        where: { isCover: true },
+        select: { url: true },
+        take: 1,
+      },
+    },
     orderBy: { viewCount: "desc" },
     take,
   })

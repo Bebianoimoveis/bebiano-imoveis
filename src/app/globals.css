@@ -94,41 +94,47 @@
 }
 
 .dark {
+  /* Painel admin — preto profundo/grafite como protagonista, marsala só
+     em detalhes (botões principais, indicadores ativos, badges, gráficos),
+     dourado só na logo. Hex literais nos três tons de marca pedidos
+     explicitamente (preto profundo, grafite, marsala); o resto deriva
+     desses tons pra manter profundidade em camadas (fundo < cards <
+     hover), em vez de tudo na mesma cor. */
   --color-gold: oklch(0.8 0.12 80);
   --color-gold-light: oklch(0.87 0.1 85);
   --color-gold-dark: oklch(0.68 0.12 70);
 
-  --background: oklch(0.15 0.012 20);
+  --background: #0b0b0d;
   --foreground: oklch(0.96 0.006 30);
-  --card: oklch(0.19 0.014 20);
+  --card: #17171a;
   --card-foreground: oklch(0.96 0.006 30);
-  --popover: oklch(0.19 0.014 20);
+  --popover: #1c1c20;
   --popover-foreground: oklch(0.96 0.006 30);
-  --primary: oklch(0.5 0.15 18);
-  --primary-foreground: oklch(0.985 0.005 20);
-  --secondary: oklch(0.25 0.014 20);
+  --primary: #6b0f24;
+  --primary-foreground: oklch(0.96 0.006 30);
+  --secondary: #1f1f23;
   --secondary-foreground: oklch(0.96 0.006 30);
-  --muted: oklch(0.25 0.014 20);
-  --muted-foreground: oklch(0.68 0.015 25);
+  --muted: #1a1a1d;
+  --muted-foreground: oklch(0.64 0.015 25);
   --accent: oklch(0.78 0.1 85);
   --accent-foreground: oklch(0.19 0.02 30);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.5 0.15 18);
-  --chart-1: oklch(0.5 0.15 18);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: #6b0f24;
+  --chart-1: #6b0f24;
   --chart-2: oklch(0.78 0.1 85);
-  --chart-3: oklch(0.556 0.02 25);
-  --chart-4: oklch(0.371 0.02 25);
-  --chart-5: oklch(0.269 0.02 25);
-  --sidebar: oklch(0.12 0.012 20);
+  --chart-3: oklch(0.6 0.01 30);
+  --chart-4: oklch(0.42 0.01 30);
+  --chart-5: oklch(0.3 0.01 30);
+  --sidebar: #0b0b0d;
   --sidebar-foreground: oklch(0.96 0.006 30);
-  --sidebar-primary: oklch(0.5 0.15 18);
-  --sidebar-primary-foreground: oklch(0.985 0.005 20);
+  --sidebar-primary: #6b0f24;
+  --sidebar-primary-foreground: oklch(0.96 0.006 30);
   --sidebar-accent: oklch(0.78 0.1 85);
   --sidebar-accent-foreground: oklch(0.19 0.02 30);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0.02 25);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: #6b0f24;
 }
 
 @layer base {
