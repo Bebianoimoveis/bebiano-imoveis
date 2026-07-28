@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Parallax } from "@/components/motion/parallax"
 import { HeroBackground } from "@/components/public/hero-background"
 import { HeroSearch } from "@/components/public/hero-search"
+import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
 import { siteConfig } from "@/config/site"
 
 type City = { id: string; name: string; state: string }
@@ -27,6 +28,8 @@ const item = {
 }
 
 export function Hero({ cities }: { cities: City[] }) {
+  const { phone } = useAttributedWhatsapp()
+
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-primary">
       <Parallax className="absolute inset-0" strength={80}>
@@ -88,7 +91,7 @@ export function Hero({ cities }: { cities: City[] }) {
               <Link href="/imoveis">Ver imóveis disponíveis</Link>
             </Button>
           </motion.div>
-          {siteConfig.whatsapp ? (
+          {phone ? (
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
               <Button
                 asChild
@@ -96,7 +99,7 @@ export function Hero({ cities }: { cities: City[] }) {
                 className="h-10 w-full px-5 text-sm border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white sm:h-11 sm:w-auto sm:px-6 sm:text-base"
               >
                 <a
-                  href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${phone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

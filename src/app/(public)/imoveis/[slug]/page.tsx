@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
 import { after } from "next/server"
 import { notFound } from "next/navigation"
-import { BedDouble, Building2, Car, Ruler, ShowerHead } from "lucide-react"
+import Image from "next/image"
+import { BedDouble, Building2, Car, Ruler, ShowerHead, User } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ import {
   listSimilarProperties,
   trackPropertyView,
 } from "@/modules/property/actions"
+import { resolveAttributedRealtor } from "@/modules/attribution/service"
 import { formatCurrency, getDisplayAddress } from "@/lib/format"
 
 const PURPOSE_LABEL: Record<string, string> = {
@@ -64,8 +66,28 @@ export default async function PropertyDetailPage({
     typeId: property.typeId,
   })
 
-  const whatsappHref = property.realtor
-    ? `https://wa.me/${property.realtor.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+  // Corretor atribuído ao visitante (link pessoal/cookie de 30 dias) tem
+  // prioridade sobre o corretor fixo do imóvel — é ele quem efetivamente
+  // captou esse lead, mesmo que o imóvel esteja vinculado a outra pessoa.
+  const attributedRealtor = await resolveAttributedRealtor()
+  const consultant = attributedRealtor
+    ? {
+        name: attributedRealtor.name,
+        creci: attributedRealtor.creci,
+        phone: attributedRealtor.phone,
+        photoUrl: attributedRealtor.photoUrl,
+      }
+    : property.realtor
+      ? {
+          name: property.realtor.user.name,
+          creci: property.realtor.creci,
+          phone: property.realtor.phone,
+          photoUrl: property.realtor.photoUrl,
+        }
+      : null
+
+  const whatsappHref = consultant
+    ? `https://wa.me/${consultant.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
         `Olá! Tenho interesse no imóvel ${property.code} - ${property.title}`
       )}`
     : null
@@ -177,15 +199,32 @@ export default async function PropertyDetailPage({
         </div>
 
         <aside className="h-fit space-y-4 rounded-xl border border-border/60 p-5">
-          {property.realtor ? (
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Corretor responsável</p>
-              <p className="font-medium">{property.realtor.user.name}</p>
-              {property.realtor.creci ? (
+          {consultant ? (
+            <div className="flex items-center gap-3">
+              <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
+                {consultant.photoUrl ? (
+                  <Image
+                    src={consultant.photoUrl}
+                    alt={consultant.name}
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                ) : (
+                  <User className="size-6 text-muted-foreground" />
+                )}
+              </div>
+              <div className="space-y-0.5">
                 <p className="text-xs text-muted-foreground">
-                  CRECI {property.realtor.creci}
+                  Consultor responsável pelo seu atendimento
                 </p>
-              ) : null}
+                <p className="font-medium">{consultant.name}</p>
+                {consultant.creci ? (
+                  <p className="text-xs text-muted-foreground">
+                    CRECI {consultant.creci}
+                  </p>
+                ) : null}
+              </div>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">

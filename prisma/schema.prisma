@@ -71,14 +71,58 @@ model Realtor {
   creci     String?
   bio       String?
   active    Boolean   @default(true)
+  // Identifica o corretor nos links de divulgação (/corretor/joao-silva,
+  // ?ref=joao-silva). Gerado automaticamente a partir do nome ao
+  // criar/editar o corretor — nullable no banco só pra não exigir
+  // backfill obrigatório de corretores antigos numa única migração.
+  slug       String?   @unique
   properties Property[]
   leads      Lead[]
   appointments Appointment[]
   proposals    Proposal[]
   contracts    Contract[]
+  visitorAttributions VisitorAttribution[]
+  defaultForSettings  SiteSettings[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+}
+
+// Vínculo persistente "este visitante pertence a este corretor" — a fonte
+// de verdade por trás do cookie de atribuição. O cookie carrega só o
+// `visitorId` (opaco); toda resolução de corretor responsável consulta
+// este registro no servidor, nunca confia num valor vindo do cliente.
+// Regra de negócio: "primeiro corretor que captou o lead" — uma vez
+// criado, só um admin troca o `realtorId` (ver overriddenByUserId).
+model VisitorAttribution {
+  id        String  @id @default(cuid())
+  visitorId String  @unique
+  realtorId String
+  realtor   Realtor @relation(fields: [realtorId], references: [id])
+
+  // Como esse visitante foi atribuído: "ref:<slug>", "path:/corretor/<slug>",
+  // "corretor:<id>", "default" (corretor padrão configurado) ou
+  // "round_robin" (fila automática).
+  referralSource String
+  landingUrl     String
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+
+  firstVisitAt DateTime  @default(now())
+  lastVisitAt  DateTime  @default(now())
+  // firstVisitAt + 30 dias — usado só para o admin saber quando expira;
+  // o cookie tem seu próprio maxAge e expira independentemente disso.
+  expiresAt    DateTime
+
+  overriddenByUserId String?
+  overriddenAt        DateTime?
+
+  leads Lead[]
+
+  createdAt DateTime @default(now())
+
+  @@index([realtorId])
 }
 
 model Client {
@@ -294,6 +338,18 @@ model Lead {
   createdById String?
   createdBy   User?   @relation("LeadCreatedBy", fields: [createdById], references: [id])
 
+  // Rastro de origem do formulário que criou este lead — preenchido a
+  // partir da VisitorAttribution do visitante no momento da criação.
+  // Não reaproveita o campo `origin` (que já tem outro significado:
+  // canal do lead, ex: "site"/"whatsapp"/"indicação").
+  visitorId      String?
+  visitor        VisitorAttribution? @relation(fields: [visitorId], references: [visitorId])
+  referralSource String?
+  landingUrl     String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+
   interactions LeadInteraction[]
   appointments Appointment[]
   proposals    Proposal[]
@@ -305,6 +361,7 @@ model Lead {
   @@index([stage])
   @@index([realtorId])
   @@index([propertyId])
+  @@index([visitorId])
 }
 
 enum LeadInteractionType {
@@ -482,6 +539,11 @@ model ActivityLog {
   @@index([entityType, entityId])
 }
 
+enum LeadDistributionMode {
+  FIXED
+  ROUND_ROBIN
+}
+
 // Configuração única do site (singleton — sempre uma única linha).
 model SiteSettings {
   id          String   @id @default(cuid())
@@ -491,5 +553,15 @@ model SiteSettings {
   address     String
   socialLinks Json?
   aboutText   String?
+
+  // Corretor responsável por visitantes sem nenhuma referência de link,
+  // quando leadDistributionMode = FIXED.
+  defaultRealtorId String?
+  defaultRealtor   Realtor? @relation(fields: [defaultRealtorId], references: [id])
+  leadDistributionMode LeadDistributionMode @default(FIXED)
+  // Cursor da fila round-robin: id do último corretor que recebeu um
+  // visitante sem referência, pra saber quem é o próximo da vez.
+  roundRobinLastRealtorId String?
+
   updatedAt   DateTime @updatedAt
 }

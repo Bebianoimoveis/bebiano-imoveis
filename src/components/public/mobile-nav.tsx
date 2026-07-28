@@ -9,7 +9,7 @@ import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
-import { siteConfig } from "@/config/site"
+import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
 
 const NAV_LINKS = [
   { href: "/imoveis", label: "Todos os imóveis" },
@@ -30,6 +30,7 @@ export function MobileNav({
   onClose: () => void
 }) {
   const [mounted, setMounted] = useState(false)
+  const { phone } = useAttributedWhatsapp()
 
   useEffect(() => {
     setMounted(true)
@@ -90,10 +91,10 @@ export function MobileNav({
             transition={{ delay: 0.24, duration: 0.35 }}
             className="flex flex-col gap-3 px-6 pb-10"
           >
-            {siteConfig.whatsapp ? (
+            {phone ? (
               <Button asChild variant="outline" size="lg" className="rounded-full">
                 <a
-                  href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${phone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={onClose}

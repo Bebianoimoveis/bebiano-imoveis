@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Building2, Heart, Home, MessageCircle, Search } from "lucide-react"
 
 import { useFavorites } from "@/hooks/use-favorites"
-import { siteConfig } from "@/config/site"
+import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
 import { cn } from "@/lib/utils"
 
 const TABS = [
@@ -21,6 +21,7 @@ const TABS = [
 export function MobileTabBar() {
   const pathname = usePathname()
   const { favoriteIds } = useFavorites()
+  const { phone } = useAttributedWhatsapp()
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center border-t border-border/60 bg-background/95 backdrop-blur-md md:hidden">
@@ -48,9 +49,9 @@ export function MobileTabBar() {
           </Link>
         )
       })}
-      {siteConfig.whatsapp ? (
+      {phone ? (
         <a
-          href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+          href={`https://wa.me/${phone.replace(/\D/g, "")}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors"

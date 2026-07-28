@@ -12,6 +12,7 @@ import {
   BarChart3,
   UserCog,
   Settings,
+  Link2,
   LogOut,
 } from "lucide-react"
 
@@ -37,6 +38,7 @@ const navItems: {
   { label: "Imóveis", href: "/admin/imoveis", icon: Building2, permission: "property.create" },
   { label: "Leads", href: "/admin/leads", icon: Users2, permission: "lead.manage" },
   { label: "Clientes", href: "/admin/clientes", icon: Contact, permission: "client.manage" },
+  { label: "Links dos Corretores", href: "/admin/corretores/links", icon: Link2, permission: "realtor.manage" },
   { label: "Agenda", href: "/admin/agenda", icon: CalendarDays, permission: "appointment.manage" },
   { label: "Propostas", href: "/admin/propostas", icon: FileText, permission: "proposal.manage" },
   { label: "Contratos", href: "/admin/contratos", icon: FileSignature, permission: "contract.manage" },

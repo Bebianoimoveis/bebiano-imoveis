@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Mail } from "lucide-react"
 
 import { InstagramIcon } from "@/components/shared/instagram-icon"
-import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
+import { FooterWhatsappLink } from "@/components/public/footer-whatsapp-link"
 import { siteConfig } from "@/config/site"
 
 const SOCIAL_LINK_CLASS =
@@ -43,17 +43,7 @@ export function Footer() {
         <div className="space-y-3 text-sm">
           <p className="font-medium">Contato</p>
           <div className="flex items-center gap-3">
-            {siteConfig.whatsapp ? (
-              <a
-                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Falar no WhatsApp"
-                className={SOCIAL_LINK_CLASS}
-              >
-                <WhatsAppIcon className="size-5" />
-              </a>
-            ) : null}
+            <FooterWhatsappLink className={SOCIAL_LINK_CLASS} />
             <a
               href={`mailto:${siteConfig.email}`}
               aria-label="Enviar e-mail"

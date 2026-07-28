@@ -21,6 +21,22 @@ const leadDetailInclude = {
 export type LeadListItem = Prisma.LeadGetPayload<{ include: typeof leadListInclude }>
 export type LeadDetail = Prisma.LeadGetPayload<{ include: typeof leadDetailInclude }>
 
+// Corretor responsável e rastro de origem já resolvidos pelo chamador
+// (ver src/modules/attribution/service.ts) — este módulo não decide mais
+// qual corretor atribuir, só grava o resultado. Mantém a cadeia de
+// prioridade (atribuição do visitante → corretor do imóvel → padrão/
+// round-robin → mais antigo) num único lugar, em vez de espalhada entre
+// os formulários que criam leads.
+export type LeadAttributionInput = {
+  realtorId: string | null
+  visitorId?: string | null
+  referralSource?: string | null
+  landingUrl?: string | null
+  utmSource?: string | null
+  utmMedium?: string | null
+  utmCampaign?: string | null
+}
+
 type CreateContactRequestInput = {
   name: string
   phone: string
@@ -29,6 +45,7 @@ type CreateContactRequestInput = {
   propertyId?: string
   source: string
   ipAddress?: string
+  attribution: LeadAttributionInput
 }
 
 function stageRank(stage: LeadStage): number {
@@ -49,6 +66,7 @@ type UpsertLeadByPhoneInput = {
   // no funil (ex: não regride de "Proposta" pra "Primeiro contato" só
   // porque a pessoa mandou outra mensagem de contato).
   advanceToStage: LeadStage
+  attribution: LeadAttributionInput
 }
 
 // Núcleo da deduplicação de leads: qualquer formulário público (contato,
@@ -70,13 +88,6 @@ export async function upsertLeadByPhone(
     : null
 
   if (!existing) {
-    const property = input.propertyId
-      ? await tx.property.findUnique({
-          where: { id: input.propertyId },
-          select: { realtorId: true },
-        })
-      : null
-
     return tx.lead.create({
       data: {
         name: input.name,
@@ -86,7 +97,13 @@ export async function upsertLeadByPhone(
         stage: input.initialStage,
         notes: input.note,
         propertyId: input.propertyId,
-        realtorId: property?.realtorId ?? null,
+        realtorId: input.attribution.realtorId,
+        visitorId: input.attribution.visitorId ?? null,
+        referralSource: input.attribution.referralSource ?? null,
+        landingUrl: input.attribution.landingUrl ?? null,
+        utmSource: input.attribution.utmSource ?? null,
+        utmMedium: input.attribution.utmMedium ?? null,
+        utmCampaign: input.attribution.utmCampaign ?? null,
       },
     })
   }
@@ -135,6 +152,7 @@ export async function createContactRequestWithLead(
         : `[${now}] Novo contato pelo site.`,
       initialStage: "NEW",
       advanceToStage: "FIRST_CONTACT",
+      attribution: input.attribution,
     })
 
     return { contactRequest, lead }

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma, AppointmentStatus } from "@/generated/prisma/client"
 import { upsertLeadByPhone } from "@/modules/lead/repository"
+import type { LeadAttributionInput } from "@/modules/lead/repository"
 
 const appointmentInclude = {
   realtor: { include: { user: true } },
@@ -42,13 +43,15 @@ type CreateVisitRequestInput = {
   propertyId: string
   scheduledAt: Date
   message?: string
+  attribution: LeadAttributionInput
 }
 
 // Fluxo público "visitante pede visita → vira Lead + Appointment
-// pendente na Agenda". realtorId é obrigatório no Appointment, então
-// usamos o corretor já responsável pelo imóvel; se o imóvel não tiver
-// um vinculado, cai para o corretor ativo mais antigo (a visita aparece
-// na Agenda para qualquer corretor reatribuir depois).
+// pendente na Agenda". A cadeia de prioridade do corretor responsável
+// (atribuição do visitante → corretor do imóvel → padrão/round-robin →
+// mais antigo) já vem resolvida em `attribution`; aqui só usamos o
+// resultado. realtorId é obrigatório no Appointment — se nem o fallback
+// mais antigo encontrar um corretor ativo, não há como agendar.
 export async function createVisitRequestWithLead(input: CreateVisitRequestInput) {
   return prisma.$transaction(async (tx) => {
     const now = new Date().toLocaleString("pt-BR")
@@ -59,33 +62,15 @@ export async function createVisitRequestWithLead(input: CreateVisitRequestInput)
       note: `[${now}] Solicitou agendamento de visita.${input.message ? ` ${input.message}` : ""}`,
       initialStage: "VISIT_SCHEDULED",
       advanceToStage: "VISIT_SCHEDULED",
+      attribution: input.attribution,
     })
 
     // Respeita o corretor já vinculado ao lead (caso já exista de um
-    // contato anterior); só cai para o do imóvel/fallback se ainda não
-    // tiver nenhum.
-    let realtorId = lead.realtorId
-    if (!realtorId) {
-      const property = await tx.property.findUnique({
-        where: { id: input.propertyId },
-        select: { realtorId: true },
-      })
-      realtorId = property?.realtorId ?? null
-    }
-    if (!realtorId) {
-      const fallbackRealtor = await tx.realtor.findFirst({
-        where: { active: true, deletedAt: null },
-        orderBy: { createdAt: "asc" },
-        select: { id: true },
-      })
-      realtorId = fallbackRealtor?.id ?? null
-    }
+    // contato anterior) — upsertLeadByPhone nunca sobrescreve um
+    // realtorId já atribuído, então lead.realtorId é a fonte de verdade.
+    const realtorId = lead.realtorId
     if (!realtorId) {
       throw new Error("Nenhum corretor disponível para atribuir a visita.")
-    }
-
-    if (lead.realtorId !== realtorId) {
-      await tx.lead.update({ where: { id: lead.id }, data: { realtorId } })
     }
 
     const appointment = await tx.appointment.create({

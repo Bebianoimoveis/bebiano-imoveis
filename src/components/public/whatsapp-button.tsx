@@ -1,13 +1,17 @@
-import { siteConfig } from "@/config/site"
+"use client"
+
 import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
+import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
 
 export function WhatsAppButton() {
-  if (!siteConfig.whatsapp) return null
+  const { phone, realtorName } = useAttributedWhatsapp()
+  if (!phone) return null
 
-  const digits = siteConfig.whatsapp.replace(/\D/g, "")
-  const href = `https://wa.me/${digits}?text=${encodeURIComponent(
-    "Olá! Vim pelo site da Bebiano Imóveis e gostaria de mais informações."
-  )}`
+  const digits = phone.replace(/\D/g, "")
+  const greeting = realtorName
+    ? `Olá ${realtorName}! Vim pelo site da Bebiano Imóveis e gostaria de mais informações.`
+    : "Olá! Vim pelo site da Bebiano Imóveis e gostaria de mais informações."
+  const href = `https://wa.me/${digits}?text=${encodeURIComponent(greeting)}`
 
   return (
     <a
