@@ -75,13 +75,17 @@ export function Header() {
           href="/"
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:hidden"
         >
+          {/* Brilho escuro atrás da logo pra ela não se perder contra a
+              foto do Hero — sem isso, o dourado/preto da logo se mistura
+              com fundos escuros/movimentados e fica difícil de ler. */}
+          <div className="absolute inset-0 -z-10 scale-[2.2] rounded-full bg-black/35 blur-2xl" />
           <Image
             src="/images/logo.png"
             alt={siteConfig.name}
             width={975}
             height={806}
             priority
-            className="h-12 w-auto"
+            className="h-16 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
           />
         </Link>
 
