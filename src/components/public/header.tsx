@@ -48,29 +48,9 @@ export function Header() {
       )}
     >
       <div className="relative mx-auto flex h-18 max-w-6xl items-center justify-between px-4 sm:px-6">
-        {/* Ícone + nome — só desktop, alinhado à esquerda junto do menu. */}
-        <Link href="/" className="hidden items-center gap-2.5 md:flex">
-          <Image
-            src="/images/icon-mark-v3.png"
-            alt=""
-            width={36}
-            height={36}
-            priority
-            className="size-9 translate-y-[3px]"
-          />
-          <span
-            className={cn(
-              "font-heading text-lg font-semibold tracking-tight transition-colors duration-500",
-              transparent ? "text-white" : "text-primary"
-            )}
-          >
-            {siteConfig.name}
-          </span>
-        </Link>
-
-        {/* Logo completa (com o nome já desenhado nela) — só mobile,
-            alinhada à esquerda como no desktop. */}
-        <Link href="/" className="relative flex items-center md:hidden">
+        {/* Logo completa (com o nome já desenhado nela), alinhada à
+            esquerda em todos os tamanhos de tela. */}
+        <Link href="/" className="relative flex items-center">
           {/* Brilho atrás da logo só faz sentido sobre a foto escura do
               Hero (transparent) — numa página com fundo claro e sólido
               ele só criava uma mancha acinzentada, deixando a logo mais
@@ -85,7 +65,7 @@ export function Header() {
             height={806}
             priority
             className={cn(
-              "h-14 w-auto transition-[filter] duration-300",
+              "h-14 w-auto transition-[filter] duration-300 md:h-16",
               transparent
                 ? "drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
                 : "drop-shadow-[0_1px_3px_rgba(0,0,0,0.25)]"
