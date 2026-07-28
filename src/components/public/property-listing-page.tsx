@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { Pagination } from "@/components/shared/pagination"
 import { PropertyCard } from "@/components/public/property-card"
 import { PropertyFiltersSidebar } from "@/components/public/property-filters-sidebar"
+import { MobileFiltersSheet } from "@/components/public/mobile-filters-sheet"
 import { listPublicProperties } from "@/modules/property/actions"
 import { listCities, listPropertyTypes } from "@/modules/taxonomy/actions"
 
@@ -70,9 +71,15 @@ export async function PropertyListingPage({
       </h1>
 
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-        <PropertyFiltersSidebar cities={cities} propertyTypes={propertyTypes} />
+        <div className="hidden lg:block">
+          <PropertyFiltersSidebar cities={cities} propertyTypes={propertyTypes} />
+        </div>
 
         <div className="space-y-6">
+          <MobileFiltersSheet>
+            <PropertyFiltersSidebar cities={cities} propertyTypes={propertyTypes} />
+          </MobileFiltersSheet>
+
           {items.length === 0 ? (
             <EmptyState
               icon={Building2}

@@ -3,6 +3,7 @@ import Link from "next/link"
 import { BedDouble, Building2, Car, ImageOff, ShowerHead } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+import { FavoriteButton } from "@/components/public/favorite-button"
 import { formatCurrency } from "@/lib/format"
 import type { PropertyListItem } from "@/modules/property/repository"
 
@@ -34,14 +35,17 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-        <Badge className="absolute left-3 top-3 border-0 bg-white/90 text-foreground shadow-sm backdrop-blur-sm">
-          {PURPOSE_LABEL[property.purpose]}
-        </Badge>
-        {property.featured ? (
-          <Badge className="absolute right-3 top-3 border-0 bg-gold text-accent-foreground shadow-sm">
-            Destaque
+        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+          <Badge className="border-0 bg-white/90 text-foreground shadow-sm backdrop-blur-sm">
+            {PURPOSE_LABEL[property.purpose]}
           </Badge>
-        ) : null}
+          {property.featured ? (
+            <Badge className="border-0 bg-gold text-accent-foreground shadow-sm">
+              Destaque
+            </Badge>
+          ) : null}
+        </div>
+        <FavoriteButton propertyId={property.id} className="absolute top-3 right-3" />
       </div>
 
       <div className="flex flex-1 flex-col gap-2.5 p-5">

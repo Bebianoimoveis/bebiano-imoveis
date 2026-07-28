@@ -12,6 +12,8 @@ export function PageMain({ children }: { children: React.ReactNode }) {
   const isHome = pathname === "/"
 
   return (
-    <main className={cn("flex-1", !isHome && "pt-18")}>{children}</main>
+    <main className={cn("flex-1 pb-16 md:pb-0", !isHome && "pt-18")}>
+      {children}
+    </main>
   )
 }

@@ -266,6 +266,20 @@ export async function listPublicProperties(rawFilters: unknown) {
   })
 }
 
+// Uso público — sem autenticação. Favoritos são guardados no localStorage
+// do visitante (sem conta), então a página de favoritos manda os ids que
+// tem aí e a gente busca os imóveis correspondentes (só publicados).
+export async function listPropertiesByIds(ids: string[]) {
+  if (ids.length === 0) return []
+
+  const { items } = await propertyRepository.listProperties({
+    where: { id: { in: ids }, status: "PUBLISHED" },
+    skip: 0,
+    take: ids.length,
+  })
+  return items
+}
+
 export async function listFeaturedProperties(limit = 6) {
   return propertyRepository.listFeaturedProperties(limit)
 }

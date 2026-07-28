@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BackButton } from "@/components/shared/back-button"
 import { PropertyDescription } from "@/components/public/property-description"
+import { FavoriteButton } from "@/components/public/favorite-button"
 import { PropertyGallery } from "@/components/public/property-gallery"
 import { PropertyCard } from "@/components/public/property-card"
 import { PropertyContactForm } from "@/components/public/property-contact-form"
@@ -114,7 +115,10 @@ export default async function PropertyDetailPage({
               ) : null}
             </div>
 
-            <ShareButton title={property.title} />
+            <div className="flex gap-2">
+              <FavoriteButton propertyId={property.id} variant="button" />
+              <ShareButton title={property.title} />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 rounded-xl border border-border/60 p-5 sm:grid-cols-4">
