@@ -32,6 +32,15 @@ export function MobileTabBar() {
           <Link
             key={tab.href}
             href={tab.href}
+            onClick={(e) => {
+              // Já está em "/" e clicou em Início de novo — não tem rota
+              // pra navegar, então rola suavemente até o topo em vez de
+              // não fazer nada.
+              if (tab.href === "/" && pathname === "/") {
+                e.preventDefault()
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }
+            }}
             className={cn(
               "relative flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
               active ? "text-gold" : "text-white/60"
