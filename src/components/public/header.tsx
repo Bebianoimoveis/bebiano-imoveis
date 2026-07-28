@@ -47,8 +47,9 @@ export function Header() {
           : "border-b border-white/[0.06] bg-background/70 backdrop-blur-[18px] supports-backdrop-filter:bg-background/60"
       )}
     >
-      <div className="mx-auto flex h-18 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
+      <div className="relative mx-auto flex h-18 max-w-6xl items-center justify-between px-4 sm:px-6">
+        {/* Ícone + nome — só desktop, alinhado à esquerda junto do menu. */}
+        <Link href="/" className="hidden items-center gap-2.5 md:flex">
           <Image
             src="/images/icon-mark-v3.png"
             alt=""
@@ -65,6 +66,23 @@ export function Header() {
           >
             {siteConfig.name}
           </span>
+        </Link>
+
+        {/* Logo completa (com o nome já desenhado nela) centralizada — só
+            mobile. Posicionada em absolute pra ficar centralizada no
+            header independente da largura do botão de menu ao lado. */}
+        <Link
+          href="/"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:hidden"
+        >
+          <Image
+            src="/images/logo.png"
+            alt={siteConfig.name}
+            width={975}
+            height={806}
+            priority
+            className="h-12 w-auto"
+          />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -99,7 +117,7 @@ export function Header() {
         <button
           type="button"
           className={cn(
-            "md:hidden transition-colors duration-500",
+            "relative z-10 ml-auto transition-colors duration-500 md:hidden",
             transparent ? "text-white" : "text-foreground"
           )}
           aria-label="Abrir menu"
