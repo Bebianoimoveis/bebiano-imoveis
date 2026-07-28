@@ -68,24 +68,28 @@ export function Header() {
           </span>
         </Link>
 
-        {/* Logo completa (com o nome já desenhado nela) centralizada — só
-            mobile. Posicionada em absolute pra ficar centralizada no
-            header independente da largura do botão de menu ao lado. */}
-        <Link
-          href="/"
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:hidden"
-        >
-          {/* Brilho escuro atrás da logo pra ela não se perder contra a
-              foto do Hero — sem isso, o dourado/preto da logo se mistura
-              com fundos escuros/movimentados e fica difícil de ler. */}
-          <div className="absolute inset-0 -z-10 scale-[2.2] rounded-full bg-black/35 blur-2xl" />
+        {/* Logo completa (com o nome já desenhado nela) — só mobile,
+            alinhada à esquerda como no desktop. */}
+        <Link href="/" className="relative flex items-center md:hidden">
+          {/* Brilho atrás da logo só faz sentido sobre a foto escura do
+              Hero (transparent) — numa página com fundo claro e sólido
+              ele só criava uma mancha acinzentada, deixando a logo mais
+              apagada em vez de mais visível. */}
+          {transparent ? (
+            <div className="absolute inset-0 -z-10 scale-[2.2] rounded-full bg-black/35 blur-2xl" />
+          ) : null}
           <Image
             src="/images/logo.png"
             alt={siteConfig.name}
             width={975}
             height={806}
             priority
-            className="h-16 w-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+            className={cn(
+              "h-14 w-auto transition-[filter] duration-300",
+              transparent
+                ? "drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+                : "drop-shadow-[0_1px_3px_rgba(0,0,0,0.25)]"
+            )}
           />
         </Link>
 
