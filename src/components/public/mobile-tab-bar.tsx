@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Building2, Heart, Home, MessageCircle, Search } from "lucide-react"
 
 import { useFavorites } from "@/hooks/use-favorites"
-import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
+import { ContactSheet } from "@/components/public/contact-sheet"
 import { cn } from "@/lib/utils"
 
 const TABS = [
@@ -21,7 +21,6 @@ const TABS = [
 export function MobileTabBar() {
   const pathname = usePathname()
   const { favoriteIds } = useFavorites()
-  const { phone } = useAttributedWhatsapp()
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center border-t border-white/10 bg-primary/90 backdrop-blur-[18px] supports-backdrop-filter:bg-primary/80 md:hidden">
@@ -33,10 +32,9 @@ export function MobileTabBar() {
             key={tab.href}
             href={tab.href}
             onClick={(e) => {
-              // Já está em "/" e clicou em Início de novo — não tem rota
-              // pra navegar, então rola suavemente até o topo em vez de
-              // não fazer nada.
-              if (tab.href === "/" && pathname === "/") {
+              // Já está na aba clicada — não tem rota pra navegar, então
+              // rola suavemente até o topo em vez de ficar sem efeito.
+              if (active) {
                 e.preventDefault()
                 window.scrollTo({ top: 0, behavior: "smooth" })
               }
@@ -58,17 +56,18 @@ export function MobileTabBar() {
           </Link>
         )
       })}
-      {phone ? (
-        <a
-          href={`https://wa.me/${phone.replace(/\D/g, "")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-white/60 transition-colors"
-        >
-          <MessageCircle className="size-5" strokeWidth={1.75} />
-          Contato
-        </a>
-      ) : null}
+      <ContactSheet
+        trigger={({ onClick }) => (
+          <button
+            type="button"
+            onClick={onClick}
+            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-white/60 transition-colors"
+          >
+            <MessageCircle className="size-5" strokeWidth={1.75} />
+            Contato
+          </button>
+        )}
+      />
     </nav>
   )
 }
