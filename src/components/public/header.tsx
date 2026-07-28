@@ -44,7 +44,7 @@ export function Header() {
         "fixed top-0 z-50 w-full transition-all duration-300",
         transparent
           ? "border-b border-transparent bg-transparent"
-          : "border-b border-white/[0.06] bg-background/70 backdrop-blur-[18px] supports-backdrop-filter:bg-background/60"
+          : "border-b border-white/10 bg-primary/90 backdrop-blur-[18px] supports-backdrop-filter:bg-primary/80"
       )}
     >
       <div className="relative mx-auto flex h-18 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -78,12 +78,7 @@ export function Header() {
             <NavLink
               key={link.href}
               href={link.href}
-              className={cn(
-                "transition-colors duration-500",
-                transparent
-                  ? "text-white/90 hover:text-white"
-                  : "text-foreground/80 hover:text-primary"
-              )}
+              className="text-white/85 transition-colors duration-500 hover:text-white"
             >
               {link.label}
             </NavLink>
@@ -94,8 +89,9 @@ export function Header() {
           <Button
             asChild
             className={cn(
-              transparent &&
-                "border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
+              transparent
+                ? "border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
+                : "bg-gold text-accent-foreground hover:bg-gold-light"
             )}
           >
             <Link href="/imoveis">Buscar imóveis</Link>
@@ -104,10 +100,7 @@ export function Header() {
 
         <button
           type="button"
-          className={cn(
-            "relative z-10 ml-auto transition-colors duration-500 md:hidden",
-            transparent ? "text-white" : "text-foreground"
-          )}
+          className="relative z-10 ml-auto text-white transition-colors duration-500 md:hidden"
           aria-label="Abrir menu"
           onClick={() => setIsOpen(true)}
         >
