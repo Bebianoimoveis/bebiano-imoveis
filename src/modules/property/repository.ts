@@ -101,6 +101,12 @@ export async function listProperties({
   return { items, total }
 }
 
+// Contagem pura, sem buscar os itens — usada pelo resumo de credibilidade
+// do menu mobile ("N imóveis disponíveis").
+export function countPublishedProperties(): Promise<number> {
+  return prisma.property.count({ where: { status: "PUBLISHED", deletedAt: null } })
+}
+
 export async function softDeleteProperty(id: string) {
   return prisma.property.update({
     where: { id },

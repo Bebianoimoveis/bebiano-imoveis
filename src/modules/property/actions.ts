@@ -266,6 +266,14 @@ export async function listPublicProperties(rawFilters: unknown) {
   })
 }
 
+// Uso público — sem autenticação. Chamada sob demanda pelo menu mobile
+// (só quando ele abre pela primeira vez), não a cada carregamento de
+// página — não vale a pena tornar nenhuma página estática em dinâmica
+// só por causa desse número.
+export async function countPublicProperties() {
+  return propertyRepository.countPublishedProperties()
+}
+
 // Uso público — sem autenticação. Favoritos são guardados no localStorage
 // do visitante (sem conta), então a página de favoritos manda os ids que
 // tem aí e a gente busca os imóveis correspondentes (só publicados).
