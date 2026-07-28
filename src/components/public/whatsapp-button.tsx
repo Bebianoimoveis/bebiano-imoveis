@@ -14,16 +14,15 @@ export function WhatsAppButton() {
   const href = `https://wa.me/${digits}?text=${encodeURIComponent(greeting)}`
 
   return (
-    // Escondido no mobile: a barra de navegação fixa já tem um atalho
-    // "Contato" pro WhatsApp, então a bolha flutuante ficava redundante
-    // e sobrepondo o rodapé quando a página é rolada até o fim. No
-    // desktop, sem essa barra, ela continua sendo o único atalho.
+    // No mobile fica mais alta que a barra de navegação fixa (que já tem
+    // seu próprio atalho "Contato"), com folga extra pra não encostar no
+    // rodapé quando a página é rolada até o fim.
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Falar no WhatsApp"
-      className="fixed right-5 bottom-5 z-50 hidden size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 md:flex"
+      className="fixed right-5 bottom-28 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 md:bottom-5"
     >
       <WhatsAppIcon className="size-6" />
     </a>
