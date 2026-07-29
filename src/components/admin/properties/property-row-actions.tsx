@@ -2,7 +2,16 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { MoreHorizontal } from "lucide-react"
+import {
+  Archive,
+  Copy,
+  Eye,
+  EyeOff,
+  MoreHorizontal,
+  Pencil,
+  Share2,
+  Sparkles,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -12,17 +21,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   archiveProperty,
   changePropertyStatus,
   duplicateProperty,
 } from "@/modules/property/actions"
+import { siteConfig } from "@/config/site"
 import type { PropertyStatus } from "@/generated/prisma/client"
 
 type PropertyRowActionsProps = {
   propertyId: string
   status: PropertyStatus
+  slug: string
 }
 
 const NEXT_STATUS_OPTIONS: Partial<Record<PropertyStatus, { label: string; status: PropertyStatus }[]>> = {
@@ -40,7 +62,7 @@ const NEXT_STATUS_OPTIONS: Partial<Record<PropertyStatus, { label: string; statu
   UNAVAILABLE: [{ label: "Voltar a publicado", status: "PUBLISHED" }],
 }
 
-export function PropertyRowActions({ propertyId, status }: PropertyRowActionsProps) {
+export function PropertyRowActions({ propertyId, status, slug }: PropertyRowActionsProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -57,48 +79,83 @@ export function PropertyRowActions({ propertyId, status }: PropertyRowActionsPro
   }
 
   const statusOptions = NEXT_STATUS_OPTIONS[status] ?? []
+  const publicUrl = `${siteConfig.url}/imoveis/${slug}`
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={isPending}>
-          <MoreHorizontal className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => router.push(`/admin/imoveis/${propertyId}`)}>
-          Editar
-        </DropdownMenuItem>
-        {statusOptions.map((option) => (
-          <DropdownMenuItem
-            key={option.status}
-            onClick={() =>
-              runAction(
-                () => changePropertyStatus(propertyId, option.status),
-                "Status atualizado."
-              )
-            }
-          >
-            {option.label}
+    <AlertDialog>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" disabled={isPending}>
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={() => router.push(`/admin/imoveis/${propertyId}`)}>
+            <Pencil /> Editar
           </DropdownMenuItem>
-        ))}
-        <DropdownMenuItem
-          onClick={() =>
-            runAction(() => duplicateProperty(propertyId), "Imóvel duplicado.")
-          }
-        >
-          Duplicar
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={() =>
-            runAction(() => archiveProperty(propertyId), "Imóvel arquivado.")
-          }
-        >
-          Arquivar
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem asChild>
+            <a href={publicUrl} target="_blank" rel="noopener noreferrer">
+              <Eye /> Visualizar no site
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              navigator.clipboard.writeText(publicUrl)
+              toast.success("Link copiado.")
+            }}
+          >
+            <Share2 /> Compartilhar
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {statusOptions.map((option) => (
+            <DropdownMenuItem
+              key={option.status}
+              onClick={() =>
+                runAction(
+                  () => changePropertyStatus(propertyId, option.status),
+                  "Status atualizado."
+                )
+              }
+            >
+              {option.status === "DRAFT" ? <EyeOff /> : <Sparkles />}
+              {option.label}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuItem
+            onClick={() => runAction(() => duplicateProperty(propertyId), "Imóvel duplicado.")}
+          >
+            <Copy /> Duplicar
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
+              <Archive /> Arquivar
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Arquivar este imóvel?</AlertDialogTitle>
+          <AlertDialogDescription>
+            O imóvel sai do site e da listagem ativa. Você pode encontrá-lo depois filtrando por
+            status &ldquo;Arquivado&rdquo;, mas essa ação não pode ser desfeita por aqui.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel />
+          <AlertDialogAction
+            onClick={() => runAction(() => archiveProperty(propertyId), "Imóvel arquivado.")}
+          >
+            Arquivar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

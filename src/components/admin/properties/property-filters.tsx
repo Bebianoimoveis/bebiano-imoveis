@@ -3,7 +3,6 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { useTransition } from "react"
 
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -17,6 +16,9 @@ type City = { id: string; name: string; state: string }
 
 const ALL = "__all__"
 
+// Busca por texto agora é o PropertySearch (com sugestões e histórico) —
+// este componente ficou só com os dois filtros rápidos (status/cidade),
+// deixando o resto pro painel de filtros avançados (PropertyFiltersSheet).
 export function PropertyFilters({ cities }: { cities: City[] }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -39,13 +41,6 @@ export function PropertyFilters({ cities }: { cities: City[] }) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Input
-        placeholder="Buscar por título..."
-        defaultValue={searchParams.get("search") ?? ""}
-        className="w-full max-w-xs"
-        onChange={(event) => updateParam("search", event.target.value)}
-      />
-
       <Select
         defaultValue={searchParams.get("status") ?? ALL}
         onValueChange={(value) => updateParam("status", value)}

@@ -88,7 +88,11 @@ export const propertyFiltersSchema = z.object({
   furnished: z.coerce.boolean().optional(),
   gatedCommunity: z.coerce.boolean().optional(),
   search: z.string().optional(),
+  createdFrom: z.coerce.date().optional(),
+  createdTo: z.coerce.date().optional(),
   page: z.coerce.number().int().positive().default(1),
+  pageSize: z.coerce.number().int().positive().max(100).default(20),
+  view: z.enum(["list", "grid"]).default("list"),
 })
 
 export type PropertyFilters = z.infer<typeof propertyFiltersSchema>

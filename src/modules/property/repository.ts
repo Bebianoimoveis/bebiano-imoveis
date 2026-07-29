@@ -107,6 +107,115 @@ export function countPublishedProperties(): Promise<number> {
   return prisma.property.count({ where: { status: "PUBLISHED", deletedAt: null } })
 }
 
+// KPIs do portfólio — um total por status (inclusive os que a listagem
+// pública nunca usa, como DRAFT/ARCHIVED) mais os agregados de valor e
+// visualizações. `where` já vem com o escopo de corretor aplicado pelo
+// chamador, igual ao resto das queries deste módulo.
+export async function getPortfolioStats(where: Prisma.PropertyWhereInput) {
+  const base = { ...where, deletedAt: null }
+
+  // Arquivar sempre grava `deletedAt` (é a mesma soft-delete de sempre),
+  // então uma contagem de ARCHIVED que exclui `deletedAt` nunca acharia
+  // nada — por isso essa contagem roda à parte, sem esse filtro.
+  const [byStatus, archivedCount, valueAgg, viewsAgg] = await Promise.all([
+    prisma.property.groupBy({
+      by: ["status"],
+      where: base,
+      _count: true,
+    }),
+    prisma.property.count({ where: { ...where, status: "ARCHIVED" } }),
+    prisma.property.aggregate({
+      where: { ...base, status: "PUBLISHED" },
+      _sum: { price: true },
+    }),
+    prisma.property.aggregate({
+      where: base,
+      _sum: { viewCount: true },
+    }),
+  ])
+
+  const countByStatus = {
+    ...Object.fromEntries(byStatus.map((row) => [row.status, row._count])),
+    ARCHIVED: archivedCount,
+  } as Record<string, number>
+
+  return {
+    total: byStatus.reduce((sum, row) => sum + row._count, 0),
+    countByStatus,
+    totalValue: valueAgg._sum.price ?? 0,
+    totalViews: viewsAgg._sum.viewCount ?? 0,
+  }
+}
+
+// Só os ids que casam com o filtro — usado pra agregar métricas (leads
+// totais do portfólio) sem arrastar o include pesado de `listProperties`.
+export async function listPropertyIds(where: Prisma.PropertyWhereInput) {
+  const rows = await prisma.property.findMany({
+    where: { ...where, deletedAt: null },
+    select: { id: true },
+  })
+  return rows.map((row) => row.id)
+}
+
+// Leads e última visita por imóvel — usados só na listagem, então
+// calculados em lote pros ids da página atual (nunca pro portfólio
+// inteiro) para não pesar a query principal.
+export async function leadCountsByProperty(propertyIds: string[]) {
+  if (propertyIds.length === 0) return new Map<string, number>()
+
+  const groups = await prisma.lead.groupBy({
+    by: ["propertyId"],
+    where: { propertyId: { in: propertyIds }, deletedAt: null },
+    _count: true,
+  })
+
+  return new Map(groups.filter((g) => g.propertyId).map((g) => [g.propertyId as string, g._count]))
+}
+
+export async function lastVisitByProperty(propertyIds: string[]) {
+  if (propertyIds.length === 0) return new Map<string, Date>()
+
+  const groups = await prisma.appointment.groupBy({
+    by: ["propertyId"],
+    where: { propertyId: { in: propertyIds } },
+    _max: { scheduledAt: true },
+  })
+
+  return new Map(
+    groups
+      .filter((g) => g.propertyId && g._max.scheduledAt)
+      .map((g) => [g.propertyId as string, g._max.scheduledAt as Date])
+  )
+}
+
+// Ações em massa — a mesma checagem de permissão do chamador (actions.ts)
+// já decide quem pode chegar aqui; este módulo só executa.
+export async function bulkUpdateStatus(ids: string[], status: Prisma.PropertyUpdateManyMutationInput["status"]) {
+  return prisma.property.updateMany({ where: { id: { in: ids } }, data: { status } })
+}
+
+export async function bulkArchive(ids: string[]) {
+  return prisma.property.updateMany({
+    where: { id: { in: ids } },
+    data: { deletedAt: new Date(), status: "ARCHIVED" },
+  })
+}
+
+export async function bulkReassignRealtor(ids: string[], realtorId: string | null) {
+  return prisma.property.updateMany({ where: { id: { in: ids } }, data: { realtorId } })
+}
+
+// Sugestões rápidas da busca (topo do input) — bem mais barato que a
+// listagem completa, só os campos usados no dropdown.
+export async function suggestProperties(where: Prisma.PropertyWhereInput, take: number) {
+  return prisma.property.findMany({
+    where: { ...where, deletedAt: null },
+    select: { id: true, code: true, title: true, city: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+    take,
+  })
+}
+
 export async function softDeleteProperty(id: string) {
   return prisma.property.update({
     where: { id },

@@ -53,9 +53,11 @@ export function StatCard({
           </span>
         ) : null}
       </div>
-      <p className="mt-4 text-sm text-muted-foreground">{label}</p>
-      <p className="font-heading text-2xl font-semibold text-foreground">{value}</p>
-      <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+      <p className="mt-4 truncate text-sm text-muted-foreground">{label}</p>
+      <p className="truncate font-heading text-2xl font-semibold text-foreground" title={value}>
+        {value}
+      </p>
+      <p className="mt-0.5 truncate text-xs text-muted-foreground">{description}</p>
     </motion.div>
   )
 }

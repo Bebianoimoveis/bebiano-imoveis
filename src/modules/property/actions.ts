@@ -223,17 +223,33 @@ function buildCommonWhere(
       filters.minPrice || filters.maxPrice
         ? { gte: filters.minPrice, lte: filters.maxPrice }
         : undefined,
-    title: filters.search ? { contains: filters.search, mode: "insensitive" } : undefined,
+    createdAt:
+      filters.createdFrom || filters.createdTo
+        ? { gte: filters.createdFrom, lte: filters.createdTo }
+        : undefined,
+    // Busca única casando título, código, cidade, bairro ou nome do
+    // corretor — antes só olhava pra título.
+    ...(filters.search
+      ? {
+          OR: [
+            { title: { contains: filters.search, mode: "insensitive" } },
+            { code: { contains: filters.search, mode: "insensitive" } },
+            { city: { name: { contains: filters.search, mode: "insensitive" } } },
+            { neighborhood: { name: { contains: filters.search, mode: "insensitive" } } },
+            { realtor: { user: { name: { contains: filters.search, mode: "insensitive" } } } },
+          ],
+        }
+      : {}),
   }
 }
 
-export async function listAdminProperties(rawFilters: unknown) {
-  const session = await requireSession()
-  const filters = propertyFiltersSchema.parse(rawFilters ?? {})
-
+async function buildAdminScopedWhere(
+  session: Awaited<ReturnType<typeof requireSession>>,
+  filters: ReturnType<typeof propertyFiltersSchema.parse>
+): Promise<Prisma.PropertyWhereInput> {
   const canViewAll = await can(session.user, "property.view.all")
 
-  const where: Prisma.PropertyWhereInput = {
+  return {
     ...buildCommonWhere(filters),
     status: filters.status,
     // Corretores sem property.view.all só enxergam os próprios imóveis.
@@ -242,12 +258,168 @@ export async function listAdminProperties(rawFilters: unknown) {
       ? filters.realtorId
       : (session.user.realtorId ?? "__none__"),
   }
+}
 
-  return propertyRepository.listProperties({
+export async function listAdminProperties(rawFilters: unknown) {
+  const session = await requireSession()
+  const filters = propertyFiltersSchema.parse(rawFilters ?? {})
+  const where = await buildAdminScopedWhere(session, filters)
+
+  const { items, total } = await propertyRepository.listProperties({
     where,
-    skip: (filters.page - 1) * PAGE_SIZE,
-    take: PAGE_SIZE,
+    skip: (filters.page - 1) * filters.pageSize,
+    take: filters.pageSize,
   })
+
+  const ids = items.map((item) => item.id)
+  const [leadCounts, lastVisits] = await Promise.all([
+    propertyRepository.leadCountsByProperty(ids),
+    propertyRepository.lastVisitByProperty(ids),
+  ])
+
+  return {
+    items: items.map((item) => ({
+      ...item,
+      leadCount: leadCounts.get(item.id) ?? 0,
+      lastVisitAt: lastVisits.get(item.id) ?? null,
+    })),
+    total,
+  }
+}
+
+// KPIs do topo do módulo — mesmo escopo por permissão da listagem, mas
+// sobre o portfólio inteiro que casa com os filtros ativos (não só a
+// página atual).
+export async function getPropertyPortfolioStats(rawFilters: unknown) {
+  const session = await requireSession()
+  const filters = propertyFiltersSchema.parse(rawFilters ?? {})
+  const where = await buildAdminScopedWhere(session, filters)
+
+  const [stats, ids] = await Promise.all([
+    propertyRepository.getPortfolioStats(where),
+    propertyRepository.listPropertyIds(where),
+  ])
+  const leadCounts = await propertyRepository.leadCountsByProperty(ids)
+  const totalLeads = [...leadCounts.values()].reduce((sum, count) => sum + count, 0)
+
+  return { ...stats, totalLeads }
+}
+
+// Sugestões instantâneas da busca — só os campos que o dropdown mostra,
+// mesmo escopo de permissão da listagem.
+export async function suggestProperties(query: string) {
+  const session = await requireSession()
+  if (query.trim().length < 2) return []
+
+  const canViewAll = await can(session.user, "property.view.all")
+  const where: Prisma.PropertyWhereInput = {
+    realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
+    OR: [
+      { title: { contains: query, mode: "insensitive" } },
+      { code: { contains: query, mode: "insensitive" } },
+    ],
+  }
+
+  return propertyRepository.suggestProperties(where, 6)
+}
+
+async function assertBulkPermission(
+  session: Awaited<ReturnType<typeof requireSession>>,
+  permission: Parameters<typeof can>[1]
+) {
+  if (!(await can(session.user, permission))) {
+    throw new Error("Sem permissão para executar esta ação.")
+  }
+}
+
+// Ações em massa reaproveitam as mesmas checagens de permissão das
+// versões unitárias — só trocam "um id" por "vários ids" num updateMany.
+export async function bulkChangePropertyStatus(ids: string[], status: PropertyStatus) {
+  const session = await requireSession()
+  await assertBulkPermission(session, status === "PUBLISHED" ? "property.publish" : "property.edit")
+
+  await propertyRepository.bulkUpdateStatus(ids, status)
+  await logActivity({
+    userId: session.user.id,
+    action: `property.bulk_status.${status.toLowerCase()}`,
+    entityType: "Property",
+    entityId: ids.join(","),
+    metadata: { count: ids.length },
+  })
+
+  revalidatePropertyPaths()
+}
+
+export async function bulkArchiveProperties(ids: string[]) {
+  const session = await requireSession()
+  await assertBulkPermission(session, "property.delete")
+
+  await propertyRepository.bulkArchive(ids)
+  await logActivity({
+    userId: session.user.id,
+    action: "property.bulk_archive",
+    entityType: "Property",
+    entityId: ids.join(","),
+    metadata: { count: ids.length },
+  })
+
+  revalidatePropertyPaths()
+}
+
+export async function bulkReassignPropertyRealtor(ids: string[], realtorId: string | null) {
+  const session = await requireSession()
+  await assertBulkPermission(session, "property.edit")
+
+  await propertyRepository.bulkReassignRealtor(ids, realtorId)
+  await logActivity({
+    userId: session.user.id,
+    action: "property.bulk_reassign_realtor",
+    entityType: "Property",
+    entityId: ids.join(","),
+    metadata: { count: ids.length, realtorId },
+  })
+
+  revalidatePropertyPaths()
+}
+
+function toCsvValue(value: string | number) {
+  const text = String(value)
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
+// Exporta o resultado filtrado atual (ou só os ids selecionados) como CSV
+// — sem biblioteca externa, é só serializar o que já foi buscado.
+export async function exportPropertiesCsv(input: { rawFilters?: unknown; ids?: string[] }) {
+  const session = await requireSession()
+
+  let where: Prisma.PropertyWhereInput
+  if (input.ids && input.ids.length > 0) {
+    const canViewAll = await can(session.user, "property.view.all")
+    where = {
+      id: { in: input.ids },
+      realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
+    }
+  } else {
+    const filters = propertyFiltersSchema.parse(input.rawFilters ?? {})
+    where = await buildAdminScopedWhere(session, filters)
+  }
+
+  const { items } = await propertyRepository.listProperties({ where, skip: 0, take: 5000 })
+
+  const header = ["Código", "Título", "Finalidade", "Status", "Preço", "Cidade", "Bairro", "Corretor", "Visualizações"]
+  const rows = items.map((item) => [
+    item.code,
+    item.title,
+    item.purpose,
+    item.status,
+    item.price.toString(),
+    item.city.name,
+    item.neighborhood.name,
+    item.realtor?.user.name ?? "",
+    item.viewCount,
+  ])
+
+  return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
 }
 
 // Uso público — sem autenticação, apenas imóveis publicados e não excluídos.
