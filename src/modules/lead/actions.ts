@@ -343,6 +343,8 @@ export async function convertLeadToClient(leadId: string) {
     name: lead.name,
     phone: lead.phone,
     email: lead.email,
+    origin: lead.origin,
+    realtorId: lead.realtorId,
   })
 
   const updated = await leadRepository.updateLead(leadId, {

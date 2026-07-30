@@ -26,6 +26,7 @@ model User {
   createdLeads Lead[]              @relation("LeadCreatedBy")
   createdProperties Property[]     @relation("PropertyCreatedBy")
   interactions LeadInteraction[]
+  clientInteractions ClientInteraction[]
   activityLogs ActivityLog[]
   notifications Notification[]
   createdAt    DateTime  @default(now())
@@ -78,6 +79,7 @@ model Realtor {
   slug       String?   @unique
   properties Property[]
   leads      Lead[]
+  clients    Client[]
   appointments Appointment[]
   proposals    Proposal[]
   contracts    Contract[]
@@ -125,21 +127,111 @@ model VisitorAttribution {
   @@index([realtorId])
 }
 
+enum ClientType {
+  BUYER
+  SELLER
+  TENANT
+  INVESTOR
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Client {
-  id        String    @id @default(cuid())
-  name      String
-  email     String?
-  phone     String
-  notes     String?
-  leads     Lead[]
+  id     String @id @default(cuid())
+  code   String @unique // ex: CL-0001
+  name   String
+  email  String?
+  phone  String
+  notes  String?
+
+  cpf           String?
+  rg            String?
+  birthDate     DateTime?
+  profession    String?
+  maritalStatus String?
+
+  street  String?
+  number  String?
+  zipCode String?
+  cityId  String?
+  city    City?   @relation("ClientCity", fields: [cityId], references: [id])
+
+  types  ClientType[] @default([])
+  status ClientStatus @default(ACTIVE)
+  vip    Boolean      @default(false)
+  tags   String[]     @default([])
+  // Canal de origem — preenchido automaticamente quando o cliente nasce
+  // de um lead convertido (ver convertLeadToClient) ou escolhido
+  // manualmente no cadastro. Null quando desconhecido.
+  origin String?
+
+  realtorId String?
+  realtor   Realtor? @relation(fields: [realtorId], references: [id])
+
+  preference ClientPreference?
+
+  leads        Lead[]
   appointments Appointment[]
   proposals    Proposal[]
   contracts    Contract[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  interactions ClientInteraction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Atualizado toda vez que uma ClientInteraction é criada — evita
+  // recalcular "última interação" juntando várias tabelas a cada listagem
+  // (mesmo padrão do Lead.lastInteractionAt).
+  lastInteractionAt DateTime  @default(now())
+  deletedAt         DateTime?
 
   @@index([phone])
+  @@index([realtorId])
+}
+
+// Preferências de busca do cliente — o que ele está procurando. Model
+// separado (1:1) em vez de campos soltos no Client porque é um conceito
+// próprio (pode não existir ainda pra um cliente recém-cadastrado) e
+// mantém o Client enxuto.
+model ClientPreference {
+  id       String @id @default(cuid())
+  clientId String @unique
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  propertyTypeId String?
+  propertyType   PropertyType? @relation(fields: [propertyTypeId], references: [id])
+  purpose        Purpose?
+  minValue       Decimal?      @db.Decimal(12, 2)
+  maxValue       Decimal?      @db.Decimal(12, 2)
+  cityId         String?
+  city           City?         @relation("ClientPreferenceCity", fields: [cityId], references: [id])
+  neighborhoodId String?
+  neighborhood   Neighborhood? @relation(fields: [neighborhoodId], references: [id])
+  bedrooms       Int?
+  minArea        Decimal?      @db.Decimal(8, 2)
+  pool           Boolean       @default(false)
+  gatedCommunity Boolean       @default(false)
+  acceptsFinancing Boolean     @default(false)
+
+  updatedAt DateTime @updatedAt
+}
+
+// Timeline/notas do cliente registradas diretamente (sem passar por um
+// Lead) — espelha LeadInteraction, mas um cliente pode não ter nenhum
+// lead vinculado (ex: cadastro manual), então precisa do próprio model.
+model ClientInteraction {
+  id          String              @id @default(cuid())
+  clientId    String
+  client      Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                @relation(fields: [userId], references: [id])
+  type        LeadInteractionType
+  description String
+  createdAt   DateTime            @default(now())
+
+  @@index([clientId])
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +244,8 @@ model City {
   state         String
   neighborhoods Neighborhood[]
   properties    Property[]
+  clients             Client[]           @relation("ClientCity")
+  clientPreferences   ClientPreference[] @relation("ClientPreferenceCity")
 
   @@unique([name, state])
 }
@@ -162,6 +256,7 @@ model Neighborhood {
   cityId     String
   city       City       @relation(fields: [cityId], references: [id])
   properties Property[]
+  clientPreferences ClientPreference[]
 
   @@unique([name, cityId])
 }
@@ -170,6 +265,7 @@ model PropertyType {
   id         String     @id @default(cuid())
   name       String     @unique // Apartamento, Casa, Terreno, Sala Comercial...
   properties Property[]
+  clientPreferences ClientPreference[]
 }
 
 model PropertyFeature {

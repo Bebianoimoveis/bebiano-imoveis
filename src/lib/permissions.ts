@@ -12,6 +12,8 @@ export type PermissionKey =
   | "lead.view.all"
   | "lead.view.own"
   | "lead.manage"
+  | "client.view.all"
+  | "client.view.own"
   | "client.manage"
   | "realtor.manage"
   | "appointment.manage"
