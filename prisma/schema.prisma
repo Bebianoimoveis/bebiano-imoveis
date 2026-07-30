@@ -521,6 +521,13 @@ enum AppointmentStatus {
   NO_SHOW
 }
 
+enum AppointmentType {
+  VISIT
+  CALL
+  RETURN
+  OTHER
+}
+
 model Appointment {
   id          String            @id @default(cuid())
   leadId      String?
@@ -532,6 +539,11 @@ model Appointment {
   realtorId   String
   realtor     Realtor           @relation(fields: [realtorId], references: [id])
   scheduledAt DateTime
+  // Duração assumida em minutos — não existia campo de fim/duração antes
+  // desta entrega; usado pra desenhar blocos na grade de semana/dia e pra
+  // detecção de conflito real (janela de sobreposição, não só "por perto").
+  durationMinutes Int             @default(60)
+  type            AppointmentType @default(VISIT)
   status      AppointmentStatus @default(SCHEDULED)
   notes       String?
   createdAt   DateTime          @default(now())

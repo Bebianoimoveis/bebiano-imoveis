@@ -5,8 +5,8 @@ import type { LeadAttributionInput } from "@/modules/lead/repository"
 
 const appointmentInclude = {
   realtor: { include: { user: true } },
-  lead: { select: { id: true, name: true } },
-  client: { select: { id: true, name: true } },
+  lead: { select: { id: true, name: true, phone: true } },
+  client: { select: { id: true, name: true, phone: true } },
   property: { select: { id: true, title: true, code: true } },
 } satisfies Prisma.AppointmentInclude
 
@@ -107,4 +107,74 @@ export async function updateAppointmentStatus(
     data: { status },
     include: appointmentInclude,
   })
+}
+
+// Sem soft-delete aqui (diferente de Lead/Client/Property) — um
+// compromisso errado é removido de verdade; o histórico de negócio real
+// já fica marcado via status (CANCELED/NO_SHOW), não via exclusão.
+export async function deleteAppointment(id: string) {
+  return prisma.appointment.delete({ where: { id } })
+}
+
+// Conflito = outro compromisso não cancelado do mesmo corretor cuja
+// janela [scheduledAt, scheduledAt+duration) se sobrepõe à nova janela.
+export async function findConflicts(input: {
+  realtorId: string
+  scheduledAt: Date
+  durationMinutes: number
+  excludeId?: string
+}) {
+  const start = input.scheduledAt
+  const end = new Date(start.getTime() + input.durationMinutes * 60000)
+
+  const candidates = await prisma.appointment.findMany({
+    where: {
+      realtorId: input.realtorId,
+      status: { notIn: ["CANCELED"] },
+      id: input.excludeId ? { not: input.excludeId } : undefined,
+      // Janela generosa (±6h) pra reduzir candidatos antes do filtro
+      // preciso em memória (Postgres não compara facilmente contra uma
+      // expressão calculada de fim sem uma coluna gerada).
+      scheduledAt: {
+        gte: new Date(start.getTime() - 6 * 60 * 60000),
+        lte: new Date(end.getTime() + 6 * 60 * 60000),
+      },
+    },
+    include: appointmentInclude,
+  })
+
+  return candidates.filter((candidate) => {
+    const candidateStart = candidate.scheduledAt
+    const candidateEnd = new Date(candidateStart.getTime() + candidate.durationMinutes * 60000)
+    return candidateStart < end && start < candidateEnd
+  })
+}
+
+export async function getAppointmentStats(where: Prisma.AppointmentWhereInput) {
+  const now = new Date()
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const todayEnd = new Date(now)
+  todayEnd.setHours(23, 59, 59, 999)
+
+  const weekStart = new Date(todayStart)
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay())
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekEnd.getDate() + 6)
+  weekEnd.setHours(23, 59, 59, 999)
+
+  const [today, week, confirmed, scheduled, done, noShow, canceled] = await Promise.all([
+    prisma.appointment.count({ where: { ...where, scheduledAt: { gte: todayStart, lte: todayEnd } } }),
+    prisma.appointment.count({ where: { ...where, scheduledAt: { gte: weekStart, lte: weekEnd } } }),
+    prisma.appointment.count({ where: { ...where, status: "CONFIRMED" } }),
+    prisma.appointment.count({ where: { ...where, status: "SCHEDULED" } }),
+    prisma.appointment.count({ where: { ...where, status: "DONE" } }),
+    prisma.appointment.count({ where: { ...where, status: "NO_SHOW" } }),
+    prisma.appointment.count({ where: { ...where, status: "CANCELED" } }),
+  ])
+
+  const attendanceBase = done + noShow
+  const attendanceRate = attendanceBase > 0 ? Math.round((done / attendanceBase) * 100) : null
+
+  return { today, week, confirmed, pending: scheduled, attendanceRate, canceled }
 }
