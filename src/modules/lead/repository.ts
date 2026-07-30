@@ -288,7 +288,9 @@ export async function getLeadStats(
     prisma.appointment.count({
       where: { ...appointmentWhere, scheduledAt: { gte: todayStart, lte: todayEnd } },
     }),
-    prisma.proposal.count({ where: { lead: base, status: "OPEN" } }),
+    prisma.proposal.count({
+      where: { lead: base, status: { notIn: ["ACCEPTED", "REJECTED", "COMPLETED", "CANCELED"] } },
+    }),
   ])
 
   const countByStage = Object.fromEntries(byStage.map((row) => [row.stage, row._count])) as Record<

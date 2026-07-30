@@ -27,6 +27,7 @@ model User {
   createdProperties Property[]     @relation("PropertyCreatedBy")
   interactions LeadInteraction[]
   clientInteractions ClientInteraction[]
+  proposalInteractions ProposalInteraction[]
   activityLogs ActivityLog[]
   notifications Notification[]
   createdAt    DateTime  @default(now())
@@ -557,9 +558,14 @@ model Appointment {
 // ---------------------------------------------------------------------------
 
 enum ProposalStatus {
-  OPEN
+  DRAFT
+  SENT
+  VIEWED
+  NEGOTIATING
   ACCEPTED
   REJECTED
+  SIGNING
+  COMPLETED
   CANCELED
 }
 
@@ -574,13 +580,50 @@ model Proposal {
   realtorId  String
   realtor    Realtor        @relation(fields: [realtorId], references: [id])
   value      Decimal        @db.Decimal(12, 2)
-  status     ProposalStatus @default(OPEN)
+  status     ProposalStatus @default(DRAFT)
   notes      String?
   contract   Contract?
+
+  // Snapshot do preço anunciado no momento da proposta — não reaproveita
+  // property.price porque o preço do imóvel pode mudar depois.
+  originalValue     Decimal? @db.Decimal(12, 2)
+  downPayment       Decimal? @db.Decimal(12, 2)
+  financingValue    Decimal? @db.Decimal(12, 2)
+  fgtsValue         Decimal? @db.Decimal(12, 2)
+  installments      Int?
+  installmentValue  Decimal? @db.Decimal(12, 2)
+  commissionPercent Decimal? @db.Decimal(5, 2)
+  paymentMethod     String?
+  validUntil        DateTime?
+
+  // Link público de acompanhamento (/proposta/[shareToken]) — só leitura,
+  // usado pra marcar "cliente visualizou" de verdade (viewedAt) em vez de
+  // fingir esse dado.
+  shareToken String?   @unique
+  sentAt     DateTime?
+  viewedAt   DateTime?
+
+  interactions ProposalInteraction[]
+
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
   @@index([propertyId])
+}
+
+// Timeline/notas da proposta — espelha ClientInteraction/LeadInteraction,
+// reaproveitando o mesmo enum de tipo.
+model ProposalInteraction {
+  id          String              @id @default(cuid())
+  proposalId  String
+  proposal    Proposal            @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                @relation(fields: [userId], references: [id])
+  type        LeadInteractionType
+  description String
+  createdAt   DateTime            @default(now())
+
+  @@index([proposalId])
 }
 
 enum ContractStatus {

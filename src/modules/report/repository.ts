@@ -60,7 +60,10 @@ export async function countUpcomingAppointments(scope: Scope) {
 
 export async function countOpenProposals(scope: Scope) {
   return prisma.proposal.count({
-    where: { ...scopeWhere(scope), status: "OPEN" },
+    where: {
+      ...scopeWhere(scope),
+      status: { notIn: ["ACCEPTED", "REJECTED", "COMPLETED", "CANCELED"] },
+    },
   })
 }
 
