@@ -37,3 +37,41 @@ export async function uploadPropertyImage(
 
   return { url: data.secure_url, publicId: data.public_id }
 }
+
+export type UploadedAttachment = {
+  url: string
+  name: string
+}
+
+// Mesmo princípio do upload de imagem acima, só que via resource_type
+// "raw" (aceita PDF) para o comprovante/nota fiscal de um lançamento
+// financeiro (ver createFinancialAttachmentUploadSignature).
+export async function uploadFinancialAttachment(
+  file: File,
+  signature: UploadSignature
+): Promise<UploadedAttachment> {
+  if (file.size > signature.maxFileSize) {
+    throw new Error("Arquivo excede o tamanho máximo permitido (10MB).")
+  }
+
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("api_key", signature.apiKey)
+  formData.append("timestamp", String(signature.timestamp))
+  formData.append("signature", signature.signature)
+  formData.append("folder", signature.folder)
+  formData.append("allowed_formats", signature.allowedFormats)
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${signature.cloudName}/raw/upload`,
+    { method: "POST", body: formData }
+  )
+
+  if (!response.ok) {
+    throw new Error("Falha ao enviar comprovante para o Cloudinary.")
+  }
+
+  const data = (await response.json()) as { secure_url: string }
+
+  return { url: data.secure_url, name: file.name }
+}

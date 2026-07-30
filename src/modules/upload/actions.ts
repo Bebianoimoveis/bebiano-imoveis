@@ -49,3 +49,40 @@ export async function createPropertyImageUploadSignature(): Promise<UploadSignat
     maxFileSize: MAX_FILE_SIZE_BYTES,
   }
 }
+
+const ATTACHMENT_ALLOWED_FORMATS = "pdf,jpg,jpeg,png"
+const ATTACHMENT_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
+
+// Mesmo esquema de assinatura acima, mas para o comprovante/nota fiscal de
+// um lançamento financeiro (resource_type: raw, aceita PDF além de
+// imagem) — extensão do padrão já usado em Contract.fileUrl.
+export async function createFinancialAttachmentUploadSignature(): Promise<UploadSignature> {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Não autenticado.")
+  }
+
+  const timestamp = Math.round(Date.now() / 1000)
+  const folder = "bebiano-imoveis/financeiro"
+
+  const paramsToSign = {
+    timestamp,
+    folder,
+    allowed_formats: ATTACHMENT_ALLOWED_FORMATS,
+  }
+
+  const signature = cloudinary.utils.api_sign_request(
+    paramsToSign,
+    process.env.CLOUDINARY_API_SECRET as string
+  )
+
+  return {
+    timestamp,
+    signature,
+    apiKey: process.env.CLOUDINARY_API_KEY as string,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+    folder,
+    allowedFormats: ATTACHMENT_ALLOWED_FORMATS,
+    maxFileSize: ATTACHMENT_MAX_FILE_SIZE_BYTES,
+  }
+}

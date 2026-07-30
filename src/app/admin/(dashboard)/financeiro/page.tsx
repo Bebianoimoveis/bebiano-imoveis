@@ -1,175 +1,234 @@
-import { Plus, Wallet } from "lucide-react"
+import Link from "next/link"
+import { ChevronRight } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { DashboardSection } from "@/components/admin/dashboard/dashboard-section"
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { FinancialTabs } from "@/components/admin/financial/financial-tabs"
+import { FinancialSearch } from "@/components/admin/financial/financial-search"
+import { FinancialFiltersSheet } from "@/components/admin/financial/financial-filters-sheet"
+import { FinancialExportButton } from "@/components/admin/financial/financial-export-button"
+import { FinancialCreateButtons } from "@/components/admin/financial/financial-create-buttons"
+import { FinancialDirectory } from "@/components/admin/financial/financial-directory"
+import { FinancialEmptyState } from "@/components/admin/financial/financial-empty-state"
+import { FinancialOverviewTab } from "@/components/admin/financial/financial-overview-tab"
+import { FinancialCommissionsPanel } from "@/components/admin/financial/financial-commissions-panel"
+import { GoalsPanel } from "@/components/admin/financial/goals-panel"
+import { FinancialReportsPanel } from "@/components/admin/financial/financial-reports-panel"
+import { isEntryOverdue } from "@/components/admin/financial/financial-entry-status-badge"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { EmptyState } from "@/components/shared/empty-state"
-import { FinancialEntryFormDialog } from "@/components/admin/financial/financial-entry-form-dialog"
-import { MarkPaidButton } from "@/components/admin/financial/mark-paid-button"
-import { listAdminFinancialEntries } from "@/modules/financial/actions"
-import { listAdminContracts } from "@/modules/contract/actions"
-import { formatCurrency } from "@/lib/format"
-import { cn } from "@/lib/utils"
+  listAdminFinancialEntries,
+  getFinancialKpis,
+  getFinancialMonthlySeries,
+  getFinancialExpenseByCategory,
+  getFinancialIncomeByRealtor,
+  getFinancialIncomeByCity,
+  getFinancialTopProperties,
+  getFinancialCashFlowTimeline,
+  getFinancialCommissionsByRealtor,
+} from "@/modules/financial/actions"
+import { listAdminGoals } from "@/modules/goal/actions"
+import { listAdminProposals } from "@/modules/proposal/actions"
+import { listAdminClients } from "@/modules/client/actions"
+import { listAdminProperties } from "@/modules/property/actions"
+import { listCities } from "@/modules/taxonomy/actions"
+import { listRealtors } from "@/modules/realtor/actions"
+import { auth } from "@/lib/auth"
+import { can } from "@/lib/permissions"
 
-export default async function AdminFinancialPage() {
-  const [entries, contracts] = await Promise.all([
+type SearchParams = Record<string, string | string[] | undefined>
+
+function paramString(params: SearchParams, key: string) {
+  const value = params[key]
+  return typeof value === "string" ? value : undefined
+}
+
+export default async function AdminFinancialPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>
+}) {
+  const params = await searchParams
+  const filters = {
+    search: paramString(params, "search"),
+    type: paramString(params, "type"),
+    status: paramString(params, "status"),
+    category: paramString(params, "category"),
+    paymentMethod: paramString(params, "paymentMethod"),
+    realtorId: paramString(params, "realtorId"),
+    cityId: paramString(params, "cityId"),
+    from: paramString(params, "from"),
+    to: paramString(params, "to"),
+  }
+  const tab = paramString(params, "tab") ?? "geral"
+  const currentYear = new Date().getFullYear()
+
+  const session = await auth()
+
+  const [
+    entries,
+    allEntries,
+    kpis,
+    monthlySeries,
+    expenseByCategory,
+    incomeByRealtor,
+    incomeByCity,
+    topProperties,
+    cashFlow,
+    commissions,
+    goals,
+    proposals,
+    cities,
+    realtors,
+    clients,
+    properties,
+    canManageFinancial,
+  ] = await Promise.all([
+    listAdminFinancialEntries(filters),
     listAdminFinancialEntries({}),
-    listAdminContracts(),
+    getFinancialKpis(filters),
+    getFinancialMonthlySeries(filters),
+    getFinancialExpenseByCategory(filters),
+    getFinancialIncomeByRealtor(filters),
+    getFinancialIncomeByCity(filters),
+    getFinancialTopProperties(filters),
+    getFinancialCashFlowTimeline(filters),
+    getFinancialCommissionsByRealtor(),
+    listAdminGoals(currentYear),
+    listAdminProposals({}),
+    listCities(),
+    listRealtors(),
+    listAdminClients({}),
+    listAdminProperties({ pageSize: 100 }),
+    can(session?.user, "financial.manage"),
   ])
 
-  const income = entries
-    .filter((e) => e.type === "INCOME")
-    .reduce((sum, e) => sum + Number(e.amount), 0)
-  const expense = entries
-    .filter((e) => e.type === "EXPENSE")
-    .reduce((sum, e) => sum + Number(e.amount), 0)
-  const balance = income - expense
+  const clientOptions = clients.map((c) => ({ id: c.id, name: c.name }))
+  const realtorOptions = realtors.map((r) => ({ id: r.id, user: { name: r.user.name } }))
+  const propertyOptions = properties.items.map((p) => ({ id: p.id, code: p.code, title: p.title }))
+
+  const overdueCount = allEntries.filter(isEntryOverdue).length
+  const availableBalance = allEntries.reduce((sum, entry) => {
+    if (entry.status !== "PAID") return sum
+    const amount = Number(entry.amount)
+    return entry.type === "INCOME" ? sum + amount : sum - amount
+  }, 0)
+  const potentialCommission = proposals
+    .filter((p) => p.status === "ACCEPTED" || p.status === "COMPLETED")
+    .reduce((sum, p) => sum + (Number(p.commissionPercent ?? 0) / 100) * Number(p.value), 0)
+  const goalsHit = goals.filter((g) => g.realized >= g.targetAmount).length
+
+  if (allEntries.length === 0) {
+    return (
+      <div className="space-y-6">
+        <DashboardSection index={0}>
+          <div>
+            <div className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Link href="/admin" className="hover:text-foreground">
+                Visão Geral
+              </Link>
+              <ChevronRight className="size-3" />
+              <span>Gestão Financeira</span>
+            </div>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">Gestão Financeira</h1>
+            <p className="text-sm text-muted-foreground">Centro financeiro inteligente — receitas, despesas e fluxo de caixa.</p>
+          </div>
+        </DashboardSection>
+        <DashboardSection index={1}>
+          <FinancialEmptyState clients={clientOptions} realtors={realtorOptions} properties={propertyOptions} />
+        </DashboardSection>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <DashboardSection index={0} className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Financeiro
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Receitas e despesas da imobiliária.
-          </p>
+          <div className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Link href="/admin" className="hover:text-foreground">
+              Visão Geral
+            </Link>
+            <ChevronRight className="size-3" />
+            <span>Gestão Financeira</span>
+          </div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Gestão Financeira</h1>
+          <p className="text-sm text-muted-foreground">Centro financeiro inteligente — receitas, despesas e fluxo de caixa.</p>
         </div>
-        <FinancialEntryFormDialog
-          contracts={contracts}
-          trigger={
-            <Button>
-              <Plus className="size-4" />
-              Novo lançamento
-            </Button>
-          }
-        />
-      </div>
+        {canManageFinancial ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <FinancialCreateButtons clients={clientOptions} realtors={realtorOptions} properties={propertyOptions} />
+          </div>
+        ) : null}
+      </DashboardSection>
 
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Receitas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-heading text-2xl font-semibold text-emerald-700 dark:text-emerald-400">
-              {formatCurrency(income)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Despesas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-heading text-2xl font-semibold text-destructive">
-              {formatCurrency(expense)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Saldo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p
-              className={cn(
-                "font-heading text-2xl font-semibold",
-                balance >= 0 ? "text-primary" : "text-destructive"
-              )}
-            >
-              {formatCurrency(balance)}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <FinancialTabs tab={tab} className="gap-6">
+        <DashboardSection index={1} className="flex flex-wrap items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="geral">Visão Geral</TabsTrigger>
+            <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
+            <TabsTrigger value="comissoes">Comissões</TabsTrigger>
+            <TabsTrigger value="metas">Metas</TabsTrigger>
+            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+          </TabsList>
+          <div className="flex flex-wrap items-center gap-2">
+            <FinancialSearch />
+            <FinancialFiltersSheet cities={cities} realtors={realtorOptions} />
+            <FinancialExportButton filters={filters as Record<string, string>} />
+          </div>
+        </DashboardSection>
 
-      {entries.length === 0 ? (
-        <EmptyState
-          icon={Wallet}
-          title="Nenhum lançamento registrado"
-          description="Lançamentos de comissões, despesas e outras movimentações aparecem aqui."
-        />
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Contrato</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Vencimento</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="text-sm">{entry.category}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "border-transparent",
-                        entry.type === "INCOME"
-                          ? "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
-                          : "bg-destructive/10 text-destructive"
-                      )}
-                    >
-                      {entry.type === "INCOME" ? "Receita" : "Despesa"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {entry.contract
-                      ? `${entry.contract.property.code} · ${entry.contract.client.name}`
-                      : "—"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {formatCurrency(entry.amount.toString())}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(entry.dueDate).toLocaleDateString("pt-BR")}
-                  </TableCell>
-                  <TableCell>
-                    {entry.paidAt ? (
-                      <Badge
-                        variant="outline"
-                        className="border-transparent bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
-                      >
-                        Pago
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-transparent bg-muted text-muted-foreground">
-                        Em aberto
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {!entry.paidAt ? <MarkPaidButton entryId={entry.id} /> : null}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+        <TabsContent value="geral">
+          <FinancialOverviewTab
+            kpis={kpis}
+            monthlySeries={monthlySeries}
+            expenseByCategory={expenseByCategory}
+            cashFlow={cashFlow}
+            incomeByRealtor={incomeByRealtor}
+            incomeByCity={incomeByCity}
+            commissions={commissions}
+            potentialCommission={potentialCommission}
+            availableBalance={availableBalance}
+            overdueCount={overdueCount}
+            goalsHit={goalsHit}
+          />
+        </TabsContent>
+
+        <TabsContent value="lancamentos">
+          <DashboardSection index={2}>
+            <FinancialDirectory
+              entries={entries}
+              clients={clientOptions}
+              realtors={realtorOptions}
+              properties={propertyOptions}
+            />
+          </DashboardSection>
+        </TabsContent>
+
+        <TabsContent value="comissoes">
+          <DashboardSection index={2}>
+            <FinancialCommissionsPanel commissions={commissions} />
+          </DashboardSection>
+        </TabsContent>
+
+        <TabsContent value="metas">
+          <DashboardSection index={2}>
+            <GoalsPanel goals={goals} year={currentYear} realtors={realtorOptions} cities={cities} />
+          </DashboardSection>
+        </TabsContent>
+
+        <TabsContent value="relatorios">
+          <DashboardSection index={2}>
+            <FinancialReportsPanel
+              incomeByRealtor={incomeByRealtor}
+              incomeByCity={incomeByCity}
+              topProperties={topProperties}
+              commissions={commissions}
+              expenseByCategory={expenseByCategory}
+              kpis={kpis}
+            />
+          </DashboardSection>
+        </TabsContent>
+      </FinancialTabs>
     </div>
   )
 }
