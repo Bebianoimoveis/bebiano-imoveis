@@ -47,6 +47,9 @@ export default async function AdminLeadDetailPage({
                 nextActionAt={lead.nextActionAt?.toISOString().slice(0, 10) ?? null}
                 realtorId={lead.realtorId}
                 realtors={realtors}
+                temperature={lead.temperature}
+                vip={lead.vip}
+                tags={lead.tags}
               />
             </CardContent>
           </Card>

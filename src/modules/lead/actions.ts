@@ -10,6 +10,7 @@ import { isRateLimited } from "@/lib/rate-limit"
 import type { Prisma, LeadStage } from "@/generated/prisma/client"
 import {
   contactRequestSchema,
+  leadCreateSchema,
   leadFiltersSchema,
   leadInteractionSchema,
   leadUpdateSchema,
@@ -80,7 +81,7 @@ async function requireSession() {
 // garante zero resultados caso o usuário não tenha realtorId vinculado.
 async function buildLeadScopeWhere(
   session: Awaited<ReturnType<typeof requireSession>>,
-  filters: { stage?: LeadStage; realtorId?: string; search?: string }
+  filters: ReturnType<typeof leadFiltersSchema.parse>
 ): Promise<Prisma.LeadWhereInput> {
   const canViewAll = await can(session.user, "lead.view.all")
 
@@ -89,7 +90,36 @@ async function buildLeadScopeWhere(
     realtorId: canViewAll
       ? filters.realtorId
       : (session.user.realtorId ?? "__none__"),
-    name: filters.search ? { contains: filters.search, mode: "insensitive" } : undefined,
+    temperature: filters.temperature,
+    origin: filters.origin,
+    createdAt:
+      filters.createdFrom || filters.createdTo
+        ? { gte: filters.createdFrom, lte: filters.createdTo }
+        : undefined,
+    lastInteractionAt:
+      filters.lastInteractionFrom || filters.lastInteractionTo
+        ? { gte: filters.lastInteractionFrom, lte: filters.lastInteractionTo }
+        : undefined,
+    property:
+      filters.minValue || filters.maxValue || filters.cityId
+        ? {
+            cityId: filters.cityId,
+            price:
+              filters.minValue || filters.maxValue
+                ? { gte: filters.minValue, lte: filters.maxValue }
+                : undefined,
+          }
+        : undefined,
+    OR: filters.search
+      ? [
+          { name: { contains: filters.search, mode: "insensitive" } },
+          { phone: { contains: filters.search } },
+          { email: { contains: filters.search, mode: "insensitive" } },
+          { property: { title: { contains: filters.search, mode: "insensitive" } } },
+          { property: { city: { name: { contains: filters.search, mode: "insensitive" } } } },
+          { realtor: { user: { name: { contains: filters.search, mode: "insensitive" } } } },
+        ]
+      : undefined,
   }
 }
 
@@ -99,6 +129,113 @@ export async function listAdminLeads(rawFilters: unknown) {
   const where = await buildLeadScopeWhere(session, filters)
 
   return leadRepository.listLeads(where)
+}
+
+// Sugestões instantâneas da busca — mesmo escopo de visibilidade da
+// listagem.
+export async function suggestLeads(query: string) {
+  const session = await requireSession()
+  if (query.trim().length < 2) return []
+
+  const canViewAll = await can(session.user, "lead.view.all")
+  const where: Prisma.LeadWhereInput = {
+    realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
+    OR: [
+      { name: { contains: query, mode: "insensitive" } },
+      { phone: { contains: query } },
+    ],
+  }
+
+  return leadRepository.suggestLeads(where, 6)
+}
+
+// KPIs do topo do CRM — período controla "novos leads" (padrão 30 dias).
+export async function getLeadCrmStats(rawFilters: unknown, periodDays = 30) {
+  const session = await requireSession()
+  const filters = leadFiltersSchema.parse(rawFilters ?? {})
+  const where = await buildLeadScopeWhere(session, filters)
+
+  const canViewAll = await can(session.user, "appointment.view.all")
+  const appointmentWhere: Prisma.AppointmentWhereInput = canViewAll
+    ? {}
+    : { realtorId: session.user.realtorId ?? "__none__" }
+
+  const periodFrom = new Date()
+  periodFrom.setDate(periodFrom.getDate() - periodDays)
+
+  return leadRepository.getLeadStats(where, periodFrom, appointmentWhere)
+}
+
+function toCsvValue(value: string | number) {
+  const text = String(value)
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+}
+
+export async function exportLeadsCsv(rawFilters: unknown) {
+  const session = await requireSession()
+  const filters = leadFiltersSchema.parse(rawFilters ?? {})
+  const where = await buildLeadScopeWhere(session, filters)
+
+  const leads = await leadRepository.listLeads(where)
+
+  const header = ["Nome", "Telefone", "E-mail", "Origem", "Etapa", "Imóvel", "Corretor", "Criado em"]
+  const rows = leads.map((lead) => [
+    lead.name,
+    lead.phone,
+    lead.email ?? "",
+    lead.origin,
+    lead.stage,
+    lead.property?.title ?? "",
+    lead.realtor?.user.name ?? "",
+    lead.createdAt.toLocaleDateString("pt-BR"),
+  ])
+
+  return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
+}
+
+export async function createLeadManually(input: unknown) {
+  const session = await requireSession()
+  if (!(await can(session.user, "lead.manage"))) {
+    throw new Error("Sem permissão para cadastrar leads.")
+  }
+
+  const data = leadCreateSchema.parse(input)
+  const lead = await leadRepository.createLeadManually({
+    ...data,
+    createdById: session.user.id,
+  })
+
+  await logActivity({
+    userId: session.user.id,
+    action: "lead.create_manual",
+    entityType: "Lead",
+    entityId: lead.id,
+  })
+
+  revalidatePath("/admin/leads")
+  return lead
+}
+
+export async function deleteLead(leadId: string) {
+  const session = await requireSession()
+  await assertCanManageLead(session, leadId)
+
+  await leadRepository.softDeleteLead(leadId)
+
+  await logActivity({
+    userId: session.user.id,
+    action: "lead.delete",
+    entityType: "Lead",
+    entityId: leadId,
+  })
+
+  revalidatePath("/admin/leads")
+}
+
+export async function getLeadContract(leadId: string) {
+  const session = await requireSession()
+  await assertCanManageLead(session, leadId)
+  return leadRepository.findAcceptedContractByLead(leadId)
 }
 
 export async function getAdminLead(id: string) {
@@ -156,6 +293,9 @@ export async function updateLead(leadId: string, input: unknown) {
   const lead = await leadRepository.updateLead(leadId, {
     notes: data.notes,
     nextActionAt: data.nextActionAt,
+    temperature: data.temperature,
+    vip: data.vip,
+    tags: data.tags,
     // data.realtorId: undefined (não enviado) → não mexe no vínculo;
     // null → desvincula; string → atribui.
     ...(data.realtorId === undefined

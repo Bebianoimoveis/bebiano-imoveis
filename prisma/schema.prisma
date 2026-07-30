@@ -316,6 +316,12 @@ enum LeadStage {
   LOST
 }
 
+enum LeadTemperature {
+  HOT
+  WARM
+  COLD
+}
+
 model Lead {
   id         String    @id @default(cuid())
   name       String
@@ -325,6 +331,14 @@ model Lead {
   stage      LeadStage @default(NEW)
   notes      String?
   nextActionAt DateTime?
+
+  temperature LeadTemperature @default(WARM)
+  vip         Boolean         @default(false)
+  tags        String[]        @default([])
+  // Atualizado toda vez que `stage` muda (inclusive pelo drag-and-drop do
+  // Kanban) — é a base de "tempo no estágio" no card, que não existiria
+  // sem um timestamp dedicado (não há histórico de transição de estágio).
+  stageChangedAt DateTime @default(now())
 
   propertyId String?
   property   Property? @relation(fields: [propertyId], references: [id])

@@ -1,0 +1,8 @@
+-- CreateEnum
+CREATE TYPE "LeadTemperature" AS ENUM ('HOT', 'WARM', 'COLD');
+
+-- AlterTable
+ALTER TABLE "Lead" ADD COLUMN "temperature" "LeadTemperature" NOT NULL DEFAULT 'WARM',
+ADD COLUMN "vip" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "stageChangedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

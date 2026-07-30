@@ -5,7 +5,16 @@ import { LEAD_STAGES } from "@/modules/lead/schema"
 type TransactionClient = Prisma.TransactionClient
 
 const leadListInclude = {
-  property: { select: { id: true, title: true, code: true, slug: true } },
+  property: {
+    select: {
+      id: true,
+      title: true,
+      code: true,
+      slug: true,
+      price: true,
+      city: { select: { name: true } },
+    },
+  },
   realtor: { include: { user: true } },
   client: true,
 } satisfies Prisma.LeadInclude
@@ -15,6 +24,12 @@ const leadDetailInclude = {
   interactions: {
     orderBy: { createdAt: "desc" as const },
     include: { user: true },
+  },
+  appointments: {
+    orderBy: { scheduledAt: "desc" as const },
+  },
+  proposals: {
+    orderBy: { createdAt: "desc" as const },
   },
 } satisfies Prisma.LeadInclude
 
@@ -177,11 +192,122 @@ export async function findLeadById(id: string): Promise<LeadDetail | null> {
 }
 
 export async function updateLeadStage(id: string, stage: LeadStage) {
+  const now = new Date()
   return prisma.lead.update({
     where: { id },
-    data: { stage, lastInteractionAt: new Date() },
+    // stageChangedAt só existe pra dar base real a "tempo no estágio" no
+    // card — atualiza toda vez que o estágio muda de verdade, inclusive
+    // pelo drag-and-drop do Kanban.
+    data: { stage, lastInteractionAt: now, stageChangedAt: now },
     include: leadDetailInclude,
   })
+}
+
+export async function softDeleteLead(id: string) {
+  return prisma.lead.update({ where: { id }, data: { deletedAt: new Date() } })
+}
+
+type CreateLeadManuallyInput = {
+  name: string
+  phone: string
+  email?: string
+  origin: string
+  propertyId?: string
+  realtorId?: string
+  temperature: "HOT" | "WARM" | "COLD"
+  vip: boolean
+  createdById: string
+}
+
+export async function createLeadManually(input: CreateLeadManuallyInput) {
+  return prisma.lead.create({
+    data: {
+      name: input.name,
+      phone: input.phone,
+      email: input.email || null,
+      origin: input.origin,
+      propertyId: input.propertyId,
+      realtorId: input.realtorId,
+      temperature: input.temperature,
+      vip: input.vip,
+      createdById: input.createdById,
+    },
+    include: leadListInclude,
+  })
+}
+
+// Só os ids/nomes que casam com o filtro — usado pra agregar métricas
+// (valor total do funil) sem arrastar o include pesado da listagem.
+export async function listLeadIds(where: Prisma.LeadWhereInput) {
+  const rows = await prisma.lead.findMany({
+    where: { ...where, deletedAt: null },
+    select: { id: true },
+  })
+  return rows.map((row) => row.id)
+}
+
+export async function suggestLeads(where: Prisma.LeadWhereInput, take: number) {
+  return prisma.lead.findMany({
+    where: { ...where, deletedAt: null },
+    select: { id: true, name: true, phone: true },
+    orderBy: { createdAt: "desc" },
+    take,
+  })
+}
+
+// Contrato ligado ao lead via a proposta aceita (um lead pode ter várias
+// propostas — só a aceita tem contrato de verdade).
+export async function findAcceptedContractByLead(leadId: string) {
+  return prisma.contract.findFirst({
+    where: { proposal: { leadId, status: "ACCEPTED" } },
+    include: { proposal: true },
+  })
+}
+
+// KPIs do topo do CRM. `tempoMedio` é uma aproximação honesta (não existe
+// timestamp de "fechado em" — usamos lastInteractionAt dos leads
+// CLOSED como proxy do momento em que o funil parou de se mover).
+export async function getLeadStats(
+  where: Prisma.LeadWhereInput,
+  periodFrom: Date,
+  appointmentWhere: Prisma.AppointmentWhereInput
+) {
+  const base = { ...where, deletedAt: null }
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const todayEnd = new Date()
+  todayEnd.setHours(23, 59, 59, 999)
+
+  const [byStage, newInPeriod, closedForAvg, visitsToday, openProposals] = await Promise.all([
+    prisma.lead.groupBy({ by: ["stage"], where: base, _count: true }),
+    prisma.lead.count({ where: { ...base, createdAt: { gte: periodFrom } } }),
+    prisma.lead.findMany({
+      where: { ...base, stage: "CLOSED" },
+      select: { createdAt: true, lastInteractionAt: true },
+    }),
+    prisma.appointment.count({
+      where: { ...appointmentWhere, scheduledAt: { gte: todayStart, lte: todayEnd } },
+    }),
+    prisma.proposal.count({ where: { lead: base, status: "OPEN" } }),
+  ])
+
+  const countByStage = Object.fromEntries(byStage.map((row) => [row.stage, row._count])) as Record<
+    string,
+    number
+  >
+  const total = byStage.reduce((sum, row) => sum + row._count, 0)
+
+  const avgDaysToClose =
+    closedForAvg.length > 0
+      ? closedForAvg.reduce(
+          (sum, lead) => sum + (lead.lastInteractionAt.getTime() - lead.createdAt.getTime()),
+          0
+        ) /
+        closedForAvg.length /
+        (1000 * 60 * 60 * 24)
+      : null
+
+  return { total, countByStage, newInPeriod, visitsToday, openProposals, avgDaysToClose }
 }
 
 export async function updateLead(id: string, data: Prisma.LeadUpdateInput) {

@@ -23,7 +23,13 @@ const TYPE_LABELS: Record<string, string> = {
   NOTE: "Anotação",
 }
 
-export function LeadInteractionForm({ leadId }: { leadId: string }) {
+export function LeadInteractionForm({
+  leadId,
+  onSuccess,
+}: {
+  leadId: string
+  onSuccess?: () => void
+}) {
   const router = useRouter()
   const [type, setType] = useState("NOTE")
   const [isPending, startTransition] = useTransition()
@@ -39,6 +45,7 @@ export function LeadInteractionForm({ leadId }: { leadId: string }) {
         formRef.current?.reset()
         toast.success("Interação registrada.")
         router.refresh()
+        onSuccess?.()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao registrar.")
       }

@@ -49,6 +49,9 @@ export const leadUpdateSchema = z.object({
   nextActionAt: z.coerce.date().optional(),
   // undefined = não alterar o corretor; null = desvincular; string = atribuir.
   realtorId: z.string().nullable().optional(),
+  temperature: z.enum(["HOT", "WARM", "COLD"]).optional(),
+  vip: z.coerce.boolean().optional(),
+  tags: z.array(z.string()).optional(),
 })
 
 export type LeadUpdateInput = z.output<typeof leadUpdateSchema>
@@ -60,11 +63,39 @@ export const leadInteractionSchema = z.object({
 
 export type LeadInteractionInput = z.infer<typeof leadInteractionSchema>
 
+export const LEAD_TEMPERATURES = ["HOT", "WARM", "COLD"] as const
+
 export const leadFiltersSchema = z.object({
   stage: z.enum(LEAD_STAGES).optional(),
   realtorId: z.string().optional(),
+  cityId: z.string().optional(),
+  origin: z.string().optional(),
+  temperature: z.enum(LEAD_TEMPERATURES).optional(),
+  minValue: z.coerce.number().nonnegative().optional(),
+  maxValue: z.coerce.number().nonnegative().optional(),
+  createdFrom: z.coerce.date().optional(),
+  createdTo: z.coerce.date().optional(),
+  lastInteractionFrom: z.coerce.date().optional(),
+  lastInteractionTo: z.coerce.date().optional(),
   search: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
 })
 
 export type LeadFilters = z.infer<typeof leadFiltersSchema>
+
+// Criação manual pelo admin (Ctrl+N / botão "Novo Lead") — não existia
+// nenhum jeito de cadastrar um lead sem ser via formulário público até
+// esta entrega.
+export const leadCreateSchema = z.object({
+  name: z.string().min(2, "Informe o nome."),
+  phone: z.string().min(8, "Informe um telefone válido."),
+  email: z.union([z.email(), z.literal("")]).optional(),
+  origin: z.string().min(1).default("site"),
+  propertyId: z.string().optional(),
+  realtorId: z.string().optional(),
+  stage: z.enum(LEAD_STAGES).default("NEW"),
+  temperature: z.enum(LEAD_TEMPERATURES).default("WARM"),
+  vip: z.coerce.boolean().default(false),
+})
+
+export type LeadCreateInput = z.output<typeof leadCreateSchema>
