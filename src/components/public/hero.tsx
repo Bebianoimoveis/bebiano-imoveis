@@ -13,6 +13,7 @@ import { siteConfig } from "@/config/site"
 
 type City = { id: string; name: string; state: string }
 type PropertyType = { id: string; name: string }
+type HeroImage = { url: string; title: string } | null
 
 const container = {
   hidden: {},
@@ -31,9 +32,11 @@ const item = {
 export function Hero({
   cities,
   propertyTypes,
+  heroImage,
 }: {
   cities: City[]
   propertyTypes: PropertyType[]
+  heroImage?: HeroImage
 }) {
   const { phone } = useAttributedWhatsapp()
 
@@ -48,16 +51,16 @@ export function Hero({
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
         >
-          <HeroBackground />
+          <HeroBackground posterUrl={heroImage?.url} posterAlt={heroImage?.title} />
         </motion.div>
       </Parallax>
 
       {/* Overlay em três camadas: (1) vertical, mais escuro embaixo onde
           fica todo o texto e a busca; (2) horizontal, mais escuro à
           esquerda (coluna do texto) e mais aberto à direita, pra nunca
-          competir com os rostos da foto; (3) mistura vinho da marca em
-          tom mais forte que uma foto crua, lendo como grade/atmosfera
-          "de estúdio" em vez de flagrante de grupo. */}
+          competir com os detalhes do imóvel; (3) mistura vinho da marca em
+          tom mais forte que uma foto crua, lendo como grade/atmosfera "de
+          estúdio" em vez de uma foto de imóvel crua. */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/50 to-black/25" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
       <div className="absolute inset-0 bg-primary/30 mix-blend-multiply" />

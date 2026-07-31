@@ -3,6 +3,7 @@ import { Star, User } from "lucide-react"
 
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
+import { AccentWord } from "@/components/public/accent-word"
 import { listPublicTestimonials } from "@/modules/testimonial/actions"
 
 export async function TestimonialsSection() {
@@ -17,7 +18,7 @@ export async function TestimonialsSection() {
             Quem já viveu a experiência
           </p>
           <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-            Depoimentos
+            <AccentWord>Depoimentos</AccentWord>
           </h2>
         </Reveal>
 

@@ -4,6 +4,7 @@ import { ArrowRight, Building2, ImageOff, MapPin } from "lucide-react"
 
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
+import { AccentWord } from "@/components/public/accent-word"
 import { formatCurrency } from "@/lib/format"
 import { listLaunchProperties } from "@/modules/property/actions"
 
@@ -31,7 +32,7 @@ export async function LaunchesSection() {
               Novos empreendimentos
             </p>
             <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-              Lançamentos
+              <AccentWord>Lançamentos</AccentWord>
             </h2>
           </div>
         </Reveal>

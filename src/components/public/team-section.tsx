@@ -5,6 +5,7 @@ import { User } from "lucide-react"
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { RealtorWhatsappButton } from "@/components/public/realtor-whatsapp-button"
+import { AccentWord } from "@/components/public/accent-word"
 import { listPublicRealtors } from "@/modules/realtor/actions"
 
 export async function TeamSection() {
@@ -18,7 +19,7 @@ export async function TeamSection() {
           Quem cuida de você
         </p>
         <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-          Nossa equipe
+          Nossa <AccentWord>equipe</AccentWord>
         </h2>
       </Reveal>
 

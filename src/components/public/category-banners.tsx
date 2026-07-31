@@ -1,17 +1,18 @@
 import Image from "next/image"
 import Link from "next/link"
 import {
-  Building,
   Building2,
-  Crown,
+  Fence,
+  Gem,
   Home,
+  LandPlot,
   Sparkles,
   Store,
-  Trees,
 } from "lucide-react"
 
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
+import { AccentWord } from "@/components/public/accent-word"
 import { listPublicProperties } from "@/modules/property/actions"
 import { cn } from "@/lib/utils"
 
@@ -52,7 +53,7 @@ function buildCategories(propertyTypes: PropertyType[]): Category[] {
     {
       key: "condominios",
       label: "Condomínios",
-      icon: Building,
+      icon: Fence,
       href: "/comprar?gatedCommunity=true",
       filters: { gatedCommunity: true },
     },
@@ -66,7 +67,7 @@ function buildCategories(propertyTypes: PropertyType[]): Category[] {
     {
       key: "terrenos",
       label: "Terrenos",
-      icon: Trees,
+      icon: LandPlot,
       href: terreno ? `/comprar?typeId=${terreno}` : "/comprar",
       filters: { typeId: terreno },
     },
@@ -80,7 +81,7 @@ function buildCategories(propertyTypes: PropertyType[]): Category[] {
     {
       key: "alto-padrao",
       label: "Casas de Alto Padrão",
-      icon: Crown,
+      icon: Gem,
       href: casa ? `/comprar?typeId=${casa}&minPrice=1200000` : "/comprar?minPrice=1200000",
       filters: { typeId: casa, minPrice: "1200000" },
     },
@@ -117,7 +118,7 @@ export async function CategoryBanners({
           Explore por categoria
         </p>
         <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-          O que você procura?
+          O que você <AccentWord>procura</AccentWord>?
         </h2>
       </Reveal>
 
@@ -134,7 +135,7 @@ export async function CategoryBanners({
                   category.key === "lancamentos" && "sm:col-span-2 sm:aspect-auto"
                 )}
               >
-                <div className="absolute inset-0 bg-secondary">
+                <div className="absolute inset-0 bg-gradient-to-br from-card via-secondary to-background">
                   {imageUrl ? (
                     <Image
                       src={imageUrl}
@@ -143,15 +144,21 @@ export async function CategoryBanners({
                       className="object-cover opacity-70 transition-all duration-700 ease-out group-hover:scale-110 group-hover:opacity-85"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
-                  ) : null}
+                  ) : (
+                    <Icon
+                      className="absolute top-1/2 left-1/2 size-16 -translate-x-1/2 -translate-y-1/2 text-gold/10 transition-transform duration-700 group-hover:scale-110 sm:size-20"
+                      strokeWidth={1}
+                    />
+                  )}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent transition-opacity duration-500 group-hover:from-black/90" />
                 <div className="absolute inset-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] transition-shadow duration-500 group-hover:shadow-[0_0_40px_-8px_var(--color-gold)]" />
 
                 <div className="relative z-10 flex flex-col gap-2 p-4 sm:p-5">
-                  <span className="flex size-9 w-fit items-center justify-center rounded-full bg-gold/15 text-gold ring-1 ring-gold/30 backdrop-blur-sm transition-transform duration-500 group-hover:scale-110">
-                    <Icon className="size-4.5" strokeWidth={1.75} />
-                  </span>
+                  <Icon
+                    className="size-6 text-gold drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)] transition-transform duration-500 ease-out group-hover:-translate-y-0.5 sm:size-7"
+                    strokeWidth={1.5}
+                  />
                   <p className="font-heading text-sm font-semibold text-white sm:text-base">
                     {category.label}
                   </p>

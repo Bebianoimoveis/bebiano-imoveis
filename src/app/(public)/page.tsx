@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Hero } from "@/components/public/hero"
+import { AccentWord } from "@/components/public/accent-word"
 import { PropertyCard } from "@/components/public/property-card"
 import { CategoryBanners } from "@/components/public/category-banners"
 import { LaunchesSection } from "@/components/public/launches-section"
@@ -10,22 +11,23 @@ import { TeamSection } from "@/components/public/team-section"
 import { TestimonialsSection } from "@/components/public/testimonials-section"
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
-import { listFeaturedProperties } from "@/modules/property/actions"
+import { listFeaturedProperties, getHeroShowcaseImage } from "@/modules/property/actions"
 import { listCities, listPropertyTypes } from "@/modules/taxonomy/actions"
 import { siteConfig } from "@/config/site"
 import { Building2 } from "lucide-react"
 
 export default async function HomePage() {
-  const [featured, cities, propertyTypes] = await Promise.all([
+  const [featured, cities, propertyTypes, heroImage] = await Promise.all([
     listFeaturedProperties(6),
     listCities(),
     listPropertyTypes(),
+    getHeroShowcaseImage(),
   ])
 
   return (
     <div>
       {/* 1. Hero + busca premium */}
-      <Hero cities={cities} propertyTypes={propertyTypes} />
+      <Hero cities={cities} propertyTypes={propertyTypes} heroImage={heroImage} />
 
       {/* Espaço extra no topo para acomodar a busca flutuante que "quebra"
           a borda inferior do Hero (ver Hero: -mb-12/-mb-16 no card de busca). */}
@@ -45,7 +47,7 @@ export default async function HomePage() {
               Selecionados a dedo
             </p>
             <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-              Imóveis em destaque
+              Imóveis em <AccentWord>destaque</AccentWord>
             </h2>
           </div>
           <Button variant="ghost" asChild className="hidden sm:inline-flex">

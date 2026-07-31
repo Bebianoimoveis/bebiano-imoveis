@@ -469,6 +469,10 @@ export async function listRecentProperties(limit = 8) {
   return propertyRepository.listRecentProperties(limit)
 }
 
+export async function getHeroShowcaseImage() {
+  return propertyRepository.getShowcasePropertyImage()
+}
+
 export async function listPublicPropertiesByRealtor(realtorId: string, limit = 12) {
   return propertyRepository.listPublicPropertiesByRealtor(realtorId, limit)
 }
