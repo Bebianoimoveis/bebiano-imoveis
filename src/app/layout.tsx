@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Plus_Jakarta_Sans, Yellowtail } from "next/font/google";
+import { Geist, Geist_Mono, Plus_Jakarta_Sans, Parisienne } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ScrollLockGuard } from "@/components/shared/scroll-lock-guard";
@@ -26,10 +26,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 // Fonte manuscrita usada só como acento em uma palavra por título de seção
 // no site público (ex: "Imóveis em destaque") — nunca em blocos de texto,
 // só para dar aquele toque de assinatura/convite de casamento premium.
-// Yellowtail em vez de uma script fina (tipo Alex Brush): traço mais
-// grosso e arredondado, legível mesmo pequeno — script fina "rabisca" e
-// fica ilegível/suja em tamanhos de título.
-const yellowtail = Yellowtail({
+const parisienne = Parisienne({
   weight: "400",
   variable: "--font-script",
   subsets: ["latin"],
@@ -51,7 +48,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} ${plusJakarta.variable} ${yellowtail.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${plusJakarta.variable} ${parisienne.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ScrollLockGuard />
