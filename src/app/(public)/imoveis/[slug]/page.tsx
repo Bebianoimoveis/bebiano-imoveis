@@ -117,7 +117,7 @@ export default async function PropertyDetailPage({
             </p>
 
             <div className="flex flex-wrap items-baseline gap-2">
-              <p className="font-heading text-3xl font-semibold text-primary">
+              <p className="font-heading text-3xl font-semibold text-foreground">
                 {formatCurrency(property.price.toString())}
                 {property.purpose === "RENT" ? (
                   <span className="text-base font-normal text-muted-foreground">
@@ -146,25 +146,25 @@ export default async function PropertyDetailPage({
           <div className="grid grid-cols-2 gap-4 rounded-xl border border-border/60 p-5 sm:grid-cols-4">
             {property.bedrooms > 0 ? (
               <div className="flex flex-col items-center gap-1 text-center">
-                <BedDouble className="size-5 text-primary" />
+                <BedDouble className="size-5 text-gold" />
                 <p className="text-sm font-medium">{property.bedrooms} quartos</p>
               </div>
             ) : null}
             {property.bathrooms > 0 ? (
               <div className="flex flex-col items-center gap-1 text-center">
-                <ShowerHead className="size-5 text-primary" />
+                <ShowerHead className="size-5 text-gold" />
                 <p className="text-sm font-medium">{property.bathrooms} banheiros</p>
               </div>
             ) : null}
             {property.parkingSpots > 0 ? (
               <div className="flex flex-col items-center gap-1 text-center">
-                <Car className="size-5 text-primary" />
+                <Car className="size-5 text-gold" />
                 <p className="text-sm font-medium">{property.parkingSpots} vagas</p>
               </div>
             ) : null}
             {property.builtArea ? (
               <div className="flex flex-col items-center gap-1 text-center">
-                <Ruler className="size-5 text-primary" />
+                <Ruler className="size-5 text-gold" />
                 <p className="text-sm font-medium">
                   {property.builtArea.toString()} m²
                 </p>
@@ -172,7 +172,7 @@ export default async function PropertyDetailPage({
             ) : null}
             {property.availableUnits ? (
               <div className="flex flex-col items-center gap-1 text-center">
-                <Building2 className="size-5 text-primary" />
+                <Building2 className="size-5 text-gold" />
                 <p className="text-sm font-medium">
                   {property.availableUnits} unidades disponíveis
                 </p>

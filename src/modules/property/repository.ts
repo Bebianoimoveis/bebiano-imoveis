@@ -317,6 +317,29 @@ export async function listRecentProperties(
   })
 }
 
+export async function listPublicPropertiesByRealtor(
+  realtorId: string,
+  take: number
+): Promise<PropertyListItem[]> {
+  return prisma.property.findMany({
+    where: { ...PUBLIC_WHERE, realtorId },
+    include: adminListInclude,
+    orderBy: { publishedAt: "desc" },
+    take,
+  })
+}
+
+export async function listLaunchProperties(
+  take: number
+): Promise<PropertyListItem[]> {
+  return prisma.property.findMany({
+    where: { ...PUBLIC_WHERE, isLaunch: true },
+    include: adminListInclude,
+    orderBy: { publishedAt: "desc" },
+    take,
+  })
+}
+
 export async function listSimilarProperties(
   input: { propertyId: string; cityId: string; typeId: string },
   take: number

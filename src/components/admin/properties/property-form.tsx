@@ -85,6 +85,7 @@ export function PropertyForm({
   const selectedTypeId = useWatch({ control: form.control, name: "typeId" })
   const isApartment =
     propertyTypes.find((type) => type.id === selectedTypeId)?.name === "Apartamento"
+  const isLaunch = useWatch({ control: form.control, name: "isLaunch" })
 
   async function handleCityChange(cityId: string) {
     // shouldValidate: sem isso, setValue não limpa um erro de validação
@@ -605,6 +606,7 @@ export function PropertyForm({
                   ["furnished", "Mobiliado"],
                   ["gatedCommunity", "Condomínio fechado"],
                   ["featured", "Imóvel em destaque"],
+                  ["isLaunch", "Lançamento"],
                 ] as const
               ).map(([name, label]) => (
                 <FormField
@@ -627,6 +629,35 @@ export function PropertyForm({
                 />
               ))}
             </div>
+
+            {isLaunch ? (
+              <FormField
+                control={form.control}
+                name="launchDeliveryAt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Previsão de entrega</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        className="max-w-48"
+                        value={
+                          field.value
+                            ? new Date(field.value as string | number | Date)
+                                .toISOString()
+                                .slice(0, 10)
+                            : ""
+                        }
+                        onChange={(e) =>
+                          field.onChange(e.target.value === "" ? undefined : e.target.value)
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
             {features.length > 0 ? (
               <FormField

@@ -39,7 +39,7 @@ export function PropertyContactForm({
 
   if (state.status === "success") {
     return (
-      <p className="rounded-lg bg-primary/10 p-4 text-sm text-primary">
+      <p className="rounded-lg border border-primary/30 bg-primary/15 p-4 text-sm text-foreground">
         {state.message}
       </p>
     )

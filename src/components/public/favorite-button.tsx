@@ -47,14 +47,14 @@ export function FavoriteButton({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "flex size-9 items-center justify-center rounded-full border border-white/30 bg-white/90 text-foreground shadow-sm backdrop-blur-sm transition-all hover:scale-105",
+        "flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm backdrop-blur-md transition-all hover:scale-105",
         className
       )}
     >
       <Heart
         className={cn(
           "size-4 transition-colors",
-          active ? "fill-primary text-primary" : "text-foreground/70"
+          active ? "fill-gold text-gold" : "text-white/80"
         )}
       />
     </button>

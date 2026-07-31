@@ -209,6 +209,7 @@ function buildCommonWhere(
     neighborhoodId: filters.neighborhoodId,
     typeId: filters.typeId,
     featured: filters.featured,
+    isLaunch: filters.isLaunch,
     acceptsFinancing: filters.acceptsFinancing,
     acceptsFgts: filters.acceptsFgts,
     furnished: filters.furnished,
@@ -466,6 +467,14 @@ export async function listFeaturedProperties(limit = 6) {
 
 export async function listRecentProperties(limit = 8) {
   return propertyRepository.listRecentProperties(limit)
+}
+
+export async function listPublicPropertiesByRealtor(realtorId: string, limit = 12) {
+  return propertyRepository.listPublicPropertiesByRealtor(realtorId, limit)
+}
+
+export async function listLaunchProperties(limit = 6) {
+  return propertyRepository.listLaunchProperties(limit)
 }
 
 export async function listSimilarProperties(

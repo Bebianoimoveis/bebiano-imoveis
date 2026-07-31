@@ -82,7 +82,7 @@ export function PropertyVisitDialog({
         </DialogHeader>
 
         {state.status === "success" ? (
-          <p className="rounded-lg bg-primary/10 p-4 text-sm text-primary">
+          <p className="rounded-lg border border-primary/30 bg-primary/15 p-4 text-sm text-foreground">
             {state.message}
           </p>
         ) : (

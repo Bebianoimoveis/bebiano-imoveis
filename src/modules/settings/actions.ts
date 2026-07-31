@@ -22,6 +22,13 @@ export async function getAdminSettings() {
   return settingsRepository.getSettings()
 }
 
+// Leitura pública — usada só pelo endereço/mapa do rodapé, sem checagem
+// de permissão (o endereço da imobiliária não é dado sensível).
+export async function getPublicSiteAddress() {
+  const settings = await settingsRepository.getSettings()
+  return settings?.address ?? null
+}
+
 export async function updateSettings(input: unknown) {
   const session = await requireSettingsManage()
   const data = siteSettingsInputSchema.parse(input)

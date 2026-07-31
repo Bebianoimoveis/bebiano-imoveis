@@ -12,6 +12,7 @@ import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
 import { siteConfig } from "@/config/site"
 
 type City = { id: string; name: string; state: string }
+type PropertyType = { id: string; name: string }
 
 const container = {
   hidden: {},
@@ -27,7 +28,13 @@ const item = {
   },
 }
 
-export function Hero({ cities }: { cities: City[] }) {
+export function Hero({
+  cities,
+  propertyTypes,
+}: {
+  cities: City[]
+  propertyTypes: PropertyType[]
+}) {
   const { phone } = useAttributedWhatsapp()
 
   return (
@@ -111,7 +118,7 @@ export function Hero({ cities }: { cities: City[] }) {
         </motion.div>
 
         <motion.div variants={item} className="relative z-20 mt-6 sm:mt-14 sm:-mb-12 lg:-mb-16">
-          <HeroSearch cities={cities} />
+          <HeroSearch cities={cities} propertyTypes={propertyTypes} />
         </motion.div>
       </motion.div>
 

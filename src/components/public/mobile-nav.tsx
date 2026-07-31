@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Heart,
   Home,
+  KeyRound,
   Lock,
   Mail,
   Search,
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Início", icon: Home },
   { href: "/imoveis", label: "Todos os imóveis", icon: Search },
   { href: "/comprar", label: "Comprar", icon: Building2 },
+  { href: "/alugar", label: "Alugar", icon: KeyRound },
   { href: "/favoritos", label: "Favoritos", icon: Heart },
 ]
 
@@ -165,7 +167,7 @@ export function MobileNav({
                       whileTap={{ scale: 0.97 }}
                       className="flex w-full items-center gap-4 rounded-3xl bg-card p-4 text-left shadow-sm ring-1 ring-border/60 transition-shadow hover:shadow-md"
                     >
-                      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-gold">
                         <User className="size-5" />
                       </span>
                       <span className="flex-1">

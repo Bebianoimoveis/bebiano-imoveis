@@ -27,6 +27,7 @@ export type PermissionKey =
   | "report.view"
   | "user.manage"
   | "settings.manage"
+  | "testimonial.manage"
 
 type SessionUser = {
   roleId: string

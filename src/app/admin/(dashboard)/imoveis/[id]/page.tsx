@@ -57,6 +57,8 @@ export default async function EditPropertyPage({
     furnished: property.furnished,
     gatedCommunity: property.gatedCommunity,
     featured: property.featured,
+    isLaunch: property.isLaunch,
+    launchDeliveryAt: property.launchDeliveryAt ?? undefined,
     videoUrl: property.videoUrl ?? "",
     realtorId: property.realtorId ?? undefined,
     featureIds: property.features.map((f) => f.featureId),

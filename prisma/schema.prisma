@@ -362,6 +362,14 @@ model Property {
 
   videoUrl String?
 
+  // "Lançamento" (empreendimento novo) — categoria própria na home
+  // pública, distinta de availableUnits (que só indica "apartamento com
+  // várias unidades", não necessariamente um lançamento). launchDeliveryAt
+  // é a previsão de entrega exibida na seção de Lançamentos; null quando
+  // isLaunch é false ou a data ainda não foi definida.
+  isLaunch        Boolean   @default(false)
+  launchDeliveryAt DateTime?
+
   // Incrementado a cada acesso à página pública do imóvel — usado no
   // relatório de "imóveis mais visualizados" do dashboard.
   viewCount Int @default(0)
@@ -761,6 +769,27 @@ model Goal {
   updatedAt    DateTime  @updatedAt
 
   @@index([scope, year, month])
+}
+
+// ---------------------------------------------------------------------------
+// Site público / marketing
+// ---------------------------------------------------------------------------
+
+// Depoimentos de clientes exibidos na home pública — gerenciados pelo
+// admin (não há formulário público de envio, evita moderação de spam).
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  city      String?
+  rating    Int      @default(5) // 1-5
+  message   String
+  photoUrl  String?
+  published Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, order])
 }
 
 // ---------------------------------------------------------------------------

@@ -18,6 +18,7 @@ import {
   Settings,
   Link2,
   LogOut,
+  MessageSquareQuote,
 } from "lucide-react"
 
 import { signOutAction } from "@/modules/auth/actions"
@@ -70,6 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Gestão",
     items: [
+      { label: "Depoimentos", href: "/admin/depoimentos", icon: MessageSquareQuote, permission: "testimonial.manage" },
       { label: "Usuários", href: "/admin/usuarios", icon: UserCog, permission: "user.manage" },
       { label: "Inteligência de Negócios", href: "/admin/relatorios", icon: BarChart3, permission: "report.view" },
       { label: "Configurações", href: "/admin/configuracoes", icon: Settings, permission: "settings.manage" },

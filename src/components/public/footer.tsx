@@ -4,13 +4,15 @@ import { Mail } from "lucide-react"
 
 import { InstagramIcon } from "@/components/shared/instagram-icon"
 import { FooterWhatsappLink } from "@/components/public/footer-whatsapp-link"
+import { getPublicSiteAddress } from "@/modules/settings/actions"
 import { siteConfig } from "@/config/site"
 
 const SOCIAL_LINK_CLASS =
   "flex size-12 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-all duration-200 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground"
 
-export function Footer() {
+export async function Footer() {
   const year = new Date().getFullYear()
+  const address = await getPublicSiteAddress()
 
   return (
     <footer className="border-t border-border/60 bg-secondary/30 pb-16 md:pb-0">
@@ -37,6 +39,9 @@ export function Footer() {
             <Link href="/comprar" className="hover:text-foreground">
               Comprar
             </Link>
+            <Link href="/alugar" className="hover:text-foreground">
+              Alugar
+            </Link>
           </div>
         </div>
 
@@ -61,8 +66,23 @@ export function Footer() {
               <InstagramIcon className="size-5" />
             </a>
           </div>
+          {address ? <p className="text-muted-foreground">{address}</p> : null}
         </div>
       </div>
+
+      {address ? (
+        <div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6">
+          <div className="overflow-hidden rounded-2xl ring-1 ring-border/60">
+            <iframe
+              title="Localização da Bebiano Imóveis"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
+              className="h-56 w-full grayscale-[35%] sm:h-72"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex flex-col items-center gap-1 border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
         <p>

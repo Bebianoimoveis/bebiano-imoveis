@@ -23,6 +23,7 @@ const defaultValues: PropertyInput = {
   furnished: false,
   gatedCommunity: false,
   featured: false,
+  isLaunch: false,
   videoUrl: "",
   featureIds: [],
 }

@@ -43,6 +43,11 @@ export const propertyInputSchema = z.object({
   gatedCommunity: z.coerce.boolean().default(false),
   featured: z.coerce.boolean().default(false),
 
+  // "Lançamento" — categoria própria na home pública (ver seção
+  // Lançamentos), distinta de availableUnits.
+  isLaunch: z.coerce.boolean().default(false),
+  launchDeliveryAt: z.coerce.date().optional(),
+
   videoUrl: z.union([z.url(), z.literal("")]).optional(),
   realtorId: z.string().optional(),
 
@@ -83,6 +88,7 @@ export const propertyFiltersSchema = z.object({
   minArea: z.coerce.number().nonnegative().optional(),
   code: z.string().optional(),
   featured: z.coerce.boolean().optional(),
+  isLaunch: z.coerce.boolean().optional(),
   acceptsFinancing: z.coerce.boolean().optional(),
   acceptsFgts: z.coerce.boolean().optional(),
   furnished: z.coerce.boolean().optional(),
