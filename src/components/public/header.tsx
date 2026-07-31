@@ -45,7 +45,11 @@ export function Header() {
         "fixed top-0 z-50 w-full transition-all duration-300",
         transparent
           ? "border-b border-transparent bg-transparent"
-          : "border-b border-white/10 bg-primary/90 backdrop-blur-[18px] supports-backdrop-filter:bg-primary/80"
+          : // Sem backdrop-blur: header fixo, recompõe a cada frame de
+            // scroll (o conteúdo passa por baixo o tempo todo) — custo
+            // contínuo, não só na primeira pintura. Fundo sólido opaco
+            // mantém a leitura sem esse custo.
+            "border-b border-white/10 bg-primary/95"
       )}
     >
       <div className="relative mx-auto flex h-18 max-w-6xl items-center justify-between px-4 sm:px-6">

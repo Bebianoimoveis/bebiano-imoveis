@@ -43,16 +43,13 @@ export function Hero({
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-primary">
       <Parallax className="absolute inset-0" strength={80}>
-        {/* "Câmera respirando": zoom quase imperceptível, independente do
-            parallax de scroll (que já cuida do eixo Y) — puramente
-            decorativo, roda sempre, não reage a interação. */}
-        <motion.div
-          className="size-full"
-          animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
-        >
-          <HeroBackground posterUrl={heroImage?.url} posterAlt={heroImage?.title} />
-        </motion.div>
+        {/* O zoom contínuo ("câmera respirando") que existia aqui rodava pra
+            sempre (24s infinito), mesmo com o Hero fora da tela depois de
+            rolar a página — forçava repaint constante o tempo todo em que a
+            aba ficava aberta, custo real de performance sem ganho visual
+            proporcional. Removido; o parallax de scroll abaixo já dá
+            movimento suficiente. */}
+        <HeroBackground posterUrl={heroImage?.url} posterAlt={heroImage?.title} />
       </Parallax>
 
       {/* Overlay em três camadas: (1) vertical, mais escuro embaixo onde

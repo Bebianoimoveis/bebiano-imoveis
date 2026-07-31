@@ -48,7 +48,10 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
-          <Badge className="border-0 bg-black/45 text-white shadow-sm backdrop-blur-md">
+          {/* Sem backdrop-blur: esse badge aparece em todo card de uma
+              grade (às vezes dezenas por página) — blur multiplicado
+              pesa no scroll, principalmente no mobile. */}
+          <Badge className="border-0 bg-black/60 text-white shadow-sm">
             {PURPOSE_LABEL[property.purpose]}
           </Badge>
           {property.featured ? (

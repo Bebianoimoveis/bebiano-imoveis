@@ -30,7 +30,9 @@ export function CardShareButton({ title, path }: { title: string; path: string }
       type="button"
       onClick={handleShare}
       aria-label="Compartilhar imóvel"
-      className="flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm backdrop-blur-md transition-all hover:scale-105"
+      // Sem backdrop-blur: mesmo motivo do FavoriteButton — se repete em
+      // cada card de imóvel numa grade, blur multiplicado pesa no scroll.
+      className="flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white shadow-sm transition-all hover:scale-105"
     >
       <Share2 className="size-4" />
     </button>

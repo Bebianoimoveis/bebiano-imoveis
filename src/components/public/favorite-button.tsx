@@ -47,7 +47,11 @@ export function FavoriteButton({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm backdrop-blur-md transition-all hover:scale-105",
+        // Sem backdrop-blur de propósito: esse botão se repete em cada
+        // card de imóvel numa grade (às vezes dezenas por página) — blur
+        // multiplicado por tantas instâncias pesa no scroll, principalmente
+        // no mobile. Opacidade sólida um pouco maior mantém o contraste.
+        "flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white shadow-sm transition-all hover:scale-105",
         className
       )}
     >

@@ -19,7 +19,8 @@ export function RealtorWhatsappButton({
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
       aria-label={`Falar com ${name} no WhatsApp`}
-      className="absolute top-3 right-3 z-20 flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm backdrop-blur-md transition-all hover:scale-105 hover:bg-primary"
+      // Sem backdrop-blur: repete em cada card da grade de corretores.
+      className="absolute top-3 right-3 z-20 flex size-9 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white shadow-sm transition-all hover:scale-105 hover:bg-primary"
     >
       <WhatsAppIcon className="size-4" />
     </a>
