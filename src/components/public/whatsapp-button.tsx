@@ -22,7 +22,9 @@ export function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Falar no WhatsApp"
-      className="fixed right-5 bottom-28 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 md:bottom-5"
+      // Marsala mais escuro que o --primary padrão (só pra este botão
+      // flutuante) e o ícone em dourado forte, a pedido da cliente.
+      className="fixed right-5 bottom-28 z-50 flex size-14 items-center justify-center rounded-full bg-[#4a0c1c] text-gold shadow-lg transition-transform hover:scale-105 md:bottom-5"
     >
       <WhatsAppIcon className="size-6" />
     </a>

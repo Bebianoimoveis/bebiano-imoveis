@@ -13,7 +13,6 @@ import { siteConfig } from "@/config/site"
 
 type City = { id: string; name: string; state: string }
 type PropertyType = { id: string; name: string }
-type HeroImage = { url: string; title: string } | null
 
 const container = {
   hidden: {},
@@ -32,11 +31,9 @@ const item = {
 export function Hero({
   cities,
   propertyTypes,
-  heroImage,
 }: {
   cities: City[]
   propertyTypes: PropertyType[]
-  heroImage?: HeroImage
 }) {
   const { phone } = useAttributedWhatsapp()
 
@@ -49,7 +46,7 @@ export function Hero({
             aba ficava aberta, custo real de performance sem ganho visual
             proporcional. Removido; o parallax de scroll abaixo já dá
             movimento suficiente. */}
-        <HeroBackground posterUrl={heroImage?.url} posterAlt={heroImage?.title} />
+        <HeroBackground />
       </Parallax>
 
       {/* Overlay em três camadas: (1) vertical, mais escuro embaixo onde

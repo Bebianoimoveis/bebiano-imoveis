@@ -317,24 +317,6 @@ export async function listRecentProperties(
   })
 }
 
-// Foto de fundo do Hero — o imóvel publicado de maior valor com pelo
-// menos uma imagem, real e vindo do catálogo, em vez de uma foto de
-// estoque genérica. Prefere a capa (isCover), cai pra primeira imagem se
-// nenhuma estiver marcada como capa.
-export async function getShowcasePropertyImage(): Promise<{ url: string; title: string } | null> {
-  const property = await prisma.property.findFirst({
-    where: { ...PUBLIC_WHERE, images: { some: {} } },
-    orderBy: { price: "desc" },
-    select: {
-      title: true,
-      images: { orderBy: [{ isCover: "desc" }, { order: "asc" }], take: 1, select: { url: true } },
-    },
-  })
-
-  const image = property?.images[0]
-  return image ? { url: image.url, title: property.title } : null
-}
-
 export async function listPublicPropertiesByRealtor(
   realtorId: string,
   take: number

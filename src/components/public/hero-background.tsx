@@ -6,11 +6,8 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 const HERO_VIDEO_SRC = "/videos/hero.mp4"
-// Fallback só usado se ainda não existir nenhum imóvel publicado com foto
-// no catálogo (site recém-implantado) — nesse caso não há imagem real de
-// imóvel pra puxar do banco.
-const FALLBACK_POSTER = "/images/hero-team.jpg"
-const FALLBACK_ALT = "Bebiano Imóveis"
+const HERO_POSTER = "/images/hero-bg.jpg"
+const HERO_ALT = "Bebiano Imóveis"
 
 // Mesmo tratamento cinematográfico (contraste, saturação, temperatura)
 // aplicado nos dois formatos, pra trocar de imagem pra vídeo (ou vice
@@ -18,16 +15,8 @@ const FALLBACK_ALT = "Bebiano Imóveis"
 const MEDIA_FILTER =
   "object-cover object-[50%_10%] contrast-[1.1] saturate-[0.75] brightness-[0.9] sepia-[0.08] grayscale-[12%]"
 
-export function HeroBackground({
-  posterUrl,
-  posterAlt,
-}: {
-  posterUrl?: string
-  posterAlt?: string
-}) {
+export function HeroBackground() {
   const [videoFailed, setVideoFailed] = useState(false)
-  const poster = posterUrl || FALLBACK_POSTER
-  const alt = posterAlt || FALLBACK_ALT
 
   return (
     <div className="relative size-full">
@@ -43,7 +32,7 @@ export function HeroBackground({
           loop
           playsInline
           preload="metadata"
-          poster={poster}
+          poster={HERO_POSTER}
           onError={() => setVideoFailed(true)}
           className={cn("absolute inset-0 hidden size-full sm:block", MEDIA_FILTER)}
         >
@@ -52,8 +41,8 @@ export function HeroBackground({
       ) : null}
 
       <Image
-        src={poster}
-        alt={alt}
+        src={HERO_POSTER}
+        alt={HERO_ALT}
         fill
         priority
         sizes="100vw"
