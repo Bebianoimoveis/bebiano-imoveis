@@ -213,12 +213,7 @@ export function MobileNav({
                           {isActive ? (
                             <span className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-full bg-primary" />
                           ) : null}
-                          <Icon
-                            className={cn(
-                              "size-[18px]",
-                              isActive ? "text-primary" : "text-muted-foreground"
-                            )}
-                          />
+                          <Icon className="size-[18px] text-gold" />
                           <span
                             className={cn(
                               "flex-1 text-[15px] text-gold",
@@ -252,7 +247,7 @@ export function MobileNav({
                           onClick={onClose}
                           className="flex items-center gap-3 rounded-2xl py-3.5 pr-3 pl-4 text-gold transition-colors hover:bg-secondary/50"
                         >
-                          <Icon className="size-[18px] text-muted-foreground" />
+                          <Icon className="size-[18px] text-gold" />
                           <span className="flex-1 text-[15px]">{contactItem.label}</span>
                           <ChevronRight className="size-4 text-muted-foreground/60" />
                         </a>
@@ -271,18 +266,18 @@ export function MobileNav({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={onClose}
-                    className="flex items-center gap-4 rounded-3xl bg-gold p-4 text-accent-foreground shadow-lg"
+                    className="flex items-center gap-4 rounded-3xl bg-primary p-4 shadow-lg"
                   >
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-foreground/10">
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/15 text-gold">
                       <WhatsAppIcon className="size-5" />
                     </span>
                     <span className="flex-1">
-                      <span className="block font-medium">Falar no WhatsApp</span>
-                      <span className="block text-sm text-accent-foreground/75">
+                      <span className="block font-medium text-gold">Falar no WhatsApp</span>
+                      <span className="block text-sm text-gold-dark">
                         Atendimento rápido
                       </span>
                     </span>
-                    <ChevronRight className="size-5 text-accent-foreground/70" />
+                    <ChevronRight className="size-5 text-gold-dark" />
                   </motion.a>
                 ) : null}
               </motion.div>
