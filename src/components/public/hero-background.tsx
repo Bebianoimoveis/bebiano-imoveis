@@ -16,15 +16,28 @@ const MEDIA_FILTER =
   "object-cover object-[50%_10%] contrast-[1.1] saturate-[0.75] brightness-[0.9] sepia-[0.08] grayscale-[12%]"
 
 export function HeroBackground() {
+  // Antes o <Image> só aparecia depois do <video> falhar (sm:hidden
+  // enquanto !videoFailed) — como public/videos/hero.mp4 não existe, no
+  // desktop a tela ficava travada/em branco até o navegador desistir do
+  // vídeo e disparar onError. Agora a imagem é sempre a base (visível
+  // desde o primeiro frame) e o vídeo, quando existir de verdade, entra
+  // por cima com um fade suave só depois de confirmar que consegue
+  // tocar — nunca há um estado "travado" esperando o vídeo decidir se
+  // existe.
+  const [videoReady, setVideoReady] = useState(false)
   const [videoFailed, setVideoFailed] = useState(false)
 
   return (
     <div className="relative size-full">
-      {/* Vídeo só em telas sm+: em mobile priorizamos performance/dados do
-          usuário e mantemos a imagem estática. Enquanto
-          public/videos/hero.mp4 não existir, o próprio <video> dispara
-          onError e cai pra imagem automaticamente — não precisa remover
-          nada daqui quando o arquivo for adicionado depois. */}
+      <Image
+        src={HERO_POSTER}
+        alt={HERO_ALT}
+        fill
+        priority
+        sizes="100vw"
+        className={MEDIA_FILTER}
+      />
+
       {!videoFailed ? (
         <video
           autoPlay
@@ -32,22 +45,17 @@ export function HeroBackground() {
           loop
           playsInline
           preload="metadata"
-          poster={HERO_POSTER}
+          onCanPlay={() => setVideoReady(true)}
           onError={() => setVideoFailed(true)}
-          className={cn("absolute inset-0 hidden size-full sm:block", MEDIA_FILTER)}
+          className={cn(
+            "absolute inset-0 hidden size-full transition-opacity duration-700 sm:block",
+            MEDIA_FILTER,
+            videoReady ? "opacity-100" : "opacity-0"
+          )}
         >
           <source src={HERO_VIDEO_SRC} type="video/mp4" />
         </video>
       ) : null}
-
-      <Image
-        src={HERO_POSTER}
-        alt={HERO_ALT}
-        fill
-        priority
-        sizes="100vw"
-        className={cn(MEDIA_FILTER, !videoFailed && "sm:hidden")}
-      />
     </div>
   )
 }
