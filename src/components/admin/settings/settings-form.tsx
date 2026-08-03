@@ -116,6 +116,30 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="rentalEnabled"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center gap-2 rounded-xl border border-border/60 p-3">
+              <FormControl>
+                <input
+                  type="checkbox"
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                  className="size-4 rounded border-border"
+                />
+              </FormControl>
+              <div>
+                <FormLabel className="font-normal">Atender locação (Alugar)</FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  Desligado: o site só mostra Venda (nenhum "Alugar" na navegação/busca). Ligue quando a
+                  imobiliária passar a atender locação.
+                </p>
+              </div>
+            </FormItem>
+          )}
+        />
+
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}

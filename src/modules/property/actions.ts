@@ -423,13 +423,15 @@ export async function exportPropertiesCsv(input: { rawFilters?: unknown; ids?: s
   return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
 }
 
-// Uso público — sem autenticação, apenas imóveis publicados e não excluídos.
+// Uso público — sem autenticação, apenas imóveis publicados e não
+// excluídos, de um tipo ainda ativo (ver PropertyType.active).
 export async function listPublicProperties(rawFilters: unknown) {
   const filters = propertyFiltersSchema.parse(rawFilters ?? {})
 
   const where: Prisma.PropertyWhereInput = {
     ...buildCommonWhere(filters),
     status: "PUBLISHED",
+    type: { active: true },
   }
 
   return propertyRepository.listProperties({
@@ -454,7 +456,7 @@ export async function listPropertiesByIds(ids: string[]) {
   if (ids.length === 0) return []
 
   const { items } = await propertyRepository.listProperties({
-    where: { id: { in: ids }, status: "PUBLISHED" },
+    where: { id: { in: ids }, status: "PUBLISHED", type: { active: true } },
     skip: 0,
     take: ids.length,
   })

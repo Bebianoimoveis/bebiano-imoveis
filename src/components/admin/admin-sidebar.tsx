@@ -19,6 +19,8 @@ import {
   Link2,
   LogOut,
   MessageSquareQuote,
+  LayoutGrid,
+  ClipboardList,
 } from "lucide-react"
 
 import { signOutAction } from "@/modules/auth/actions"
@@ -54,6 +56,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Visão Geral", href: "/admin", icon: LayoutDashboard },
       { label: "Portfólio de Imóveis", href: "/admin/imoveis", icon: Building2, permission: "property.create" },
+      { label: "Segmentos", href: "/admin/segmentos", icon: LayoutGrid, permission: "segment.manage" },
+      { label: "Captação", href: "/admin/captacao", icon: ClipboardList, permission: "submission.manage" },
       { label: "Central de Leads", href: "/admin/leads", icon: Users2, permission: "lead.manage" },
       { label: "Clientes", href: "/admin/clientes", icon: Contact, permission: "client.manage" },
       { label: "Links dos Corretores", href: "/admin/corretores/links", icon: Link2, permission: "realtor.manage" },

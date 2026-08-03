@@ -86,3 +86,36 @@ export async function createFinancialAttachmentUploadSignature(): Promise<Upload
     maxFileSize: ATTACHMENT_MAX_FILE_SIZE_BYTES,
   }
 }
+
+const SUBMISSION_ALLOWED_FORMATS = "jpg,jpeg,png,webp"
+const SUBMISSION_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 // 8MB
+
+// Sem checagem de sessão de propósito: usado pelo formulário público
+// "Quero vender meu imóvel" (src/app/(public)/anunciar), preenchido por
+// visitantes sem conta. Pasta e formatos restritos (só imagem) limitam o
+// uso indevido da assinatura.
+export async function createSubmissionImageUploadSignature(): Promise<UploadSignature> {
+  const timestamp = Math.round(Date.now() / 1000)
+  const folder = "bebiano-imoveis/captacao"
+
+  const paramsToSign = {
+    timestamp,
+    folder,
+    allowed_formats: SUBMISSION_ALLOWED_FORMATS,
+  }
+
+  const signature = cloudinary.utils.api_sign_request(
+    paramsToSign,
+    process.env.CLOUDINARY_API_SECRET as string
+  )
+
+  return {
+    timestamp,
+    signature,
+    apiKey: process.env.CLOUDINARY_API_KEY as string,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+    folder,
+    allowedFormats: SUBMISSION_ALLOWED_FORMATS,
+    maxFileSize: SUBMISSION_MAX_FILE_SIZE_BYTES,
+  }
+}

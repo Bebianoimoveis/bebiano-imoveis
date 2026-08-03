@@ -28,6 +28,8 @@ export type PermissionKey =
   | "user.manage"
   | "settings.manage"
   | "testimonial.manage"
+  | "submission.manage"
+  | "segment.manage"
 
 type SessionUser = {
   roleId: string

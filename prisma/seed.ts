@@ -33,6 +33,8 @@ const PERMISSIONS = [
   "user.manage",
   "settings.manage",
   "testimonial.manage",
+  "submission.manage",
+  "segment.manage",
 ] as const
 
 const PERMISSIONS_BY_ROLE: Record<(typeof ROLES)[number], readonly string[]> = {
@@ -56,6 +58,8 @@ const PERMISSIONS_BY_ROLE: Record<(typeof ROLES)[number], readonly string[]> = {
     "contract.view.all",
     "report.view",
     "testimonial.manage",
+    "submission.manage",
+    "segment.manage",
   ],
   REALTOR: [
     "property.create",

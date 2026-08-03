@@ -27,8 +27,20 @@ export async function listNeighborhoods(cityId: string) {
   })
 }
 
+// Usado pelo painel admin (cadastro/edição de imóvel, filtros internos) —
+// inclui tipos desativados, já que a equipe ainda precisa vê-los pra
+// reativar ou pra editar imóveis antigos daquele tipo.
 export async function listPropertyTypes() {
   return prisma.propertyType.findMany({ orderBy: { name: "asc" } })
+}
+
+// Usado pelo site público (busca, filtros, categorias) — só tipos
+// ativos, ver PropertyType.active.
+export async function listPublicPropertyTypes() {
+  return prisma.propertyType.findMany({
+    where: { active: true },
+    orderBy: { name: "asc" },
+  })
 }
 
 export async function listPropertyFeatures() {
@@ -89,4 +101,23 @@ export async function createPropertyFeature(input: unknown) {
 
   revalidatePath("/admin/imoveis/novo")
   return feature
+}
+
+// Liga/desliga a visibilidade de um tipo de imóvel no site inteiro (busca,
+// filtros, listagens, links diretos — ver PUBLIC_WHERE no repository de
+// property). Reaproveita "segment.manage" em vez de criar uma permissão
+// nova, já que é a mesma responsabilidade de "controlar o que aparece no
+// site" da tela de Segmentos.
+export async function togglePropertyTypeActive(id: string, active: boolean) {
+  const session = await auth()
+  if (!(await can(session?.user, "segment.manage"))) {
+    throw new Error("Sem permissão para gerenciar tipos de imóvel.")
+  }
+
+  await prisma.propertyType.update({ where: { id }, data: { active } })
+
+  revalidatePath("/admin/segmentos")
+  revalidatePath("/")
+  revalidatePath("/comprar")
+  revalidatePath("/alugar")
 }

@@ -31,9 +31,11 @@ const item = {
 export function Hero({
   cities,
   propertyTypes,
+  rentalEnabled = false,
 }: {
   cities: City[]
   propertyTypes: PropertyType[]
+  rentalEnabled?: boolean
 }) {
   const { phone } = useAttributedWhatsapp()
 
@@ -115,7 +117,7 @@ export function Hero({
         </motion.div>
 
         <motion.div variants={item} className="relative z-20 mt-6 sm:mt-14 sm:-mb-12 lg:-mb-16">
-          <HeroSearch cities={cities} propertyTypes={propertyTypes} />
+          <HeroSearch cities={cities} propertyTypes={propertyTypes} rentalEnabled={rentalEnabled} />
         </motion.div>
       </motion.div>
 

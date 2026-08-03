@@ -12,14 +12,16 @@ import { MobileNav } from "@/components/public/mobile-nav"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 
-const NAV_LINKS = [
+const BASE_NAV_LINKS = [
   { href: "/imoveis", label: "Todos os imóveis" },
   { href: "/comprar", label: "Comprar" },
-  { href: "/alugar", label: "Alugar" },
 ]
 
-export function Header() {
+const RENT_LINK = { href: "/alugar", label: "Alugar" }
+
+export function Header({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
+  const navLinks = rentalEnabled ? [...BASE_NAV_LINKS, RENT_LINK] : BASE_NAV_LINKS
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
 
@@ -79,7 +81,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <NavLink
               key={link.href}
               href={link.href}
@@ -113,7 +115,7 @@ export function Header() {
         </button>
       </div>
 
-      <MobileNav open={isOpen} onClose={() => setIsOpen(false)} />
+      <MobileNav open={isOpen} onClose={() => setIsOpen(false)} rentalEnabled={rentalEnabled} />
     </header>
   )
 }

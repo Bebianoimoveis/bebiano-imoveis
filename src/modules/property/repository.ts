@@ -62,7 +62,10 @@ export async function findPropertyBySlugPublic(
   slug: string
 ): Promise<PropertyDetail | null> {
   return prisma.property.findFirst({
-    where: { slug, deletedAt: null, status: "PUBLISHED" },
+    // type.active: se o tipo do imóvel foi desativado (ver Segment/toggle
+    // no admin), o imóvel some do site público inteiro, inclusive por
+    // link direto — não só dos banners/busca.
+    where: { slug, deletedAt: null, status: "PUBLISHED", type: { active: true } },
     include: detailInclude,
   })
 }
@@ -290,9 +293,12 @@ export async function findFirstImage(propertyId: string) {
   })
 }
 
+// type.active: imóvel de um tipo desativado (ver PropertyType.active /
+// toggle de segmento no admin) some do site público inteiro.
 const PUBLIC_WHERE = {
   status: "PUBLISHED",
   deletedAt: null,
+  type: { active: true },
 } satisfies Prisma.PropertyWhereInput
 
 export async function listFeaturedProperties(

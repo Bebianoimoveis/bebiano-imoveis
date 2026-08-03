@@ -29,6 +29,14 @@ export async function getPublicSiteAddress() {
   return settings?.address ?? null
 }
 
+// Leitura pública — controla se "Alugar" aparece na navegação/busca do
+// site público (menu, rodapé, toggle do Hero). Hoje a imobiliária só
+// trabalha com venda; ativar aqui não exige deploy.
+export async function getPublicRentalEnabled() {
+  const settings = await settingsRepository.getSettings()
+  return settings?.rentalEnabled ?? false
+}
+
 export async function updateSettings(input: unknown) {
   const session = await requireSettingsManage()
   const data = siteSettingsInputSchema.parse(input)
@@ -39,6 +47,7 @@ export async function updateSettings(input: unknown) {
     email: data.email,
     address: data.address,
     aboutText: data.aboutText || null,
+    rentalEnabled: data.rentalEnabled,
     socialLinks: {
       instagram: data.instagram || undefined,
       facebook: data.facebook || undefined,

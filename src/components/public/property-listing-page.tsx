@@ -7,7 +7,7 @@ import { PropertyCard } from "@/components/public/property-card"
 import { PropertyFiltersSidebar } from "@/components/public/property-filters-sidebar"
 import { MobileFiltersSheet } from "@/components/public/mobile-filters-sheet"
 import { listPublicProperties } from "@/modules/property/actions"
-import { listCities, listPropertyTypes } from "@/modules/taxonomy/actions"
+import { listCities, listPublicPropertyTypes } from "@/modules/taxonomy/actions"
 
 const PAGE_SIZE = 20
 
@@ -50,7 +50,7 @@ export async function PropertyListingPage({
   const [{ items, total }, cities, propertyTypes] = await Promise.all([
     listPublicProperties(filters),
     listCities(),
-    listPropertyTypes(),
+    listPublicPropertyTypes(),
   ])
 
   function buildHref(page: number) {

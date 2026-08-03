@@ -10,7 +10,7 @@ import { siteConfig } from "@/config/site"
 const SOCIAL_LINK_CLASS =
   "flex size-12 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-all duration-200 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground"
 
-export async function Footer() {
+export async function Footer({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
   const year = new Date().getFullYear()
   const address = await getPublicSiteAddress()
 
@@ -39,8 +39,13 @@ export async function Footer() {
             <Link href="/comprar" className="hover:text-foreground">
               Comprar
             </Link>
-            <Link href="/alugar" className="hover:text-foreground">
-              Alugar
+            {rentalEnabled ? (
+              <Link href="/alugar" className="hover:text-foreground">
+                Alugar
+              </Link>
+            ) : null}
+            <Link href="/anunciar" className="hover:text-foreground">
+              Anunciar meu imóvel
             </Link>
           </div>
         </div>

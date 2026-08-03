@@ -8,6 +8,7 @@ export const siteSettingsInputSchema = z.object({
   aboutText: z.string().max(4000).optional(),
   instagram: z.string().optional(),
   facebook: z.string().optional(),
+  rentalEnabled: z.boolean(),
 })
 
 export type SiteSettingsInput = z.infer<typeof siteSettingsInputSchema>

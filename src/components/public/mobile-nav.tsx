@@ -27,11 +27,15 @@ import { countPublicProperties } from "@/modules/property/actions"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { href: "/", label: "Início", icon: Home },
   { href: "/imoveis", label: "Todos os imóveis", icon: Search },
   { href: "/comprar", label: "Comprar", icon: Building2 },
-  { href: "/alugar", label: "Alugar", icon: KeyRound },
+]
+
+const RENT_NAV_ITEM = { href: "/alugar", label: "Alugar", icon: KeyRound }
+
+const TAIL_NAV_ITEMS = [
   { href: "/favoritos", label: "Favoritos", icon: Heart },
 ]
 
@@ -62,15 +66,20 @@ const item = {
 export function MobileNav({
   open,
   onClose,
+  rentalEnabled = false,
 }: {
   open: boolean
   onClose: () => void
+  rentalEnabled?: boolean
 }) {
   const [mounted, setMounted] = useState(false)
   const [count, setCount] = useState<number | null>(null)
   const hasFetchedCount = useRef(false)
   const pathname = usePathname()
   const { phone, realtorName } = useAttributedWhatsapp()
+  const navItems = rentalEnabled
+    ? [...BASE_NAV_ITEMS, RENT_NAV_ITEM, ...TAIL_NAV_ITEMS]
+    : [...BASE_NAV_ITEMS, ...TAIL_NAV_ITEMS]
 
   useEffect(() => {
     setMounted(true)
@@ -188,7 +197,7 @@ export function MobileNav({
                   Navegação
                 </p>
                 <div className="space-y-1">
-                  {NAV_ITEMS.map((navItem) => {
+                  {navItems.map((navItem) => {
                     const isActive = pathname === navItem.href
                     const Icon = navItem.icon
                     return (

@@ -14,6 +14,7 @@ export default async function AdminSettingsPage() {
     aboutText: settings?.aboutText ?? "",
     instagram: socialLinks.instagram ?? "",
     facebook: socialLinks.facebook ?? "",
+    rentalEnabled: settings?.rentalEnabled ?? false,
   }
 
   return (
