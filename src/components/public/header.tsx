@@ -50,8 +50,10 @@ export function Header({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
           : // Sem backdrop-blur: header fixo, recompõe a cada frame de
             // scroll (o conteúdo passa por baixo o tempo todo) — custo
             // contínuo, não só na primeira pintura. Fundo sólido opaco
-            // mantém a leitura sem esse custo.
-            "border-b border-white/10 bg-primary/95"
+            // mantém a leitura sem esse custo. Marsala mais escuro que o
+            // --primary padrão (mesmo tom do botão de WhatsApp), a pedido
+            // da cliente.
+            "border-b border-white/10 bg-[#4a0c1c]"
       )}
     >
       <div className="relative mx-auto flex h-18 max-w-6xl items-center justify-between px-4 sm:px-6">

@@ -73,7 +73,7 @@ export function HeroSearch({
               type="button"
               onClick={() => setFinalidade(option.value)}
               className={cn(
-                "relative flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors duration-300 sm:px-4 sm:text-sm",
+                "relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors duration-300 sm:px-4 sm:text-sm",
                 active ? "text-primary-foreground" : "text-white/70 hover:text-white"
               )}
             >

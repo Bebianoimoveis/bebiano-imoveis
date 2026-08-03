@@ -27,7 +27,9 @@ export function MobileTabBar() {
     // frame de scroll no mobile (o conteúdo passa por baixo dela o tempo
     // todo) — blur nesse caso tem custo contínuo, não só na primeira
     // pintura. Fundo sólido bem opaco mantém a leitura sem esse custo.
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center border-t border-white/10 bg-primary/95 md:hidden">
+    // Marsala mais escuro que o --primary padrão (mesmo tom do header e
+    // do botão de WhatsApp), a pedido da cliente.
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center border-t border-white/10 bg-[#4a0c1c] md:hidden">
       {TABS.map((tab) => {
         const active = tab.match(pathname)
         const Icon = tab.icon
