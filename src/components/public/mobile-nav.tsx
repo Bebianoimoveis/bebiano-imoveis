@@ -141,7 +141,7 @@ export function MobileNav({
                     priority
                     className="h-12 w-auto"
                   />
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <p className="mt-2 text-sm text-gold">
                     Encontre o imóvel ideal.
                   </p>
                 </div>
@@ -158,9 +158,9 @@ export function MobileNav({
               {/* Resumo de credibilidade */}
               <motion.div
                 variants={item}
-                className="mx-6 mt-5 flex w-fit items-center gap-2 rounded-full bg-secondary/60 px-4 py-2.5 text-sm text-foreground/80"
+                className="mx-6 mt-5 flex w-fit items-center gap-2 rounded-full bg-secondary/60 px-4 py-2.5 text-sm text-gold"
               >
-                <Building2 className="size-4 text-primary" />
+                <Building2 className="size-4 text-gold" />
                 {count === null
                   ? "Carregando imóveis…"
                   : `${count} ${count === 1 ? "imóvel disponível" : "imóveis disponíveis"}`}
@@ -180,8 +180,8 @@ export function MobileNav({
                         <User className="size-5" />
                       </span>
                       <span className="flex-1">
-                        <span className="block font-medium">Fale com um corretor</span>
-                        <span className="block text-sm text-muted-foreground">
+                        <span className="block font-medium text-gold">Fale com um corretor</span>
+                        <span className="block text-sm text-gold-dark">
                           Atendimento personalizado
                         </span>
                       </span>

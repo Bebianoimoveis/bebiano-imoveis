@@ -88,7 +88,10 @@ export default async function HomePage() {
       <TestimonialsSection />
 
       {/* 7. CTA */}
-      <section className="relative overflow-hidden border-t border-border/60 bg-primary text-primary-foreground">
+      {/* Marsala mais escuro que o --primary padrão (mesmo tom do header/
+          barra mobile/WhatsApp) — a cor cheia ficava clara demais contra o
+          resto do site, que é bem mais escuro. */}
+      <section className="relative overflow-hidden border-t border-border/60 bg-[#4a0c1c] text-primary-foreground">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklch,var(--color-gold)_12%,transparent),transparent_60%)]" />
         <Reveal className="relative mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-20 text-center sm:px-6 sm:py-24">
           <h2 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
