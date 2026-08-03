@@ -266,7 +266,9 @@ export function MobileNav({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={onClose}
-                    className="flex items-center gap-4 rounded-3xl bg-primary p-4 shadow-lg"
+                    // Marsala mais escuro que o --primary padrão (mesmo tom
+                    // do header/barra mobile/bolha flutuante de WhatsApp).
+                    className="flex items-center gap-4 rounded-3xl bg-[#4a0c1c] p-4 shadow-lg"
                   >
                     <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/15 text-gold">
                       <WhatsAppIcon className="size-5" />
