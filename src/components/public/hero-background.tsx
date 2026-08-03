@@ -6,14 +6,19 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 const HERO_VIDEO_SRC = "/videos/hero.mp4"
-const HERO_POSTER = "/images/hero-bg.jpg"
+// Imagem em modo paisagem (fornecida pela cliente) — a anterior era
+// vertical (foto de celular) e cortava boa parte do enquadramento numa
+// tela larga de desktop via object-cover.
+const HERO_POSTER = "/images/hero-bg.png"
 const HERO_ALT = "Bebiano Imóveis"
 
 // Mesmo tratamento cinematográfico (contraste, saturação, temperatura)
 // aplicado nos dois formatos, pra trocar de imagem pra vídeo (ou vice
-// versa) sem precisar redecidir o grading.
+// versa) sem precisar redecidir o grading. object-position central (não
+// mais deslocada pro topo) — a imagem paisagem já cobre bem o quadro sem
+// precisar compensar recorte.
 const MEDIA_FILTER =
-  "object-cover object-[50%_10%] contrast-[1.1] saturate-[0.75] brightness-[0.9] sepia-[0.08] grayscale-[12%]"
+  "object-cover object-center contrast-[1.1] saturate-[0.75] brightness-[0.9] sepia-[0.08] grayscale-[12%]"
 
 export function HeroBackground() {
   // Antes o <Image> só aparecia depois do <video> falhar (sm:hidden
