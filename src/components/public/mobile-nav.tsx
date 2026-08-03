@@ -221,8 +221,8 @@ export function MobileNav({
                           />
                           <span
                             className={cn(
-                              "flex-1 text-[15px]",
-                              isActive ? "font-medium text-primary" : "text-foreground"
+                              "flex-1 text-[15px] text-gold",
+                              isActive && "font-medium"
                             )}
                           >
                             {navItem.label}
@@ -250,7 +250,7 @@ export function MobileNav({
                           target={contactItem.external ? "_blank" : undefined}
                           rel={contactItem.external ? "noopener noreferrer" : undefined}
                           onClick={onClose}
-                          className="flex items-center gap-3 rounded-2xl py-3.5 pr-3 pl-4 text-foreground transition-colors hover:bg-secondary/50"
+                          className="flex items-center gap-3 rounded-2xl py-3.5 pr-3 pl-4 text-gold transition-colors hover:bg-secondary/50"
                         >
                           <Icon className="size-[18px] text-muted-foreground" />
                           <span className="flex-1 text-[15px]">{contactItem.label}</span>
@@ -271,18 +271,18 @@ export function MobileNav({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={onClose}
-                    className="flex items-center gap-4 rounded-3xl bg-primary p-4 text-primary-foreground shadow-lg"
+                    className="flex items-center gap-4 rounded-3xl bg-gold p-4 text-accent-foreground shadow-lg"
                   >
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/15">
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-foreground/10">
                       <WhatsAppIcon className="size-5" />
                     </span>
                     <span className="flex-1">
                       <span className="block font-medium">Falar no WhatsApp</span>
-                      <span className="block text-sm text-primary-foreground/80">
+                      <span className="block text-sm text-accent-foreground/75">
                         Atendimento rápido
                       </span>
                     </span>
-                    <ChevronRight className="size-5 text-primary-foreground/70" />
+                    <ChevronRight className="size-5 text-accent-foreground/70" />
                   </motion.a>
                 ) : null}
               </motion.div>

@@ -63,13 +63,9 @@
      hover/detalhe. --hover é um token extra (fora do set padrão do
      shadcn) mapeado em @theme inline como --color-hover, disponível como
      bg-hover/hover:bg-hover em qualquer componente do site público. */
-  /* Dourado mais "metal precioso", menos amarelo-limão: lightness mais
-     baixa, chroma mais alto e hue puxado pra mais perto do laranja (72
-     em vez de 80) — feedback direto da cliente, achou o tom anterior
-     parecido com amarelo. */
-  --color-gold: oklch(0.74 0.15 68);
-  --color-gold-light: oklch(0.81 0.13 72);
-  --color-gold-dark: oklch(0.6 0.15 62);
+  --color-gold: oklch(0.8 0.12 80);
+  --color-gold-light: oklch(0.87 0.1 85);
+  --color-gold-dark: oklch(0.68 0.12 70);
 
   --background: #180a0e;
   --foreground: oklch(0.96 0.01 60);
@@ -113,13 +109,9 @@
      explicitamente (preto profundo, grafite, marsala); o resto deriva
      desses tons pra manter profundidade em camadas (fundo < cards <
      hover), em vez de tudo na mesma cor. */
-  /* Dourado mais "metal precioso", menos amarelo-limão: lightness mais
-     baixa, chroma mais alto e hue puxado pra mais perto do laranja (72
-     em vez de 80) — feedback direto da cliente, achou o tom anterior
-     parecido com amarelo. */
-  --color-gold: oklch(0.74 0.15 68);
-  --color-gold-light: oklch(0.81 0.13 72);
-  --color-gold-dark: oklch(0.6 0.15 62);
+  --color-gold: oklch(0.8 0.12 80);
+  --color-gold-light: oklch(0.87 0.1 85);
+  --color-gold-dark: oklch(0.68 0.12 70);
 
   --background: #0b0b0d;
   --foreground: oklch(0.96 0.006 30);
