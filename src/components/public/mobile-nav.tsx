@@ -141,7 +141,7 @@ export function MobileNav({
                     priority
                     className="h-12 w-auto"
                   />
-                  <p className="mt-2 text-sm text-gold">
+                  <p className="mt-2 text-sm text-foreground">
                     Encontre o imóvel ideal.
                   </p>
                 </div>
@@ -193,7 +193,7 @@ export function MobileNav({
 
               {/* Navegação */}
               <motion.div variants={item} className="mt-6 px-6">
-                <p className="mb-2 px-1 text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
+                <p className="mb-2 px-1 text-[11px] font-semibold tracking-[0.14em] text-foreground uppercase">
                   Navegação
                 </p>
                 <div className="space-y-1">
@@ -232,7 +232,7 @@ export function MobileNav({
 
               {/* Contato (canais externos) */}
               <motion.div variants={item} className="mt-6 px-6">
-                <p className="mb-2 px-1 text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
+                <p className="mb-2 px-1 text-[11px] font-semibold tracking-[0.14em] text-foreground uppercase">
                   Contato
                 </p>
                 <div className="space-y-1">
@@ -275,7 +275,7 @@ export function MobileNav({
                       <WhatsAppIcon className="size-5" />
                     </span>
                     <span className="flex-1">
-                      <span className="block font-medium text-gold">Falar no WhatsApp</span>
+                      <span className="block font-medium text-foreground">Falar no WhatsApp</span>
                       <span className="block text-sm text-gold-dark">
                         Atendimento rápido
                       </span>
