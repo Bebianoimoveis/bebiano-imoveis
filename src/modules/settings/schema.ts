@@ -6,6 +6,7 @@ export const siteSettingsInputSchema = z.object({
   email: z.email("Informe um e-mail válido."),
   address: z.string().min(5, "Informe o endereço."),
   aboutText: z.string().max(4000).optional(),
+  businessHours: z.string().max(200).optional(),
   instagram: z.string().optional(),
   facebook: z.string().optional(),
   rentalEnabled: z.boolean(),

@@ -118,6 +118,20 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
 
         <FormField
           control={form.control}
+          name="businessHours"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Horário de funcionamento</FormLabel>
+              <FormControl>
+                <Input placeholder="Ex: Seg a Sex, 9h às 18h" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="rentalEnabled"
           render={({ field }) => (
             <FormItem className="flex flex-row items-center gap-2 rounded-xl border border-border/60 p-3">

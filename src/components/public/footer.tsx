@@ -47,6 +47,9 @@ export async function Footer({ rentalEnabled = false }: { rentalEnabled?: boolea
             <Link href="/anunciar" className="hover:text-foreground">
               Anunciar meu imóvel
             </Link>
+            <Link href="/sobre" className="hover:text-foreground">
+              Sobre Nós
+            </Link>
           </div>
         </div>
 

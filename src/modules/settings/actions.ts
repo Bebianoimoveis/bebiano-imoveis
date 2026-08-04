@@ -37,6 +37,24 @@ export async function getPublicRentalEnabled() {
   return settings?.rentalEnabled ?? false
 }
 
+// Leitura pública — usada pela página "/sobre" (texto institucional
+// editável em Configurações, sem dado sensível).
+export async function getPublicAboutText() {
+  const settings = await settingsRepository.getSettings()
+  return settings?.aboutText ?? null
+}
+
+// Leitura pública — usada pela seção de Localização da página "/sobre".
+export async function getPublicContactInfo() {
+  const settings = await settingsRepository.getSettings()
+  return {
+    phone: settings?.phone ?? null,
+    whatsapp: settings?.whatsapp ?? null,
+    address: settings?.address ?? null,
+    businessHours: settings?.businessHours ?? null,
+  }
+}
+
 export async function updateSettings(input: unknown) {
   const session = await requireSettingsManage()
   const data = siteSettingsInputSchema.parse(input)
@@ -47,6 +65,7 @@ export async function updateSettings(input: unknown) {
     email: data.email,
     address: data.address,
     aboutText: data.aboutText || null,
+    businessHours: data.businessHours || null,
     rentalEnabled: data.rentalEnabled,
     socialLinks: {
       instagram: data.instagram || undefined,

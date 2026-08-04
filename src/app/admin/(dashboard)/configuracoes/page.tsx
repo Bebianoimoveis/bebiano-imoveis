@@ -12,6 +12,7 @@ export default async function AdminSettingsPage() {
     email: settings?.email ?? "",
     address: settings?.address ?? "",
     aboutText: settings?.aboutText ?? "",
+    businessHours: settings?.businessHours ?? "",
     instagram: socialLinks.instagram ?? "",
     facebook: socialLinks.facebook ?? "",
     rentalEnabled: settings?.rentalEnabled ?? false,

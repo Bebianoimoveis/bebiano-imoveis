@@ -919,6 +919,10 @@ model SiteSettings {
   address     String
   socialLinks Json?
   aboutText   String?
+  // Texto livre (ex: "Seg a Sex, 9h às 18h") — exibido na seção de
+  // Localização do site público. Texto livre em vez de estruturado
+  // porque é só exibição, não há lógica de "aberto agora" alguma.
+  businessHours String?
 
   // Hoje a imobiliária só trabalha com venda — desligado por padrão.
   // Liga "Alugar" na navegação/busca/rodapé do site público sem precisar

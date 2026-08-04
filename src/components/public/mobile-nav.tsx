@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Heart,
   Home,
+  Info,
   KeyRound,
   Lock,
   Mail,
@@ -37,6 +38,7 @@ const RENT_NAV_ITEM = { href: "/alugar", label: "Alugar", icon: KeyRound }
 
 const TAIL_NAV_ITEMS = [
   { href: "/favoritos", label: "Favoritos", icon: Heart },
+  { href: "/sobre", label: "Sobre Nós", icon: Info },
 ]
 
 const CONTACT_ITEMS = [
