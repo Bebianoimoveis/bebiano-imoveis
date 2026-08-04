@@ -180,7 +180,7 @@ export function MobileNav({
                         <User className="size-5" />
                       </span>
                       <span className="flex-1">
-                        <span className="block font-medium text-gold">Fale com um corretor</span>
+                        <span className="block font-medium text-foreground">Fale com um corretor</span>
                         <span className="block text-sm text-gold-dark">
                           Atendimento personalizado
                         </span>
