@@ -5,14 +5,15 @@ import { motion, useInView } from "motion/react"
 
 import { AccentWord } from "@/components/public/accent-word"
 
-// Valores placeholder fornecidos pelo briefing da cliente como ilustrativos
-// — NÃO são números finais confirmados. Um humano precisa validar/trocar
-// por dados reais antes de considerar esta seção pronta para produção.
+// "anos de mercado", "clientes atendidos" e "satisfação" são números
+// reais confirmados pela cliente. "imóveis negociados" e "sonhos
+// realizados" ainda são placeholder do briefing original — faltam
+// confirmar.
 const STATS = [
-  { value: 10, suffix: "+", label: "anos de mercado" },
-  { value: 2000, suffix: "+", label: "clientes atendidos" },
+  { value: 1, suffix: "", label: "ano de mercado" },
+  { value: 1000, suffix: "+", label: "clientes atendidos com transparência e segurança" },
   { value: 500, suffix: "+", label: "imóveis negociados" },
-  { value: 98, suffix: "%", label: "satisfação" },
+  { value: 100, suffix: "%", label: "satisfação" },
   { value: 1000, suffix: "+", label: "sonhos realizados" },
 ] as const
 
