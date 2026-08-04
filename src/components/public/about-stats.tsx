@@ -5,16 +5,13 @@ import { motion, useInView } from "motion/react"
 
 import { AccentWord } from "@/components/public/accent-word"
 
-// "anos de mercado", "clientes atendidos" e "satisfação" são números
-// reais confirmados pela cliente. "imóveis negociados" e "sonhos
-// realizados" ainda são placeholder do briefing original — faltam
-// confirmar.
+// Números reais confirmados pela cliente. "Imóveis negociados" e "sonhos
+// realizados" (placeholder do briefing original) foram removidos a
+// pedido dela.
 const STATS = [
   { value: 1, suffix: "", label: "ano de mercado" },
   { value: 1000, suffix: "+", label: "clientes atendidos com transparência e segurança" },
-  { value: 500, suffix: "+", label: "imóveis negociados" },
   { value: 100, suffix: "%", label: "satisfação" },
-  { value: 1000, suffix: "+", label: "sonhos realizados" },
 ] as const
 
 function Counter({ value, suffix }: { value: number; suffix: string }) {
@@ -68,7 +65,7 @@ export function AboutStats() {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-5 sm:gap-6">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-8">
           {STATS.map((stat) => (
             <div key={stat.label} className="flex flex-col items-center gap-1.5 text-center">
               <Counter value={stat.value} suffix={stat.suffix} />
