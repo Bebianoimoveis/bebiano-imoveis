@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Building2, Heart, Home, MessageCircle, Search } from "lucide-react"
+import { Building2, Heart, Home, Info, MessageCircle, Search } from "lucide-react"
 
 import { useFavorites } from "@/hooks/use-favorites"
 import { ContactSheet } from "@/components/public/contact-sheet"
@@ -13,6 +13,7 @@ const TABS = [
   { href: "/imoveis", label: "Buscar", icon: Search, match: (p: string) => p === "/imoveis" },
   { href: "/favoritos", label: "Favoritos", icon: Heart, match: (p: string) => p === "/favoritos" },
   { href: "/comprar", label: "Imóveis", icon: Building2, match: (p: string) => p === "/comprar" },
+  { href: "/sobre", label: "Sobre", icon: Info, match: (p: string) => p === "/sobre" },
 ]
 
 // Fixa embaixo só no mobile — no desktop a navegação já vive no header.
