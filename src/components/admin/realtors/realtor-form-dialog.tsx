@@ -122,7 +122,7 @@ export function RealtorFormDialog({
           <DialogTitle>{mode === "create" ? "Novo corretor" : "Editar corretor"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
           <div className="flex items-center gap-4">
             <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
               {photoUrl ? (
@@ -141,23 +141,40 @@ export function RealtorFormDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="name">Nome</Label>
-              <Input id="name" {...form.register("name", { required: true, minLength: 2 })} />
+              <Input id="name" autoComplete="off" {...form.register("name", { required: true, minLength: 2 })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Telefone / WhatsApp</Label>
-              <Input id="phone" placeholder="(11) 99999-9999" {...form.register("phone", { required: true, minLength: 8 })} />
+              <Input id="phone" placeholder="(11) 99999-9999" autoComplete="off" {...form.register("phone", { required: true, minLength: 8 })} />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="email">E-mail (login de acesso)</Label>
-            <Input id="email" type="email" {...form.register("email", { required: true })} />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="off"
+              // Sem isso, o navegador oferece autopreencher com um login
+              // salvo (ex: de um corretor cadastrado antes por engano com
+              // o e-mail errado) — já aconteceu de o formulário abrir
+              // pré-preenchido com credenciais de outra pessoa.
+              data-1p-ignore
+              data-lpignore="true"
+              {...form.register("email", { required: true })}
+            />
           </div>
 
           {mode === "create" ? (
             <div className="space-y-1.5">
               <Label htmlFor="password">Senha de acesso</Label>
-              <PasswordInput id="password" {...form.register("password")} />
+              <PasswordInput
+                id="password"
+                autoComplete="new-password"
+                data-1p-ignore
+                data-lpignore="true"
+                {...form.register("password")}
+              />
               {form.formState.errors.password ? (
                 <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
               ) : null}

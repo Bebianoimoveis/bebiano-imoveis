@@ -37,8 +37,8 @@ export function SegmentActiveToggle({ id, active }: { id: string; active: boolea
     >
       <span
         className={cn(
-          "absolute top-0.5 size-5 rounded-full bg-white shadow transition-transform",
-          active ? "translate-x-[22px]" : "translate-x-0.5"
+          "absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform",
+          active ? "translate-x-[20px]" : "translate-x-0"
         )}
       />
     </button>
