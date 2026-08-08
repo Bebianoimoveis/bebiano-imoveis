@@ -73,7 +73,7 @@ export default async function AdminRealtorsPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
                         {realtor.photoUrl ? (
-                          <Image src={realtor.photoUrl} alt={realtor.user.name} fill className="object-cover" sizes="36px" />
+                          <Image src={realtor.photoUrl} alt={realtor.user.name} fill className="object-cover object-top" sizes="36px" />
                         ) : (
                           <User className="size-4" />
                         )}

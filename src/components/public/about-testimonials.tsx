@@ -54,7 +54,7 @@ export async function AboutTestimonials() {
                         src={testimonial.photoUrl}
                         alt={testimonial.name}
                         fill
-                        className="object-cover"
+                        className="object-cover object-top"
                         sizes="40px"
                       />
                     ) : (

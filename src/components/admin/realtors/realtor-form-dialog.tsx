@@ -126,7 +126,7 @@ export function RealtorFormDialog({
           <div className="flex items-center gap-4">
             <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
               {photoUrl ? (
-                <Image src={photoUrl} alt="Foto do corretor" fill className="object-cover" sizes="64px" />
+                <Image src={photoUrl} alt="Foto do corretor" fill className="object-cover object-top" sizes="64px" />
               ) : (
                 <User className="size-7" />
               )}

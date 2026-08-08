@@ -207,7 +207,7 @@ export default async function PropertyDetailPage({
                     src={consultant.photoUrl}
                     alt={consultant.name}
                     fill
-                    className="object-cover"
+                    className="object-cover object-top"
                     sizes="56px"
                   />
                 ) : (

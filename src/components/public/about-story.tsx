@@ -34,7 +34,7 @@ export function AboutStory({
               src={imageUrl}
               alt="Bebiano Imóveis"
               fill
-              className="object-cover"
+              className="object-cover object-top"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />

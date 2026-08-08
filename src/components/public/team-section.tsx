@@ -47,7 +47,7 @@ export async function TeamSection() {
                       src={realtor.photoUrl}
                       alt={realtor.user.name}
                       fill
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                      className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-110"
                       sizes="(max-width: 640px) 50vw, 25vw"
                     />
                   ) : (
