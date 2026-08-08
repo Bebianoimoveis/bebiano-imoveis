@@ -9,7 +9,6 @@ import { TeamSection } from "@/components/public/team-section"
 import { AboutHowWeWork } from "@/components/public/about-how-we-work"
 import { AboutValuesShowcase } from "@/components/public/about-values-showcase"
 import { AboutWhyChoose } from "@/components/public/about-why-choose"
-import { AboutGallery } from "@/components/public/about-gallery"
 import { AboutTestimonials } from "@/components/public/about-testimonials"
 import { AboutLocation } from "@/components/public/about-location"
 import { AboutFinalCta } from "@/components/public/about-final-cta"
@@ -73,16 +72,13 @@ export default async function AboutPage() {
       {/* 9. Por Que Escolher a Bebiano */}
       <AboutWhyChoose />
 
-      {/* 10. Galeria */}
-      <AboutGallery />
-
-      {/* 11. Depoimentos (scroll horizontal) */}
+      {/* 10. Depoimentos (scroll horizontal) */}
       <AboutTestimonials />
 
-      {/* 12. Localização */}
+      {/* 11. Localização */}
       <AboutLocation />
 
-      {/* 13. CTA Final */}
+      {/* 12. CTA Final */}
       <AboutFinalCta />
     </div>
   )
