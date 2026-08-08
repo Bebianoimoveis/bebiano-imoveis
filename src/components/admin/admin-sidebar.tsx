@@ -91,6 +91,21 @@ function initials(name?: string | null) {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase()
 }
 
+function matchesRoute(pathname: string, href: string) {
+  if (href === "/admin") return pathname === "/admin"
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
+// "/admin/corretores" é prefixo de "/admin/corretores/links" — sem isso,
+// os dois itens acendiam juntos quando a rota mais específica estava
+// ativa. Só o href mais específico (mais longo) entre os que batem vira
+// o ativo.
+function findActiveHref(pathname: string, hrefs: string[]) {
+  return hrefs
+    .filter((href) => matchesRoute(pathname, href))
+    .sort((a, b) => b.length - a.length)[0]
+}
+
 function SidebarContent({
   user,
   permissions,
@@ -106,6 +121,11 @@ function SidebarContent({
     ...group,
     items: group.items.filter((item) => !item.permission || permissions.has(item.permission)),
   })).filter((group) => group.items.length > 0)
+
+  const activeHref = findActiveHref(
+    pathname,
+    groups.flatMap((group) => group.items.map((item) => item.href))
+  )
 
   return (
     <div className="flex h-full flex-col">
@@ -140,8 +160,7 @@ function SidebarContent({
             </p>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-                const isActive =
-                  item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href)
+                const isActive = item.href === activeHref
                 return (
                   <Link
                     key={item.href}
