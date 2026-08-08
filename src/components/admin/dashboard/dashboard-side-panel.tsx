@@ -41,7 +41,7 @@ function Section({
         ) : null}
       </div>
       {children}
-      <Link href={href} className="block text-xs font-medium text-gold hover:underline">
+      <Link href={href} className="block text-xs font-medium text-primary hover:underline">
         Ver tudo
       </Link>
     </div>
@@ -70,7 +70,7 @@ export function DashboardSidePanel({ data }: { data: SidePanelData }) {
               <li key={alert.id}>
                 <Link
                   href={alert.href}
-                  className="flex items-start gap-1.5 text-sm text-foreground hover:text-gold"
+                  className="flex items-start gap-1.5 text-sm text-foreground hover:text-primary"
                 >
                   <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
                   {alert.label}

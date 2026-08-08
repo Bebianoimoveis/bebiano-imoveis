@@ -110,7 +110,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-6 py-6">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gold/15">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary/60">
           <Image
             src="/images/logo.png"
             alt="Bebiano Imóveis"
@@ -156,7 +156,7 @@ function SidebarContent({
                     className={cn(
                       "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-gold/12 text-foreground"
+                        ? "bg-primary/15 text-foreground"
                         : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
                     )}
                   >
@@ -164,13 +164,13 @@ function SidebarContent({
                       <motion.span
                         layoutId="admin-nav-active"
                         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                        className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 rounded-full bg-gold"
+                        className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 rounded-full bg-primary"
                       />
                     ) : null}
                     <item.icon
                       className={cn(
                         "size-4 shrink-0 transition-colors",
-                        isActive ? "text-gold" : "text-muted-foreground group-hover:text-foreground"
+                        isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
                       )}
                     />
                     <span className="truncate">{item.label}</span>

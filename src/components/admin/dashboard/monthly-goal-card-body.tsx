@@ -31,7 +31,7 @@ export function MonthlyGoalCardBody({
     <div className="rounded-[20px] border border-border/60 bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-heading text-base font-semibold">Meta do mês</h2>
-        <span className="flex size-8 items-center justify-center rounded-lg bg-gold/15 text-gold">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
           <Target className="size-4" />
         </span>
       </div>

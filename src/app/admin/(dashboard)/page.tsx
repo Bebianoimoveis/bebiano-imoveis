@@ -62,28 +62,24 @@ export default async function AdminDashboardPage({
         <div className="min-w-0 space-y-8">
           <DashboardSection index={1} className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard
-              tone="gold"
               icon={<Home className="size-5" />}
               label="Imóveis publicados"
               value={String(metrics.propertyStatus.published)}
               description="Ativos no site"
             />
             <StatCard
-              tone="emerald"
               icon={<DollarSign className="size-5" />}
               label="Vendas no mês"
               value={formatCurrency(metrics.salesInPeriod.total.toString())}
               description={`${metrics.salesInPeriod.count} contrato(s)`}
             />
             <StatCard
-              tone="rose"
               icon={<Ban className="size-5" />}
               label="Imóveis indisponíveis"
               value={String(metrics.propertyStatus.unavailable)}
               description="Fora do ar"
             />
             <StatCard
-              tone="blue"
               icon={<Building2 className="size-5" />}
               label="Novos leads"
               value={String(metrics.newLeads.value)}
@@ -92,14 +88,12 @@ export default async function AdminDashboardPage({
               previousValue={metrics.newLeads.previousValue}
             />
             <StatCard
-              tone="violet"
               icon={<CalendarCheck className="size-5" />}
               label="Visitas agendadas"
               value={String(metrics.upcomingAppointments)}
               description="Próximos agendamentos"
             />
             <StatCard
-              tone="amber"
               icon={<FileText className="size-5" />}
               label="Propostas abertas"
               value={String(metrics.openProposals)}
@@ -110,7 +104,6 @@ export default async function AdminDashboardPage({
             {financialKpis ? (
               <>
                 <StatCard
-                  tone="cyan"
                   icon={<ArrowUpCircle className="size-5" />}
                   label="Receita do mês"
                   value={formatCurrency(financialKpis.currentMonth.income)}
@@ -119,7 +112,6 @@ export default async function AdminDashboardPage({
                   previousValue={financialKpis.previousMonth.income}
                 />
                 <StatCard
-                  tone="primary"
                   icon={<Clock className="size-5" />}
                   label="A receber"
                   value={formatCurrency(financialKpis.pendingIncome)}

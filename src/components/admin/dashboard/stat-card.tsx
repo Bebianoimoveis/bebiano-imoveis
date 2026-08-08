@@ -10,23 +10,6 @@ function growth(value: number, previousValue: number): number | null {
   return Math.round(((value - previousValue) / previousValue) * 100)
 }
 
-// Mesma convenção de tons já usada em badges do admin (lead-temperature,
-// status financeiro) — utilitários Tailwind diretos, sem token novo no
-// tema. "gold" é o único tom "de marca"; os demais são só pra dar
-// identidade visual/diferenciação entre os cards do grid.
-const TONE_CLASSES = {
-  primary: "bg-primary/15 text-primary",
-  gold: "bg-gold/15 text-gold",
-  emerald: "bg-emerald-500/15 text-emerald-400",
-  blue: "bg-blue-500/15 text-blue-400",
-  violet: "bg-violet-500/15 text-violet-400",
-  amber: "bg-amber-500/15 text-amber-400",
-  rose: "bg-rose-500/15 text-rose-400",
-  cyan: "bg-cyan-500/15 text-cyan-400",
-} as const
-
-export type StatCardTone = keyof typeof TONE_CLASSES
-
 export function StatCard({
   icon,
   label,
@@ -34,7 +17,6 @@ export function StatCard({
   description,
   previousValue,
   currentValue,
-  tone = "primary",
 }: {
   icon: React.ReactNode
   label: string
@@ -43,7 +25,6 @@ export function StatCard({
   /** Se informados junto com `currentValue`, mostra o indicador de crescimento. */
   previousValue?: number
   currentValue?: number
-  tone?: StatCardTone
 }) {
   const delta =
     previousValue !== undefined && currentValue !== undefined
@@ -57,7 +38,7 @@ export function StatCard({
       className="group rounded-[20px] border border-border/60 bg-card p-5 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/20"
     >
       <div className="flex items-start justify-between">
-        <span className={cn("flex size-10 items-center justify-center rounded-xl", TONE_CLASSES[tone])}>
+        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
           {icon}
         </span>
         {delta !== null ? (
