@@ -13,22 +13,23 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { listFeaturedProperties } from "@/modules/property/actions"
 import { listCities, listPublicPropertyTypes } from "@/modules/taxonomy/actions"
-import { getPublicRentalEnabled } from "@/modules/settings/actions"
+import { getPublicRentalEnabled, getPublicHeroImage } from "@/modules/settings/actions"
 import { siteConfig } from "@/config/site"
 import { Building2 } from "lucide-react"
 
 export default async function HomePage() {
-  const [featured, cities, propertyTypes, rentalEnabled] = await Promise.all([
+  const [featured, cities, propertyTypes, rentalEnabled, heroImageUrl] = await Promise.all([
     listFeaturedProperties(6),
     listCities(),
     listPublicPropertyTypes(),
     getPublicRentalEnabled(),
+    getPublicHeroImage(),
   ])
 
   return (
     <div>
       {/* 1. Hero + busca premium */}
-      <Hero cities={cities} propertyTypes={propertyTypes} rentalEnabled={rentalEnabled} />
+      <Hero cities={cities} propertyTypes={propertyTypes} rentalEnabled={rentalEnabled} heroImageUrl={heroImageUrl} />
 
       {/* Espaço extra no topo para acomodar a busca flutuante que "quebra"
           a borda inferior do Hero (ver Hero: -mb-12/-mb-16 no card de busca). */}

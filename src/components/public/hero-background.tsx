@@ -20,7 +20,7 @@ const HERO_ALT = "Bebiano Imóveis"
 const MEDIA_FILTER =
   "object-cover object-center contrast-[1.1] saturate-[0.75] brightness-[0.9] sepia-[0.08] grayscale-[12%]"
 
-export function HeroBackground() {
+export function HeroBackground({ posterUrl }: { posterUrl?: string | null }) {
   // Antes o <Image> só aparecia depois do <video> falhar (sm:hidden
   // enquanto !videoFailed) — como public/videos/hero.mp4 não existe, no
   // desktop a tela ficava travada/em branco até o navegador desistir do
@@ -35,7 +35,7 @@ export function HeroBackground() {
   return (
     <div className="relative size-full">
       <Image
-        src={HERO_POSTER}
+        src={posterUrl || HERO_POSTER}
         alt={HERO_ALT}
         fill
         priority

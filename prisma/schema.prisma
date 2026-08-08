@@ -924,6 +924,13 @@ model SiteSettings {
   // porque é só exibição, não há lógica de "aberto agora" alguma.
   businessHours String?
 
+  // Imagens genéricas de marca do site público, editáveis pelo admin em
+  // vez de arquivo fixo no código — não inclui fotos de corretor/imóvel,
+  // que já têm seu próprio cadastro. Nula = usa o fallback padrão
+  // embutido no componente (asset em public/images).
+  heroImageUrl       String?
+  aboutStoryImageUrl String?
+
   // Hoje a imobiliária só trabalha com venda — desligado por padrão.
   // Liga "Alugar" na navegação/busca/rodapé do site público sem precisar
   // de deploy quando a imobiliária passar a atender locação.

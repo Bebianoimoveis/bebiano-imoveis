@@ -16,6 +16,8 @@ export default async function AdminSettingsPage() {
     instagram: socialLinks.instagram ?? "",
     facebook: socialLinks.facebook ?? "",
     rentalEnabled: settings?.rentalEnabled ?? false,
+    heroImageUrl: settings?.heroImageUrl ?? "",
+    aboutStoryImageUrl: settings?.aboutStoryImageUrl ?? "",
   }
 
   return (

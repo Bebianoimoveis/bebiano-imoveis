@@ -32,10 +32,12 @@ export function Hero({
   cities,
   propertyTypes,
   rentalEnabled = false,
+  heroImageUrl,
 }: {
   cities: City[]
   propertyTypes: PropertyType[]
   rentalEnabled?: boolean
+  heroImageUrl?: string | null
 }) {
   const { phone } = useAttributedWhatsapp()
 
@@ -48,7 +50,7 @@ export function Hero({
             aba ficava aberta, custo real de performance sem ganho visual
             proporcional. Removido; o parallax de scroll abaixo já dá
             movimento suficiente. */}
-        <HeroBackground />
+        <HeroBackground posterUrl={heroImageUrl} />
       </Parallax>
 
       {/* Overlay em três camadas: (1) vertical, mais escuro embaixo onde

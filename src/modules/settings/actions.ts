@@ -55,6 +55,19 @@ export async function getPublicContactInfo() {
   }
 }
 
+// Leitura pública — imagem de fundo do Hero (home e "/sobre"), editável
+// em Configurações. Null = componente usa o fallback embutido.
+export async function getPublicHeroImage() {
+  const settings = await settingsRepository.getSettings()
+  return settings?.heroImageUrl ?? null
+}
+
+// Leitura pública — imagem da seção "Nossa História" em "/sobre".
+export async function getPublicAboutStoryImage() {
+  const settings = await settingsRepository.getSettings()
+  return settings?.aboutStoryImageUrl ?? null
+}
+
 export async function updateSettings(input: unknown) {
   const session = await requireSettingsManage()
   const data = siteSettingsInputSchema.parse(input)
@@ -67,6 +80,8 @@ export async function updateSettings(input: unknown) {
     aboutText: data.aboutText || null,
     businessHours: data.businessHours || null,
     rentalEnabled: data.rentalEnabled,
+    heroImageUrl: data.heroImageUrl || null,
+    aboutStoryImageUrl: data.aboutStoryImageUrl || null,
     socialLinks: {
       instagram: data.instagram || undefined,
       facebook: data.facebook || undefined,

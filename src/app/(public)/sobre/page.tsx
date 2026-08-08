@@ -13,7 +13,11 @@ import { AboutGallery } from "@/components/public/about-gallery"
 import { AboutTestimonials } from "@/components/public/about-testimonials"
 import { AboutLocation } from "@/components/public/about-location"
 import { AboutFinalCta } from "@/components/public/about-final-cta"
-import { getPublicAboutText } from "@/modules/settings/actions"
+import {
+  getPublicAboutText,
+  getPublicHeroImage,
+  getPublicAboutStoryImage,
+} from "@/modules/settings/actions"
 import { listPublicRealtors } from "@/modules/realtor/actions"
 import { siteConfig } from "@/config/site"
 
@@ -22,23 +26,28 @@ export const metadata: Metadata = {
   description: `Conheça a ${siteConfig.name}, imobiliária em ${siteConfig.city}, ${siteConfig.state}.`,
 }
 
-// Imagem de fallback para "Nossa História" quando nenhum corretor tem foto
-// cadastrada — mesmo asset paisagem já usado no Hero da home.
+// Imagem de fallback para "Nossa História" quando nem a imagem editável em
+// Configurações nem nenhum corretor com foto existirem ainda — mesmo
+// asset paisagem já usado no Hero da home.
 const FALLBACK_STORY_IMAGE = "/images/hero-bg.png"
 
 export default async function AboutPage() {
-  const [aboutText, realtors] = await Promise.all([
+  const [aboutText, realtors, heroImageUrl, aboutStoryImageUrl] = await Promise.all([
     getPublicAboutText(),
     listPublicRealtors(),
+    getPublicHeroImage(),
+    getPublicAboutStoryImage(),
   ])
 
   const storyImage =
-    realtors.find((realtor) => realtor.photoUrl)?.photoUrl ?? FALLBACK_STORY_IMAGE
+    aboutStoryImageUrl ??
+    realtors.find((realtor) => realtor.photoUrl)?.photoUrl ??
+    FALLBACK_STORY_IMAGE
 
   return (
     <div>
       {/* 1. Hero */}
-      <AboutHero />
+      <AboutHero heroImageUrl={heroImageUrl} />
 
       {/* 2. Nossa História */}
       <AboutStory aboutText={aboutText} imageUrl={storyImage} />

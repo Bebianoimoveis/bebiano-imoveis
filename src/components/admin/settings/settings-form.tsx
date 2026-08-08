@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
+import { ImageOff, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,16 +20,38 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { updateSettings } from "@/modules/settings/actions"
+import { createSiteImageUploadSignature } from "@/modules/upload/actions"
+import { uploadPropertyImage } from "@/modules/upload/client"
 import { siteSettingsInputSchema, type SiteSettingsInput } from "@/modules/settings/schema"
 
 export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInput }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploadingField, setUploadingField] = useState<"heroImageUrl" | "aboutStoryImageUrl" | null>(null)
 
   const form = useForm<SiteSettingsInput>({
     resolver: zodResolver(siteSettingsInputSchema),
     defaultValues,
   })
+
+  async function handleImageChange(
+    field: "heroImageUrl" | "aboutStoryImageUrl",
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingField(field)
+    try {
+      const signature = await createSiteImageUploadSignature()
+      const uploaded = await uploadPropertyImage(file, signature)
+      form.setValue(field, uploaded.url)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao enviar imagem.")
+    } finally {
+      setUploadingField(null)
+      e.target.value = ""
+    }
+  }
 
   async function onSubmit(values: SiteSettingsInput) {
     setIsSubmitting(true)
@@ -129,6 +153,104 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
             </FormItem>
           )}
         />
+
+        <div className="space-y-4 rounded-xl border border-border/60 p-4">
+          <div>
+            <p className="text-sm font-medium">Imagens do site</p>
+            <p className="text-xs text-muted-foreground">
+              Usadas no Hero (home e Sobre Nós) e na seção "Nossa História". Não inclui fotos de
+              corretor, que ficam em Corretores.
+            </p>
+          </div>
+
+          <FormField
+            control={form.control}
+            name="heroImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Imagem de fundo do Hero</FormLabel>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-muted-foreground">
+                    {field.value ? (
+                      <Image src={field.value} alt="Imagem do Hero" fill className="object-cover" sizes="112px" />
+                    ) : (
+                      <ImageOff className="size-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => handleImageChange("heroImageUrl", e)}
+                        disabled={uploadingField === "heroImageUrl"}
+                      />
+                    </FormControl>
+                    {uploadingField === "heroImageUrl" ? (
+                      <p className="text-xs text-muted-foreground">Enviando...</p>
+                    ) : field.value ? (
+                      <button
+                        type="button"
+                        onClick={() => form.setValue("heroImageUrl", "")}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3" /> Remover (volta pra imagem padrão)
+                      </button>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Nenhuma — usando a imagem padrão.</p>
+                    )}
+                  </div>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="aboutStoryImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Imagem da seção "Nossa História"</FormLabel>
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-muted-foreground">
+                    {field.value ? (
+                      <Image src={field.value} alt="Imagem da Nossa História" fill className="object-cover" sizes="112px" />
+                    ) : (
+                      <ImageOff className="size-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) => handleImageChange("aboutStoryImageUrl", e)}
+                        disabled={uploadingField === "aboutStoryImageUrl"}
+                      />
+                    </FormControl>
+                    {uploadingField === "aboutStoryImageUrl" ? (
+                      <p className="text-xs text-muted-foreground">Enviando...</p>
+                    ) : field.value ? (
+                      <button
+                        type="button"
+                        onClick={() => form.setValue("aboutStoryImageUrl", "")}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3" /> Remover (volta pro corretor/imagem padrão)
+                      </button>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhuma — usando a foto de um corretor cadastrado, ou a imagem padrão.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}

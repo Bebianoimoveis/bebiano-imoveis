@@ -10,6 +10,8 @@ export const siteSettingsInputSchema = z.object({
   instagram: z.string().optional(),
   facebook: z.string().optional(),
   rentalEnabled: z.boolean(),
+  heroImageUrl: z.string().optional(),
+  aboutStoryImageUrl: z.string().optional(),
 })
 
 export type SiteSettingsInput = z.infer<typeof siteSettingsInputSchema>

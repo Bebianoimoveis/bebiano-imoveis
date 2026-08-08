@@ -120,6 +120,40 @@ export async function createRealtorPhotoUploadSignature(): Promise<UploadSignatu
   }
 }
 
+// Mesmo esquema de assinatura acima, pra imagens genéricas de marca do
+// site público (Hero, "Nossa História") editadas em Configurações — não
+// inclui fotos de corretor/imóvel, que têm sua própria assinatura.
+export async function createSiteImageUploadSignature(): Promise<UploadSignature> {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Não autenticado.")
+  }
+
+  const timestamp = Math.round(Date.now() / 1000)
+  const folder = "bebiano-imoveis/site"
+
+  const paramsToSign = {
+    timestamp,
+    folder,
+    allowed_formats: ALLOWED_FORMATS,
+  }
+
+  const signature = cloudinary.utils.api_sign_request(
+    paramsToSign,
+    process.env.CLOUDINARY_API_SECRET as string
+  )
+
+  return {
+    timestamp,
+    signature,
+    apiKey: process.env.CLOUDINARY_API_KEY as string,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+    folder,
+    allowedFormats: ALLOWED_FORMATS,
+    maxFileSize: MAX_FILE_SIZE_BYTES,
+  }
+}
+
 const SUBMISSION_ALLOWED_FORMATS = "jpg,jpeg,png,webp"
 const SUBMISSION_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 // 8MB
 
