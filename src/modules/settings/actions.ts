@@ -96,5 +96,13 @@ export async function updateSettings(input: unknown) {
   })
 
   revalidatePath("/admin/configuracoes")
+  // As páginas públicas que leem SiteSettings (Hero da home/Sobre, texto
+  // institucional, endereço/mapa/horário do rodapé e da Localização,
+  // toggle de Alugar) são Server Components cacheados — sem isso, salvar
+  // aqui não refletia nelas até o próximo deploy. "layout" também
+  // invalida o Header/Footer (endereço, horário, Alugar), que aparecem
+  // em toda página pública, não só na home.
+  revalidatePath("/", "layout")
+  revalidatePath("/sobre")
   return settings
 }
