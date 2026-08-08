@@ -109,21 +109,15 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 px-6 py-6">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary/60">
-          <Image
-            src="/images/logo.png"
-            alt="Bebiano Imóveis"
-            width={97}
-            height={80}
-            priority
-            className="h-7 w-auto"
-          />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold tracking-tight text-foreground">Bebiano Imóveis</p>
-          <p className="truncate text-xs text-muted-foreground">Painel administrativo</p>
-        </div>
+      <div className="px-6 py-7">
+        <Image
+          src="/images/logo.png"
+          alt="Bebiano Imóveis"
+          width={97}
+          height={80}
+          priority
+          className="h-16 w-auto"
+        />
       </div>
 
       <div className="mx-4 mb-5 flex items-center gap-3 rounded-2xl bg-secondary/60 p-3">
