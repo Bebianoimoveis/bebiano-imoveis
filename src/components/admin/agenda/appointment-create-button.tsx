@@ -8,7 +8,13 @@ import { AppointmentFormSheet } from "@/components/admin/agenda/appointment-form
 
 type RealtorOption = { id: string; user: { name: string } }
 
-export function AppointmentCreateButton({ realtors }: { realtors: RealtorOption[] }) {
+export function AppointmentCreateButton({
+  realtors,
+  currentRealtorId,
+}: {
+  realtors: RealtorOption[]
+  currentRealtorId?: string | null
+}) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -17,7 +23,12 @@ export function AppointmentCreateButton({ realtors }: { realtors: RealtorOption[
         <Plus className="size-4" />
         Novo Compromisso
       </Button>
-      <AppointmentFormSheet open={open} onOpenChange={setOpen} realtors={realtors} />
+      <AppointmentFormSheet
+        open={open}
+        onOpenChange={setOpen}
+        realtors={realtors}
+        currentRealtorId={currentRealtorId}
+      />
     </>
   )
 }

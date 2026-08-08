@@ -128,6 +128,7 @@ export function AppointmentFormSheet({
   clientId,
   propertyId,
   contextLabel,
+  currentRealtorId,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -138,6 +139,10 @@ export function AppointmentFormSheet({
   clientId?: string
   propertyId?: string
   contextLabel?: string
+  /** Corretor do usuário logado, se ele próprio for um — pré-seleciona só
+   *  a si mesmo. Sem isso o campo começa vazio; nunca cai num corretor
+   *  qualquer (ex.: o primeiro da lista) sem o usuário escolher. */
+  currentRealtorId?: string | null
 }) {
   const router = useRouter()
   const isEditing = !!appointment
@@ -169,7 +174,7 @@ export function AppointmentFormSheet({
           : null
       )
     } else {
-      setRealtorId(realtors[0]?.id ?? "")
+      setRealtorId(currentRealtorId ?? "")
       setType("VISIT")
       setScheduledAt(toDatetimeLocal(defaultScheduledAt ?? new Date()))
       setDuration(60)
@@ -180,7 +185,7 @@ export function AppointmentFormSheet({
       setPropertyCode("")
     }
     setConflicts([])
-  }, [open, appointment, defaultScheduledAt, realtors])
+  }, [open, appointment, defaultScheduledAt, realtors, currentRealtorId])
 
   useEffect(() => {
     if (!realtorId || !scheduledAt) return

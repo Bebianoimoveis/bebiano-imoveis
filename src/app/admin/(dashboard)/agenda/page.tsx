@@ -12,6 +12,7 @@ import { AppointmentDateNav } from "@/components/admin/agenda/appointment-date-n
 import { AppointmentBoard } from "@/components/admin/agenda/appointment-board"
 import { getAppointmentStats, listAdminAppointments } from "@/modules/appointment/actions"
 import { listRealtors } from "@/modules/realtor/actions"
+import { auth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -88,11 +89,13 @@ export default async function AdminAgendaPage({
     mine,
   }
 
-  const [appointments, stats, realtors] = await Promise.all([
+  const [session, appointments, stats, realtors] = await Promise.all([
+    auth(),
     listAdminAppointments(filters),
     getAppointmentStats(filters),
     listRealtors(),
   ])
+  const currentRealtorId = session?.user?.realtorId ?? null
 
   function buildHref(overrides: { view?: AppointmentView; date?: string; mine?: boolean }) {
     const search = new URLSearchParams()
@@ -129,7 +132,7 @@ export default async function AdminAgendaPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <AppointmentIcsButton />
-          <AppointmentCreateButton realtors={realtors} />
+          <AppointmentCreateButton realtors={realtors} currentRealtorId={currentRealtorId} />
         </div>
       </DashboardSection>
 
@@ -166,7 +169,7 @@ export default async function AdminAgendaPage({
             icon={CalendarDays}
             title="Nenhum compromisso neste período"
             description="Visitas, ligações e retornos aparecem aqui assim que forem agendados."
-            action={<AppointmentCreateButton realtors={realtors} />}
+            action={<AppointmentCreateButton realtors={realtors} currentRealtorId={currentRealtorId} />}
           />
         ) : (
           <AppointmentBoard appointments={appointments} view={activeView} anchor={anchor} realtors={realtors} />
