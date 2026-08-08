@@ -56,10 +56,8 @@ export function PropertyTypeToggleList({ types }: { types: PropertyTypeItem[] })
               )}
             >
               <span
-                className={cn(
-                  "absolute top-0.5 size-5 rounded-full bg-white shadow transition-transform",
-                  type.active ? "translate-x-[22px]" : "translate-x-0.5"
-                )}
+                className="absolute top-0.5 size-5 rounded-full bg-white shadow transition-[left]"
+                style={{ left: type.active ? 22 : 2 }}
               />
             </button>
           </li>

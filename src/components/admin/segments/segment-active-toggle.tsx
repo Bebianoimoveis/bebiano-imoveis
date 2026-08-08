@@ -35,11 +35,12 @@ export function SegmentActiveToggle({ id, active }: { id: string; active: boolea
         active ? "bg-primary" : "bg-muted"
       )}
     >
+      {/* left em style inline (não classe Tailwind com colchetes) — a
+          posição do "conhecido" depende só disso, sem depender de nenhuma
+          geração de CSS que possa ficar desatualizada em cache. */}
       <span
-        className={cn(
-          "absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform",
-          active ? "translate-x-[20px]" : "translate-x-0"
-        )}
+        className="absolute top-0.5 size-5 rounded-full bg-white shadow transition-[left]"
+        style={{ left: active ? 22 : 2 }}
       />
     </button>
   )
