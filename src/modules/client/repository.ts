@@ -52,6 +52,35 @@ export async function findClientById(id: string): Promise<ClientDetail | null> {
   })
 }
 
+export type UpcomingBirthday = { id: string; name: string; phone: string; birthDate: Date; daysUntil: number }
+
+// Sem suporte nativo do Prisma pra "mês/dia, ignorando o ano" — busca só
+// quem tem data de nascimento e calcula a próxima ocorrência em memória.
+// Volume baixo (clientes de uma imobiliária local), sem custo real.
+export async function listUpcomingBirthdays(
+  where: Prisma.ClientWhereInput,
+  daysAhead: number
+): Promise<UpcomingBirthday[]> {
+  const clients = await prisma.client.findMany({
+    where: { ...where, deletedAt: null, birthDate: { not: null } },
+    select: { id: true, name: true, phone: true, birthDate: true },
+  })
+
+  const now = new Date()
+  const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+
+  return clients
+    .map((client) => {
+      const birth = client.birthDate as Date
+      let next = Date.UTC(now.getUTCFullYear(), birth.getUTCMonth(), birth.getUTCDate())
+      if (next < todayUTC) next = Date.UTC(now.getUTCFullYear() + 1, birth.getUTCMonth(), birth.getUTCDate())
+      const daysUntil = Math.round((next - todayUTC) / 86400000)
+      return { id: client.id, name: client.name, phone: client.phone, birthDate: birth, daysUntil }
+    })
+    .filter((client) => client.daysUntil <= daysAhead)
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+}
+
 type CreateClientInput = {
   name: string
   phone: string

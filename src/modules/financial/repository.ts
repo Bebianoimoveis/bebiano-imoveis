@@ -48,6 +48,32 @@ export async function createEntry(data: Prisma.FinancialEntryCreateInput) {
   return prisma.financialEntry.create({ data, include: entryListInclude })
 }
 
+// Widgets "Vencimentos Hoje"/"Alertas" do Dashboard — mesma definição de
+// atrasado usada em isEntryOverdue (financial-entry-status-badge.tsx):
+// status pendente/agendado com dueDate no passado, calculado na hora.
+export async function listEntriesDueToday(): Promise<FinancialEntryListItem[]> {
+  const now = new Date()
+  const start = new Date(now)
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(now)
+  end.setHours(23, 59, 59, 999)
+
+  return prisma.financialEntry.findMany({
+    where: {
+      dueDate: { gte: start, lte: end },
+      status: { in: ["PENDING", "SCHEDULED", "PARTIAL"] },
+    },
+    include: entryListInclude,
+    orderBy: { dueDate: "asc" },
+  })
+}
+
+export async function countOverdueEntries(): Promise<number> {
+  return prisma.financialEntry.count({
+    where: { status: { in: ["PENDING", "SCHEDULED"] }, dueDate: { lt: new Date() } },
+  })
+}
+
 export async function updateEntry(id: string, data: Prisma.FinancialEntryUpdateInput) {
   return prisma.financialEntry.update({ where: { id }, data, include: entryListInclude })
 }

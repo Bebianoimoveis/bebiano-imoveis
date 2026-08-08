@@ -103,7 +103,7 @@ function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden w-full max-w-md items-center gap-2 rounded-xl border border-border/60 bg-secondary/40 px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 sm:flex"
+        className="hidden w-full max-w-md items-center gap-2 rounded-xl border border-border/60 bg-secondary/40 px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-gold/40 hover:bg-secondary/70 sm:flex"
       >
         <Search className="size-4" />
         <span className="flex-1 truncate text-left">Buscar imóveis, leads, clientes…</span>
@@ -208,7 +208,7 @@ export function AdminTopbar({
             <button
               type="button"
               aria-label="Notificações"
-              className="relative flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="relative flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-gold"
             >
               <Bell className="size-[18px]" />
             </button>

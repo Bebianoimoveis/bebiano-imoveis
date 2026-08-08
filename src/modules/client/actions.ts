@@ -21,6 +21,17 @@ async function requireSession() {
   return session
 }
 
+// Leitura pro widget "Aniversários" do Dashboard — mesmo escopo por
+// corretor de client.view.all usado em todo o resto do módulo.
+export async function listAdminUpcomingBirthdays(daysAhead = 7) {
+  const session = await requireSession()
+  const canViewAll = await can(session.user, "client.view.all")
+  return clientRepository.listUpcomingBirthdays(
+    { realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__") },
+    daysAhead
+  )
+}
+
 // Corretores sem client.view.all só enxergam os próprios clientes. O
 // sentinel garante zero resultados caso o usuário não tenha realtorId
 // vinculado — mesmo padrão do módulo de Leads.

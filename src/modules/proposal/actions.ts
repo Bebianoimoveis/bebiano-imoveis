@@ -56,6 +56,23 @@ async function buildProposalScopeWhere(
   }
 }
 
+// Widget "Radar de Prazos" do Dashboard — propostas com validade nos
+// próximos `daysAhead` dias, ainda num estágio ativo do funil. Mesma
+// definição de "ativa" já usada em getProposalStats (proposal/repository.ts)
+// pro cálculo de propostas expiradas.
+export async function listAdminProposalsExpiringSoon(daysAhead = 7) {
+  const session = await requireSession()
+  const canViewAll = await can(session.user, "proposal.view.all")
+  const now = new Date()
+  const until = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000)
+
+  return proposalRepository.listProposals({
+    realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
+    validUntil: { gte: now, lte: until },
+    status: { notIn: ["ACCEPTED", "REJECTED", "COMPLETED", "CANCELED"] },
+  })
+}
+
 export async function listAdminProposals(rawFilters: unknown = {}) {
   const session = await requireSession()
   const filters = proposalFiltersSchema.parse(rawFilters ?? {})

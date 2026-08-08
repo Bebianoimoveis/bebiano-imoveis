@@ -3,6 +3,10 @@
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import * as reportRepository from "@/modules/report/repository"
+import { listAdminAppointments } from "@/modules/appointment/actions"
+import { listAdminUpcomingBirthdays } from "@/modules/client/actions"
+import { getDashboardFinancialAlerts } from "@/modules/financial/actions"
+import { listAdminProposalsExpiringSoon } from "@/modules/proposal/actions"
 
 async function requireSession() {
   const session = await auth()
@@ -100,6 +104,59 @@ export async function getDashboardMetrics(periodDays = 30) {
     leadsByStage,
     topViewed,
     activity,
+  }
+}
+
+// Coluna direita do Dashboard (Agenda de hoje/Aniversários/Radar de
+// prazos/Vencimentos/Alertas). Cada fonte já faz sua própria checagem de
+// permissão e escopo por corretor — getDashboardFinancialAlerts exige
+// "financial.view", que nem todo usuário tem, então é a única chamada
+// envolta em catch (widget some pra quem não tem acesso, resto do painel
+// segue normal).
+export async function getDashboardSidePanel() {
+  await requireSession()
+
+  const now = new Date()
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const todayEnd = new Date(now)
+  todayEnd.setHours(23, 59, 59, 999)
+
+  const [todayAppointments, birthdays, expiringProposals, financialAlerts] = await Promise.all([
+    listAdminAppointments({ from: todayStart, to: todayEnd }),
+    listAdminUpcomingBirthdays(7),
+    listAdminProposalsExpiringSoon(7),
+    getDashboardFinancialAlerts().catch(() => null),
+  ])
+
+  const urgentProposals = expiringProposals.filter((proposal) => {
+    if (!proposal.validUntil) return false
+    return new Date(proposal.validUntil).getTime() - now.getTime() <= 2 * 24 * 60 * 60 * 1000
+  })
+
+  const alerts = [
+    financialAlerts && financialAlerts.overdueCount > 0
+      ? {
+          id: "overdue-financial",
+          label: `${financialAlerts.overdueCount} lançamento${financialAlerts.overdueCount > 1 ? "s" : ""} financeiro${financialAlerts.overdueCount > 1 ? "s" : ""} atrasado${financialAlerts.overdueCount > 1 ? "s" : ""}`,
+          href: "/admin/financeiro",
+        }
+      : null,
+    urgentProposals.length > 0
+      ? {
+          id: "proposals-expiring",
+          label: `${urgentProposals.length} proposta${urgentProposals.length > 1 ? "s" : ""} vencendo em até 2 dias`,
+          href: "/admin/propostas",
+        }
+      : null,
+  ].filter((alert): alert is { id: string; label: string; href: string } => alert !== null)
+
+  return {
+    todayAppointments,
+    birthdays,
+    expiringProposals,
+    financialAlerts,
+    alerts,
   }
 }
 

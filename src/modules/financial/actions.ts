@@ -65,6 +65,16 @@ export async function listAdminFinancialEntries(rawFilters: unknown) {
   return financialRepository.listEntries(buildEntryWhere(filters))
 }
 
+// Widgets "Vencimentos Hoje"/"Alertas" do Dashboard.
+export async function getDashboardFinancialAlerts() {
+  await requireFinancialView()
+  const [dueToday, overdueCount] = await Promise.all([
+    financialRepository.listEntriesDueToday(),
+    financialRepository.countOverdueEntries(),
+  ])
+  return { dueToday, overdueCount }
+}
+
 export async function getFinancialKpis(rawFilters: unknown = {}) {
   await requireFinancialView()
   const filters = financialFiltersSchema.parse(rawFilters ?? {})
