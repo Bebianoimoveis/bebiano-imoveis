@@ -31,33 +31,51 @@ export function StatCard({
       ? growth(currentValue, previousValue)
       : null
 
+  const deltaBadge =
+    delta !== null ? (
+      <span
+        className={cn(
+          "flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium",
+          delta >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"
+        )}
+      >
+        {delta >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+        {Math.abs(delta)}%
+      </span>
+    ) : null
+
   return (
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className="group rounded-2xl border border-border/60 bg-card p-3 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/20 sm:rounded-[20px] sm:p-5"
+      className="group rounded-xl border border-border/60 bg-card p-2.5 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/20 sm:rounded-[20px] sm:p-5"
     >
-      <div className="flex items-start justify-between">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary sm:size-10 sm:rounded-xl [&_svg]:size-4 sm:[&_svg]:size-5">
+      {/* No mobile o ícone fica ao lado do valor (uma linha só) e a
+          descrição some — o card vertical de 4 linhas empilhadas era
+          alto demais numa grade de 2 colunas. A partir de sm volta ao
+          layout original (ícone sozinho em cima, valor grande embaixo). */}
+      <div className="flex items-center gap-2.5 sm:hidden">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary [&_svg]:size-3.5">
           {icon}
         </span>
-        {delta !== null ? (
-          <span
-            className={cn(
-              "flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium sm:px-2 sm:text-xs",
-              delta >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"
-            )}
-          >
-            {delta >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-            {Math.abs(delta)}%
-          </span>
-        ) : null}
+        <p className="truncate font-heading text-base font-semibold text-foreground" title={value}>
+          {value}
+        </p>
+        {deltaBadge ? <div className="ml-auto">{deltaBadge}</div> : null}
       </div>
-      <p className="mt-2 truncate text-xs text-muted-foreground sm:mt-4 sm:text-sm">{label}</p>
-      <p className="truncate font-heading text-lg font-semibold text-foreground sm:text-2xl" title={value}>
+      <p className="mt-1 truncate text-[11px] text-muted-foreground sm:hidden">{label}</p>
+
+      <div className="hidden sm:flex sm:items-start sm:justify-between">
+        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary [&_svg]:size-5">
+          {icon}
+        </span>
+        {deltaBadge}
+      </div>
+      <p className="hidden truncate text-sm text-muted-foreground sm:mt-4 sm:block">{label}</p>
+      <p className="hidden truncate font-heading text-2xl font-semibold text-foreground sm:block" title={value}>
         {value}
       </p>
-      <p className="mt-0.5 truncate text-[11px] text-muted-foreground sm:text-xs">{description}</p>
+      <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block">{description}</p>
     </motion.div>
   )
 }
