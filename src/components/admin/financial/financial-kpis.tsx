@@ -35,7 +35,7 @@ export function FinancialKpis({
   const pendingCommission = commissions.reduce((sum, c) => sum + c.commissionPending, 0)
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
       <StatCard
         icon={<ArrowUpCircle className="size-5" />}
         label="Receita do mês"

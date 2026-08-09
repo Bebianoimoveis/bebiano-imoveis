@@ -28,7 +28,7 @@ export function LeadKpis({ stats }: { stats: Stats }) {
   const conversion = stats.total > 0 ? Math.round((closed / stats.total) * 100) : 0
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-4">
       <StatCard
         icon={<UserPlus className="size-5" />}
         label="Novos leads"

@@ -25,7 +25,7 @@ export function PropertyKpis({ stats }: { stats: Stats }) {
   const c = stats.countByStatus
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
       <StatCard icon={<Building2 className="size-5" />} label="Total" value={String(stats.total)} description="No portfólio" />
       <StatCard
         icon={<CheckCircle2 className="size-5" />}

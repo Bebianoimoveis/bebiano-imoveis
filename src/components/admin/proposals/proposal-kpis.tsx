@@ -17,7 +17,7 @@ type Stats = {
 
 export function ProposalKpis({ stats }: { stats: Stats }) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-4">
       <StatCard
         icon={<Clock className="size-5" />}
         label="Propostas abertas"

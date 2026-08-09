@@ -13,7 +13,7 @@ type Stats = {
 
 export function AppointmentKpis({ stats }: { stats: Stats }) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
       <StatCard
         icon={<CalendarCheck className="size-5" />}
         label="Hoje"

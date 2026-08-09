@@ -15,7 +15,7 @@ type Stats = {
 
 export function ClientKpis({ stats }: { stats: Stats }) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-4">
       <StatCard
         icon={<Users className="size-5" />}
         label="Total de clientes"

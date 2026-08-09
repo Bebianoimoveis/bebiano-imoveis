@@ -60,7 +60,7 @@ export default async function AdminDashboardPage({
 
       <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-8">
-          <DashboardSection index={1} className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <DashboardSection index={1} className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
             <StatCard
               icon={<Home className="size-5" />}
               label="Imóveis publicados"
