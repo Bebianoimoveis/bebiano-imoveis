@@ -42,7 +42,7 @@ export function AdminShell({
         onOpenChange={setMobileSidebarOpen}
       />
       <div className="flex min-w-0 flex-1 flex-col">
-        <AdminTopbar user={user} onOpenMobileSidebar={() => setMobileSidebarOpen(true)} />
+        <AdminTopbar user={user} permissions={permissions} onOpenMobileSidebar={() => setMobileSidebarOpen(true)} />
         <main className="flex-1 overflow-x-hidden p-6 md:p-8">{children}</main>
       </div>
     </div>

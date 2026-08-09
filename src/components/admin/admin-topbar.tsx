@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "cmdk"
-import { Bell, Building2, Contact, Menu, Moon, Search, Users2 } from "lucide-react"
+import { Bell, Building2, Contact, Menu, Moon, Search, Sparkles, Users2 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { AssistantPanel } from "@/components/admin/assistant/assistant-panel"
 import { signOutAction } from "@/modules/auth/actions"
 import { globalSearch, type GlobalSearchResult } from "@/modules/search/actions"
 import { cn } from "@/lib/utils"
@@ -184,11 +185,16 @@ function GlobalSearch() {
 
 export function AdminTopbar({
   user,
+  permissions,
   onOpenMobileSidebar,
 }: {
   user: AdminTopbarUser
+  permissions: Set<string>
   onOpenMobileSidebar: () => void
 }) {
+  const [assistantOpen, setAssistantOpen] = useState(false)
+  const canUseAssistant = permissions.has("assistant.use")
+
   return (
     <header className="flex h-16 items-center gap-4 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md md:px-8">
       <button
@@ -203,6 +209,25 @@ export function AdminTopbar({
       <GlobalSearch />
 
       <div className="ml-auto flex items-center gap-1.5">
+        {canUseAssistant ? (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Assistente IA"
+                  onClick={() => setAssistantOpen(true)}
+                  className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                >
+                  <Sparkles className="size-[18px]" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Assistente IA</TooltipContent>
+            </Tooltip>
+            <AssistantPanel open={assistantOpen} onOpenChange={setAssistantOpen} />
+          </>
+        ) : null}
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
