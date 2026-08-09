@@ -118,7 +118,7 @@ function GlobalSearch() {
           setOpen(next)
           if (!next) setQuery("")
         }}
-        overlayClassName="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+        overlayClassName="fixed inset-0 z-50 bg-black/70"
         className="fixed top-[18%] left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl"
         shouldFilter={false}
       >

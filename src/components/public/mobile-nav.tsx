@@ -115,7 +115,7 @@ export function MobileNav({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] flex justify-end bg-black/45 backdrop-blur-[16px] md:hidden"
+          className="fixed inset-0 z-[100] flex justify-end bg-black/60 md:hidden"
           onClick={onClose}
         >
           <motion.div
