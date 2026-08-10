@@ -7,6 +7,7 @@ import { getPropertyPortfolioStats } from "@/modules/property/actions"
 import { getFinancialKpis } from "@/modules/financial/actions"
 import { getProposalCrmStats, listAdminProposals } from "@/modules/proposal/actions"
 import { getAppointmentStats, listAdminAppointments } from "@/modules/appointment/actions"
+import { getPublicAboutText, getPublicContactInfo } from "@/modules/settings/actions"
 
 // Cada ferramenta é só uma casca fina em cima de uma action que já existe
 // e já aplica a mesma permissão/escopo por corretor do resto do painel —
@@ -83,6 +84,12 @@ export const ASSISTANT_TOOL_DECLARATIONS: FunctionDeclaration[] = [
     name: "get_today_agenda_detail",
     description:
       "Lista detalhada dos compromissos de hoje (horário, tipo, com quem, imóvel) — use quando pedirem a agenda de hoje de verdade, não só a contagem (ex.: 'o que tenho hoje', 'qual minha próxima visita', ou como parte de um resumo do dia).",
+    parametersJsonSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_company_info",
+    description:
+      "Informações institucionais da Bebiano Imóveis: texto sobre a empresa, telefone, WhatsApp, endereço e horário de funcionamento. Use pra perguntas sobre a empresa em si (não sobre os dados operacionais do sistema).",
     parametersJsonSchema: { type: "object", properties: {} },
   },
 ]
@@ -201,6 +208,11 @@ export async function executeAssistantTool(name: string, args: ToolArgs): Promis
       return safeCall("a agenda", () => getAppointmentStats({}))
     case "get_today_agenda_detail":
       return safeCall("os compromissos de hoje", () => getTodayAgendaDetail())
+    case "get_company_info":
+      return safeCall("as informações da empresa", async () => ({
+        about: await getPublicAboutText(),
+        contact: await getPublicContactInfo(),
+      }))
     default:
       return { error: `Ferramenta desconhecida: ${name}` }
   }
