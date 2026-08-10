@@ -4,7 +4,7 @@ import { getDashboardMetrics } from "@/modules/report/actions"
 import { getLeadCrmStats, listAdminLeads } from "@/modules/lead/actions"
 import { getClientCrmStats } from "@/modules/client/actions"
 import { getPropertyPortfolioStats } from "@/modules/property/actions"
-import { getFinancialKpis } from "@/modules/financial/actions"
+import { getFinancialKpis, getFinancialCashFlowTimeline, getFinancialMonthlySeries } from "@/modules/financial/actions"
 import { getProposalCrmStats, listAdminProposals } from "@/modules/proposal/actions"
 import { getAppointmentStats, listAdminAppointments } from "@/modules/appointment/actions"
 import { getPublicAboutText, getPublicContactInfo } from "@/modules/settings/actions"
@@ -84,6 +84,12 @@ export const ASSISTANT_TOOL_DECLARATIONS: FunctionDeclaration[] = [
     name: "get_today_agenda_detail",
     description:
       "Lista detalhada dos compromissos de hoje (horário, tipo, com quem, imóvel) — use quando pedirem a agenda de hoje de verdade, não só a contagem (ex.: 'o que tenho hoje', 'qual minha próxima visita', ou como parte de um resumo do dia).",
+    parametersJsonSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_financial_forecast",
+    description:
+      "Projeção de fechamento do mês atual (receita, despesa e saldo previstos), calculada a partir do ritmo real do mês até agora e comparada com a média dos últimos 3 meses fechados. Avisa explicitamente se o mês está no ritmo de fechar no vermelho (saldo negativo). Use para perguntas como 'vamos fechar no vermelho', 'quanto vamos faturar esse mês', 'como está a projeção do mês'. Só funciona com permissão financeira. SEMPRE apresente isso como estimativa, nunca como número garantido.",
     parametersJsonSchema: { type: "object", properties: {} },
   },
   {
@@ -168,6 +174,56 @@ async function getLeadsNeedingAttention(limit: number) {
   }
 }
 
+// Projeção puramente aritmética (sem "achismo" do modelo): ritmo diário
+// real do mês até agora, extrapolado pros dias restantes, cruzado com a
+// média dos últimos 3 meses fechados como referência. O resultado inclui
+// o método usado, pra instrução de sistema sempre citar como estimativa.
+async function getFinancialForecast() {
+  const [timeline, monthlySeries] = await Promise.all([
+    getFinancialCashFlowTimeline({}),
+    getFinancialMonthlySeries({}),
+  ])
+
+  const now = new Date()
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  const dayOfMonth = now.getDate()
+
+  const elapsed = timeline.slice(0, dayOfMonth)
+  const incomeSoFar = elapsed.reduce((sum, day) => sum + day.income, 0)
+  const expenseSoFar = elapsed.reduce((sum, day) => sum + day.expense, 0)
+
+  const projectedIncome = Math.round(((incomeSoFar / dayOfMonth) * daysInMonth) * 100) / 100
+  const projectedExpense = Math.round(((expenseSoFar / dayOfMonth) * daysInMonth) * 100) / 100
+  const projectedBalance = Math.round((projectedIncome - projectedExpense) * 100) / 100
+
+  // monthlySeries vem em ordem cronológica crescente, com o mês atual
+  // (ainda em andamento) por último — os 3 anteriores a ele já fecharam.
+  const lastClosedMonths = monthlySeries.slice(0, -1).slice(-3)
+  const historicalAverageBalance =
+    lastClosedMonths.length > 0
+      ? Math.round(
+          (lastClosedMonths.reduce((sum, month) => sum + (month.income - month.expense), 0) /
+            lastClosedMonths.length) *
+            100
+        ) / 100
+      : null
+
+  return {
+    method: `Projeção linear a partir do ritmo real do mês até o dia ${dayOfMonth} de ${daysInMonth}, comparada com a média dos últimos ${lastClosedMonths.length} meses fechados.`,
+    dayOfMonth,
+    daysInMonth,
+    incomeSoFar: Math.round(incomeSoFar * 100) / 100,
+    expenseSoFar: Math.round(expenseSoFar * 100) / 100,
+    balanceSoFar: Math.round((incomeSoFar - expenseSoFar) * 100) / 100,
+    projectedIncome,
+    projectedExpense,
+    projectedBalance,
+    willCloseNegative: projectedBalance < 0,
+    historicalAverageBalanceLast3Months: historicalAverageBalance,
+    lastClosedMonths,
+  }
+}
+
 async function getTodayAgendaDetail() {
   const now = new Date()
   const start = new Date(now)
@@ -202,6 +258,8 @@ export async function executeAssistantTool(name: string, args: ToolArgs): Promis
       return safeCall("as estatísticas de imóveis", () => getPropertyPortfolioStats({}))
     case "get_financial_kpis":
       return safeCall("os indicadores financeiros", () => getFinancialKpis({}))
+    case "get_financial_forecast":
+      return safeCall("a projeção financeira", () => getFinancialForecast())
     case "get_proposals_stats":
       return safeCall("as estatísticas de propostas", () => getProposalCrmStats({}))
     case "get_agenda_today":
