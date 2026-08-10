@@ -194,6 +194,7 @@ export function AdminTopbar({
 }) {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const canUseAssistant = permissions.has("assistant.use")
+  const firstName = user.name?.split(" ")[0] ?? "por aqui"
 
   return (
     <header className="flex h-16 items-center gap-4 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md md:px-8">
@@ -215,16 +216,21 @@ export function AdminTopbar({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  aria-label="Assistente IA"
+                  aria-label="Bebiano IA"
                   onClick={() => setAssistantOpen(true)}
                   className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
                   <Sparkles className="size-[18px]" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>Assistente IA</TooltipContent>
+              <TooltipContent>Bebiano IA</TooltipContent>
             </Tooltip>
-            <AssistantPanel open={assistantOpen} onOpenChange={setAssistantOpen} />
+            <AssistantPanel
+              open={assistantOpen}
+              onOpenChange={setAssistantOpen}
+              firstName={firstName}
+              permissionKeys={[...permissions]}
+            />
           </>
         ) : null}
 
