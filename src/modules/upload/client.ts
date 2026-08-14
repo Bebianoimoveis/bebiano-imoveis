@@ -12,6 +12,9 @@ export async function uploadPropertyImage(
   file: File,
   signature: UploadSignature
 ): Promise<UploadedImage> {
+  if (file.size === 0) {
+    throw new Error("Esse arquivo está vazio ou corrompido. Tente selecionar a imagem novamente.")
+  }
   if (file.size > signature.maxFileSize) {
     throw new Error("Arquivo excede o tamanho máximo permitido (8MB).")
   }
@@ -50,6 +53,9 @@ export async function uploadFinancialAttachment(
   file: File,
   signature: UploadSignature
 ): Promise<UploadedAttachment> {
+  if (file.size === 0) {
+    throw new Error("Esse arquivo está vazio ou corrompido. Tente selecionar o arquivo novamente.")
+  }
   if (file.size > signature.maxFileSize) {
     throw new Error("Arquivo excede o tamanho máximo permitido (10MB).")
   }
