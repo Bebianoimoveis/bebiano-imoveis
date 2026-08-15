@@ -32,6 +32,7 @@ type FormValues = {
   creci: string
   bio: string
   photoUrl: string
+  photoPositionY: number
 }
 
 type RealtorFormDialogProps = {
@@ -45,6 +46,7 @@ type RealtorFormDialogProps = {
     creci: string
     bio: string
     photoUrl: string
+    photoPositionY: number
   }
 }
 
@@ -68,10 +70,12 @@ export function RealtorFormDialog({
       creci: defaultValues?.creci ?? "",
       bio: defaultValues?.bio ?? "",
       photoUrl: defaultValues?.photoUrl ?? "",
+      photoPositionY: defaultValues?.photoPositionY ?? 0,
     },
   })
 
   const photoUrl = form.watch("photoUrl")
+  const photoPositionY = form.watch("photoPositionY")
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -81,6 +85,7 @@ export function RealtorFormDialog({
       const signature = await createRealtorPhotoUploadSignature()
       const uploaded = await uploadPropertyImage(file, signature)
       form.setValue("photoUrl", uploaded.url)
+      form.setValue("photoPositionY", 0)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar foto.")
     } finally {
@@ -126,7 +131,14 @@ export function RealtorFormDialog({
           <div className="flex items-center gap-4">
             <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
               {photoUrl ? (
-                <Image src={photoUrl} alt="Foto do corretor" fill className="object-cover object-top" sizes="64px" />
+                <Image
+                  src={photoUrl}
+                  alt="Foto do corretor"
+                  fill
+                  className="object-cover"
+                  style={{ objectPosition: `center ${photoPositionY}%` }}
+                  sizes="64px"
+                />
               ) : (
                 <User className="size-7" />
               )}
@@ -137,6 +149,24 @@ export function RealtorFormDialog({
               {isUploading ? <p className="text-xs text-muted-foreground">Enviando...</p> : null}
             </div>
           </div>
+
+          {photoUrl ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="photoPositionY">Posição da foto</Label>
+              <input
+                id="photoPositionY"
+                type="range"
+                min={0}
+                max={100}
+                value={photoPositionY}
+                onChange={(e) => form.setValue("photoPositionY", Number(e.target.value))}
+                className="w-full accent-primary"
+              />
+              <p className="text-xs text-muted-foreground">
+                Ajuste pra centralizar o rosto no recorte redondo — vale pra todo lugar que essa foto aparece no site.
+              </p>
+            </div>
+          ) : null}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

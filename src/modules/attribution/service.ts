@@ -16,6 +16,7 @@ export type AttributedRealtorView = {
   phone: string
   creci: string | null
   photoUrl: string | null
+  photoPositionY: number | null
   slug: string | null
 }
 
@@ -26,6 +27,7 @@ function formatRealtor(realtor: AttributedRealtor): AttributedRealtorView {
     phone: realtor.phone,
     creci: realtor.creci,
     photoUrl: realtor.photoUrl,
+    photoPositionY: realtor.photoPositionY,
     slug: realtor.slug,
   }
 }

@@ -11,6 +11,7 @@ export const createRealtorSchema = z.object({
   creci: z.string().optional(),
   bio: z.string().optional(),
   photoUrl: z.string().optional(),
+  photoPositionY: z.number().min(0).max(100).optional(),
 })
 
 export type CreateRealtorInput = z.infer<typeof createRealtorSchema>
@@ -22,6 +23,7 @@ export const updateRealtorSchema = z.object({
   creci: z.string().optional(),
   bio: z.string().optional(),
   photoUrl: z.string().optional(),
+  photoPositionY: z.number().min(0).max(100).optional(),
 })
 
 export type UpdateRealtorInput = z.infer<typeof updateRealtorSchema>

@@ -71,6 +71,10 @@ model Realtor {
   user      User      @relation(fields: [userId], references: [id])
   phone     String
   photoUrl  String?
+  // Posição vertical do enquadramento da foto (0 = topo, 100 = base),
+  // ajustada manualmente no cadastro — null usa o padrão (topo), mesmo
+  // comportamento de antes de existir esse campo.
+  photoPositionY Int?
   creci     String?
   bio       String?
   active    Boolean   @default(true)

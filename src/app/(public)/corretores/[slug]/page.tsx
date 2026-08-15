@@ -57,7 +57,8 @@ export default async function RealtorProfilePage({
               src={realtor.photoUrl}
               alt={realtor.user.name}
               fill
-              className="object-cover object-top"
+              className="object-cover"
+              style={{ objectPosition: `center ${realtor.photoPositionY ?? 0}%` }}
               sizes="144px"
             />
           ) : (

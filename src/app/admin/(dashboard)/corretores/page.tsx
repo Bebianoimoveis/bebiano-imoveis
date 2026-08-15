@@ -73,7 +73,14 @@ export default async function AdminRealtorsPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
                         {realtor.photoUrl ? (
-                          <Image src={realtor.photoUrl} alt={realtor.user.name} fill className="object-cover object-top" sizes="36px" />
+                          <Image
+                            src={realtor.photoUrl}
+                            alt={realtor.user.name}
+                            fill
+                            className="object-cover"
+                            style={{ objectPosition: `center ${realtor.photoPositionY ?? 0}%` }}
+                            sizes="36px"
+                          />
                         ) : (
                           <User className="size-4" />
                         )}
@@ -98,6 +105,7 @@ export default async function AdminRealtorsPage() {
                         creci: realtor.creci ?? "",
                         bio: realtor.bio ?? "",
                         photoUrl: realtor.photoUrl ?? "",
+                        photoPositionY: realtor.photoPositionY ?? 0,
                       }}
                       trigger={
                         <Button variant="ghost" size="sm">

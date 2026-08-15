@@ -76,6 +76,7 @@ export default async function PropertyDetailPage({
         creci: attributedRealtor.creci,
         phone: attributedRealtor.phone,
         photoUrl: attributedRealtor.photoUrl,
+        photoPositionY: attributedRealtor.photoPositionY,
       }
     : property.realtor
       ? {
@@ -83,6 +84,7 @@ export default async function PropertyDetailPage({
           creci: property.realtor.creci,
           phone: property.realtor.phone,
           photoUrl: property.realtor.photoUrl,
+          photoPositionY: property.realtor.photoPositionY,
         }
       : null
 
@@ -207,7 +209,8 @@ export default async function PropertyDetailPage({
                     src={consultant.photoUrl}
                     alt={consultant.name}
                     fill
-                    className="object-cover object-top"
+                    className="object-cover"
+                    style={{ objectPosition: `center ${consultant.photoPositionY ?? 0}%` }}
                     sizes="56px"
                   />
                 ) : (

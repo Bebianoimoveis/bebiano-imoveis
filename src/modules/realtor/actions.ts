@@ -101,6 +101,7 @@ export async function createRealtor(input: unknown) {
       creci: data.creci || null,
       bio: data.bio || null,
       photoUrl: data.photoUrl || null,
+      photoPositionY: data.photoPositionY ?? null,
       user: {
         create: {
           name: data.name,
@@ -153,6 +154,7 @@ export async function updateRealtor(id: string, input: unknown) {
         creci: data.creci || null,
         bio: data.bio || null,
         photoUrl: data.photoUrl || null,
+        photoPositionY: data.photoPositionY ?? null,
       },
     }),
   ])
