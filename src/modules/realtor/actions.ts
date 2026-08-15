@@ -35,16 +35,22 @@ export async function listRealtors() {
 // Usado pelo botão "Compartilhar" de imóvel: se quem está logado for
 // corretor, devolve o próprio slug pra montar um link com atribuição
 // (?ref=<slug>, já suportado pelo middleware de atribuição existente) —
-// sem isso o link copiado não teria como saber quem indicou.
-export async function getCurrentUserRealtorSlug() {
+// sem isso o link copiado não teria como saber quem indicou. Devolve o
+// nome junto pra confirmação na tela deixar explícito de quem é o link
+// (em vez de um "seu código" genérico, sem prova nenhuma de que pegou a
+// pessoa certa).
+export async function getCurrentUserRealtorShareInfo() {
   const session = await auth()
   if (!session?.user?.realtorId) return null
 
   const realtor = await prisma.realtor.findUnique({
     where: { id: session.user.realtorId },
-    select: { slug: true },
+    select: { slug: true, user: { select: { name: true } } },
   })
-  return realtor?.slug ?? (realtor ? await ensureRealtorSlug(session.user.realtorId, session.user.name ?? "corretor") : null)
+  if (!realtor) return null
+
+  const slug = realtor.slug ?? (await ensureRealtorSlug(session.user.realtorId, realtor.user.name))
+  return { slug, name: realtor.user.name }
 }
 
 // Leitura pública — seção "Equipe" da home, sem checagem de sessão. Gera o

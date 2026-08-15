@@ -40,7 +40,7 @@ import {
   changePropertyStatus,
   duplicateProperty,
 } from "@/modules/property/actions"
-import { getCurrentUserRealtorSlug } from "@/modules/realtor/actions"
+import { getCurrentUserRealtorShareInfo } from "@/modules/realtor/actions"
 import { siteConfig } from "@/config/site"
 import type { PropertyStatus } from "@/generated/prisma/client"
 
@@ -76,8 +76,11 @@ export function PropertyRowActions({ propertyId, status, slug, title }: Property
   // de nada novo no lado público. Sem vínculo de corretor (ex.: admin
   // puro), cai pro link simples.
   async function buildShareLink() {
-    const realtorSlug = await getCurrentUserRealtorSlug()
-    return realtorSlug ? `${publicUrl}?ref=${realtorSlug}` : publicUrl
+    const info = await getCurrentUserRealtorShareInfo()
+    return {
+      link: info ? `${publicUrl}?ref=${info.slug}` : publicUrl,
+      realtorName: info?.name ?? null,
+    }
   }
 
   function runAction(action: () => Promise<unknown>, successMessage: string) {
@@ -114,10 +117,10 @@ export function PropertyRowActions({ propertyId, status, slug, title }: Property
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={async () => {
-              const link = await buildShareLink()
+              const { link, realtorName } = await buildShareLink()
               navigator.clipboard.writeText(link)
               toast.success(
-                link === publicUrl ? "Link copiado." : "Link copiado com seu código de indicação."
+                realtorName ? `Link copiado com a indicação de ${realtorName}.` : "Link copiado."
               )
             }}
           >
@@ -125,7 +128,7 @@ export function PropertyRowActions({ propertyId, status, slug, title }: Property
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={async () => {
-              const link = await buildShareLink()
+              const { link } = await buildShareLink()
               const message = `Olá! Separei esse imóvel${title ? ` (${title})` : ""} pra você, dá uma olhada: ${link}`
               window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
             }}
