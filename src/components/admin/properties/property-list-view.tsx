@@ -124,7 +124,7 @@ export function PropertyListView({
                 slug={property.slug}
                 className="hidden items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 xl:flex"
               />
-              <PropertyRowActions propertyId={property.id} status={property.status} slug={property.slug} />
+              <PropertyRowActions propertyId={property.id} status={property.status} slug={property.slug} title={property.title} />
             </div>
           </div>
         )

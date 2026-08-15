@@ -14,6 +14,8 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +40,7 @@ import {
   changePropertyStatus,
   duplicateProperty,
 } from "@/modules/property/actions"
+import { getCurrentUserRealtorSlug } from "@/modules/realtor/actions"
 import { siteConfig } from "@/config/site"
 import type { PropertyStatus } from "@/generated/prisma/client"
 
@@ -45,6 +48,7 @@ type PropertyRowActionsProps = {
   propertyId: string
   status: PropertyStatus
   slug: string
+  title?: string
 }
 
 const NEXT_STATUS_OPTIONS: Partial<Record<PropertyStatus, { label: string; status: PropertyStatus }[]>> = {
@@ -62,9 +66,19 @@ const NEXT_STATUS_OPTIONS: Partial<Record<PropertyStatus, { label: string; statu
   UNAVAILABLE: [{ label: "Voltar a publicado", status: "PUBLISHED" }],
 }
 
-export function PropertyRowActions({ propertyId, status, slug }: PropertyRowActionsProps) {
+export function PropertyRowActions({ propertyId, status, slug, title }: PropertyRowActionsProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+
+  // Se quem está logado for corretor, o link leva o próprio código de
+  // indicação (?ref=<slug>) — o middleware de atribuição já existente
+  // (src/middleware.ts) reconhece isso em qualquer página, sem precisar
+  // de nada novo no lado público. Sem vínculo de corretor (ex.: admin
+  // puro), cai pro link simples.
+  async function buildShareLink() {
+    const realtorSlug = await getCurrentUserRealtorSlug()
+    return realtorSlug ? `${publicUrl}?ref=${realtorSlug}` : publicUrl
+  }
 
   function runAction(action: () => Promise<unknown>, successMessage: string) {
     startTransition(async () => {
@@ -99,12 +113,24 @@ export function PropertyRowActions({ propertyId, status, slug }: PropertyRowActi
             </a>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => {
-              navigator.clipboard.writeText(publicUrl)
-              toast.success("Link copiado.")
+            onClick={async () => {
+              const link = await buildShareLink()
+              navigator.clipboard.writeText(link)
+              toast.success(
+                link === publicUrl ? "Link copiado." : "Link copiado com seu código de indicação."
+              )
             }}
           >
             <Share2 /> Compartilhar
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={async () => {
+              const link = await buildShareLink()
+              const message = `Olá! Separei esse imóvel${title ? ` (${title})` : ""} pra você, dá uma olhada: ${link}`
+              window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
+            }}
+          >
+            <WhatsAppIcon className="size-4" /> Compartilhar no WhatsApp
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />

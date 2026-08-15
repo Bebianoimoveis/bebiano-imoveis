@@ -78,7 +78,7 @@ export default async function EditPropertyPage({
             Código {property.code}
           </p>
         </div>
-        <PropertyRowActions propertyId={property.id} status={property.status} slug={property.slug} />
+        <PropertyRowActions propertyId={property.id} status={property.status} slug={property.slug} title={property.title} />
       </div>
 
       <PropertyForm

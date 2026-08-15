@@ -95,7 +95,7 @@ export function PropertyGridView({
 
               <div className="flex items-center justify-between border-t border-border/60 pt-3">
                 <PropertyRealtor realtor={property.realtor} />
-                <PropertyRowActions propertyId={property.id} status={property.status} slug={property.slug} />
+                <PropertyRowActions propertyId={property.id} status={property.status} slug={property.slug} title={property.title} />
               </div>
 
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
