@@ -14,9 +14,17 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { UserFormDialog } from "@/components/admin/users/user-form-dialog"
 import { UserActiveToggle } from "@/components/admin/users/user-active-toggle"
 import { listAdminUsers, listRoles } from "@/modules/user/actions"
+import { roleLabel } from "@/modules/user/role-labels"
 
 export default async function AdminUsersPage() {
-  const [users, roles] = await Promise.all([listAdminUsers(), listRoles()])
+  const [users, allRoles] = await Promise.all([listAdminUsers(), listRoles()])
+
+  // Só Admin e Corretor ficam disponíveis para escolha — Gerente e
+  // Financeiro continuam existindo no banco (usuários já cadastrados com
+  // esses papéis não são afetados), só não aparecem mais como opção nova.
+  const selectableRoles = allRoles
+    .filter((role) => role.name === "ADMIN" || role.name === "REALTOR")
+    .map((role) => ({ ...role, name: roleLabel(role.name) }))
 
   return (
     <div className="space-y-6">
@@ -31,7 +39,7 @@ export default async function AdminUsersPage() {
         </div>
         <UserFormDialog
           mode="create"
-          roles={roles}
+          roles={selectableRoles}
           trigger={
             <Button>
               <Plus className="size-4" />
@@ -63,7 +71,7 @@ export default async function AdminUsersPage() {
                     {user.email}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {user.role.name}
+                    {roleLabel(user.role.name)}
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -81,7 +89,14 @@ export default async function AdminUsersPage() {
                     <UserFormDialog
                       mode="edit"
                       userId={user.id}
-                      roles={roles}
+                      roles={
+                        selectableRoles.some((role) => role.id === user.roleId)
+                          ? selectableRoles
+                          : [
+                              ...selectableRoles,
+                              { id: user.roleId, name: roleLabel(user.role.name) },
+                            ]
+                      }
                       defaultValues={{
                         name: user.name,
                         email: user.email,
