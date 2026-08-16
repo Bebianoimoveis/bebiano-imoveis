@@ -58,6 +58,17 @@ export async function findPropertyById(
   })
 }
 
+// Leitura mínima usada na resolução de corretor responsável ao criar um
+// lead (ver lead/service.ts) — evita puxar o include completo do imóvel
+// só para pegar um campo.
+export async function findPropertyRealtorId(id: string): Promise<string | null> {
+  const property = await prisma.property.findUnique({
+    where: { id },
+    select: { realtorId: true },
+  })
+  return property?.realtorId ?? null
+}
+
 export async function findPropertyBySlugPublic(
   slug: string
 ): Promise<PropertyDetail | null> {

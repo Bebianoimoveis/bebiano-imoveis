@@ -4,6 +4,7 @@ import type { LeadAttributionInput } from "@/modules/lead/repository"
 import * as appointmentRepository from "@/modules/appointment/repository"
 import * as attributionService from "@/modules/attribution/service"
 import type { ResolvedRealtorForLead } from "@/modules/attribution/service"
+import * as propertyRepository from "@/modules/property/repository"
 
 class SpamRejectedError extends Error {}
 
@@ -31,6 +32,17 @@ function assertLooksHuman(input: { honeypot?: string; startedAt: number }) {
   }
 }
 
+// resolveRealtorForNewLead espera o id do corretor responsável pelo
+// imóvel (fallback quando não há atribuição por cookie), não o id do
+// imóvel em si — por isso o lookup aqui em vez de repassar
+// input.propertyId direto.
+async function resolveRealtorForLeadInput(propertyId?: string | null) {
+  const propertyRealtorId = propertyId
+    ? await propertyRepository.findPropertyRealtorId(propertyId)
+    : null
+  return attributionService.resolveRealtorForNewLead(propertyRealtorId)
+}
+
 // Achata o resultado da atribuição pro formato que os repositórios
 // esperam gravar no Lead — só um lugar decide "qual corretor" (attribution
 // service), aqui só reformata.
@@ -52,7 +64,7 @@ export async function submitPublicContactRequest(
 ) {
   assertLooksHuman(input)
 
-  const resolved = await attributionService.resolveRealtorForNewLead(input.propertyId)
+  const resolved = await resolveRealtorForLeadInput(input.propertyId)
 
   return leadRepository.createContactRequestWithLead({
     name: input.name,
@@ -80,7 +92,7 @@ export async function submitPublicVisitRequest(input: VisitRequestInput) {
     throw new Error("Data ou horário inválido.")
   }
 
-  const resolved = await attributionService.resolveRealtorForNewLead(input.propertyId)
+  const resolved = await resolveRealtorForLeadInput(input.propertyId)
 
   return appointmentRepository.createVisitRequestWithLead({
     name: input.name,
