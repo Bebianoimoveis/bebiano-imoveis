@@ -78,7 +78,7 @@ function DropdownMenuContent({
               exit={{ opacity: 0, scale: 0.98, y: -4, filter: "blur(4px)" }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className={cn(
-                "z-50 max-h-(--radix-dropdown-menu-content-available-height) w-(--radix-dropdown-menu-trigger-width) min-w-40 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-xl border border-white/40 bg-popover/70 p-1.5 text-popover-foreground shadow-xl shadow-black/10 ring-1 ring-foreground/5 backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-popover/60",
+                "z-[110] max-h-(--radix-dropdown-menu-content-available-height) w-(--radix-dropdown-menu-trigger-width) min-w-40 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-xl border border-white/40 bg-popover/70 p-1.5 text-popover-foreground shadow-xl shadow-black/10 ring-1 ring-foreground/5 backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-popover/60",
                 className
               )}
             >
@@ -285,7 +285,7 @@ function DropdownMenuSubContent({
   return (
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
-      className={cn("z-50 min-w-[96px] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+      className={cn("z-[110] min-w-[96px] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
       {...props}
     />
   )
