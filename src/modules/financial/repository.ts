@@ -68,6 +68,26 @@ export async function listEntriesDueToday(): Promise<FinancialEntryListItem[]> {
   })
 }
 
+// Vencidos (sem limite pra trás) + vencendo nos próximos `days` dias —
+// usado pro sino de notificações. Não grava nada, só lê: igual o cálculo
+// de "atrasado" acima, resolve sozinho quando a data passa ou a conta é
+// paga, sem precisar de um cron pra manter registro sincronizado.
+export async function listEntriesDueSoon(days: number): Promise<FinancialEntryListItem[]> {
+  const limit = new Date()
+  limit.setDate(limit.getDate() + days)
+  limit.setHours(23, 59, 59, 999)
+
+  return prisma.financialEntry.findMany({
+    where: {
+      dueDate: { lte: limit },
+      status: { in: ["PENDING", "SCHEDULED", "PARTIAL"] },
+    },
+    include: entryListInclude,
+    orderBy: { dueDate: "asc" },
+    take: 10,
+  })
+}
+
 export async function countOverdueEntries(): Promise<number> {
   return prisma.financialEntry.count({
     where: { status: { in: ["PENDING", "SCHEDULED"] }, dueDate: { lt: new Date() } },

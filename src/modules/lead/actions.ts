@@ -18,6 +18,7 @@ import {
 import * as leadRepository from "@/modules/lead/repository"
 import * as leadService from "@/modules/lead/service"
 import { SpamRejectedError } from "@/modules/lead/service"
+import * as notificationService from "@/modules/notification/service"
 import * as clientRepository from "@/modules/client/repository"
 
 const GENERIC_SUCCESS_MESSAGE =
@@ -211,6 +212,11 @@ export async function createLeadManually(input: unknown) {
     entityType: "Lead",
     entityId: lead.id,
   })
+
+  void notificationService.notifyNewLead(
+    { id: lead.id, name: lead.name, realtorId: lead.realtorId, origin: lead.origin },
+    session.user.id
+  )
 
   revalidatePath("/admin/leads")
   return lead

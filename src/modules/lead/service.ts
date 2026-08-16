@@ -5,6 +5,7 @@ import * as appointmentRepository from "@/modules/appointment/repository"
 import * as attributionService from "@/modules/attribution/service"
 import type { ResolvedRealtorForLead } from "@/modules/attribution/service"
 import * as propertyRepository from "@/modules/property/repository"
+import * as notificationService from "@/modules/notification/service"
 
 class SpamRejectedError extends Error {}
 
@@ -66,7 +67,7 @@ export async function submitPublicContactRequest(
 
   const resolved = await resolveRealtorForLeadInput(input.propertyId)
 
-  return leadRepository.createContactRequestWithLead({
+  const result = await leadRepository.createContactRequestWithLead({
     name: input.name,
     phone: input.phone,
     email: input.email,
@@ -76,6 +77,17 @@ export async function submitPublicContactRequest(
     ipAddress,
     attribution: toLeadAttribution(resolved),
   })
+
+  if (result.isNewLead) {
+    void notificationService.notifyNewLead({
+      id: result.lead.id,
+      name: result.lead.name,
+      realtorId: result.lead.realtorId,
+      origin: "site",
+    })
+  }
+
+  return result
 }
 
 export async function submitPublicVisitRequest(input: VisitRequestInput) {
@@ -94,7 +106,7 @@ export async function submitPublicVisitRequest(input: VisitRequestInput) {
 
   const resolved = await resolveRealtorForLeadInput(input.propertyId)
 
-  return appointmentRepository.createVisitRequestWithLead({
+  const result = await appointmentRepository.createVisitRequestWithLead({
     name: input.name,
     phone: input.phone,
     propertyId: input.propertyId,
@@ -102,6 +114,17 @@ export async function submitPublicVisitRequest(input: VisitRequestInput) {
     message: input.message ?? undefined,
     attribution: toLeadAttribution(resolved),
   })
+
+  if (result.isNewLead) {
+    void notificationService.notifyNewLead({
+      id: result.lead.id,
+      name: result.lead.name,
+      realtorId: result.lead.realtorId,
+      origin: "site",
+    })
+  }
+
+  return result
 }
 
 export { SpamRejectedError }

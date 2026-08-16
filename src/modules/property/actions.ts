@@ -11,6 +11,7 @@ import { propertyFiltersSchema, propertyInputSchema } from "@/modules/property/s
 import type { PropertyImageInput } from "@/modules/property/types"
 import * as propertyRepository from "@/modules/property/repository"
 import * as propertyService from "@/modules/property/service"
+import * as notificationService from "@/modules/notification/service"
 
 const PAGE_SIZE = 20
 
@@ -47,6 +48,11 @@ export async function createProperty(input: unknown) {
     entityId: property.id,
     metadata: { code: property.code },
   })
+
+  void notificationService.notifyNewProperty(
+    { id: property.id, title: property.title, code: property.code },
+    session.user.id
+  )
 
   revalidatePropertyPaths()
   // Nunca retornar o objeto Prisma completo para um Client Component: campos

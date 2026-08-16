@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "cmdk"
-import { Bell, Building2, Contact, Menu, Moon, Search, Sparkles, Users2 } from "lucide-react"
+import { Building2, Contact, Menu, Moon, Search, Sparkles, Users2 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { AssistantPanel } from "@/components/admin/assistant/assistant-panel"
+import { NotificationBell } from "@/components/admin/notifications/notification-bell"
 import { signOutAction } from "@/modules/auth/actions"
 import { globalSearch, type GlobalSearchResult } from "@/modules/search/actions"
 import { cn } from "@/lib/utils"
@@ -234,27 +235,7 @@ export function AdminTopbar({
           </>
         ) : null}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label="Notificações"
-              className="relative flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              <Bell className="size-[18px]" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-72">
-            <DropdownMenuLabel>Notificações</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
-              <Bell className="size-6 text-muted-foreground/50" />
-              <p className="text-xs text-muted-foreground">
-                Nenhuma notificação por enquanto.
-              </p>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NotificationBell />
 
         <Tooltip>
           <TooltipTrigger asChild>

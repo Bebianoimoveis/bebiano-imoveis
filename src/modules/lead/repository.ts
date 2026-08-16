@@ -103,7 +103,7 @@ export async function upsertLeadByPhone(
     : null
 
   if (!existing) {
-    return tx.lead.create({
+    const lead = await tx.lead.create({
       data: {
         name: input.name,
         phone: input.phone,
@@ -121,11 +121,12 @@ export async function upsertLeadByPhone(
         utmCampaign: input.attribution.utmCampaign ?? null,
       },
     })
+    return { lead, isNew: true }
   }
 
   const shouldAdvanceStage = stageRank(input.advanceToStage) > stageRank(existing.stage)
 
-  return tx.lead.update({
+  const lead = await tx.lead.update({
     where: { id: existing.id },
     data: {
       notes: existing.notes ? `${existing.notes}\n\n${input.note}` : input.note,
@@ -135,6 +136,7 @@ export async function upsertLeadByPhone(
       email: existing.email ?? (input.email || null),
     },
   })
+  return { lead, isNew: false }
 }
 
 // Cria o registro bruto do formulário (auditoria/anti-spam) e o Lead
@@ -157,7 +159,7 @@ export async function createContactRequestWithLead(
     })
 
     const now = new Date().toLocaleString("pt-BR")
-    const lead = await upsertLeadByPhone(tx, {
+    const { lead, isNew } = await upsertLeadByPhone(tx, {
       name: input.name,
       phone: input.phone,
       email: input.email,
@@ -170,7 +172,7 @@ export async function createContactRequestWithLead(
       attribution: input.attribution,
     })
 
-    return { contactRequest, lead }
+    return { contactRequest, lead, isNewLead: isNew }
   })
 }
 

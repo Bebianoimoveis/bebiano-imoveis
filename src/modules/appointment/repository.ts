@@ -55,7 +55,7 @@ type CreateVisitRequestInput = {
 export async function createVisitRequestWithLead(input: CreateVisitRequestInput) {
   return prisma.$transaction(async (tx) => {
     const now = new Date().toLocaleString("pt-BR")
-    const lead = await upsertLeadByPhone(tx, {
+    const { lead, isNew: isNewLead } = await upsertLeadByPhone(tx, {
       name: input.name,
       phone: input.phone,
       propertyId: input.propertyId,
@@ -83,7 +83,7 @@ export async function createVisitRequestWithLead(input: CreateVisitRequestInput)
       },
     })
 
-    return { lead, appointment }
+    return { lead, appointment, isNewLead }
   })
 }
 
