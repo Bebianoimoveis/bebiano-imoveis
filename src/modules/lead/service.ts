@@ -7,7 +7,15 @@ import type { ResolvedRealtorForLead } from "@/modules/attribution/service"
 
 class SpamRejectedError extends Error {}
 
-const MIN_FILL_TIME_MS = 2000
+// 2000ms rejeitava envios reais demais: a mensagem já vem pré-preenchida
+// (defaultValue) e nome/telefone costumam vir de autofill do navegador,
+// então uma pessoa de verdade consegue enviar em menos de 2s sem ter
+// mexido em nada digitando. Bots ingênuos ainda são pegos por qualquer
+// limite baixo (enviam quase instantaneamente); bots sofisticados já
+// simulam um delay proposital, então um limite mais alto não pega esses
+// de qualquer forma — só o honeypot continua sendo a defesa real contra
+// eles.
+const MIN_FILL_TIME_MS = 800
 
 // Heurística simples e sem dependências externas: bots costumam preencher
 // o campo honeypot (invisível para humanos) e enviar o formulário quase
