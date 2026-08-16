@@ -48,6 +48,14 @@ export async function createEntry(data: Prisma.FinancialEntryCreateInput) {
   return prisma.financialEntry.create({ data, include: entryListInclude })
 }
 
+// Cria todas as parcelas atomicamente — se uma falhar, nenhuma fica
+// gravada (evita um lançamento parcelado "pela metade" no financeiro).
+export async function createEntryInstallments(entries: Prisma.FinancialEntryCreateInput[]) {
+  return prisma.$transaction(
+    entries.map((data) => prisma.financialEntry.create({ data, include: entryListInclude }))
+  )
+}
+
 // Widgets "Vencimentos Hoje"/"Alertas" do Dashboard — mesma definição de
 // atrasado usada em isEntryOverdue (financial-entry-status-badge.tsx):
 // status pendente/agendado com dueDate no passado, calculado na hora.

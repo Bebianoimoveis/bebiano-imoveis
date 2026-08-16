@@ -110,6 +110,7 @@ export function FinancialEntryFormSheet({
       amount: "" as unknown as number,
       dueDate: "" as unknown as Date,
       status: "PENDING",
+      installments: 1,
     },
   })
 
@@ -139,15 +140,19 @@ export function FinancialEntryFormSheet({
         amount: "" as unknown as number,
         dueDate: "" as unknown as Date,
         status: "PENDING",
+        installments: 1,
       })
     }
   }, [open, entry, defaultType, form])
 
   const type = form.watch("type")
   const status = form.watch("status")
+  const amount = form.watch("amount")
+  const installments = Number(form.watch("installments")) || 1
   const attachmentUrl = form.watch("attachmentUrl")
   const attachmentName = form.watch("attachmentName")
   const categories = type === "INCOME" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+  const isInstallmentPlan = !isEditing && installments > 1
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -300,31 +305,64 @@ export function FinancialEntryFormSheet({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            {!isEditing ? (
               <FormField
                 control={form.control}
-                name="status"
+                name="installments"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {FINANCIAL_STATUS_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Parcelas</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={60}
+                        value={String(field.value ?? 1)}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    {isInstallmentPlan && amount ? (
+                      <p className="text-xs text-muted-foreground">
+                        Gera {installments} lançamentos mensais a partir do vencimento acima, de{" "}
+                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+                          Number(amount) / installments
+                        )}{" "}
+                        cada.
+                      </p>
+                    ) : null}
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            ) : null}
+
+            <div className={isInstallmentPlan ? "" : "grid grid-cols-2 gap-3"}>
+              {!isInstallmentPlan ? (
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {FINANCIAL_STATUS_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
 
               <FormField
                 control={form.control}
@@ -352,7 +390,7 @@ export function FinancialEntryFormSheet({
               />
             </div>
 
-            {status === "PARTIAL" || status === "PAID" ? (
+            {!isInstallmentPlan && (status === "PARTIAL" || status === "PAID") ? (
               <FormField
                 control={form.control}
                 name="paidAmount"

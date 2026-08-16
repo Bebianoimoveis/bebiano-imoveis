@@ -152,39 +152,92 @@ export async function exportFinancialEntriesCsv(rawFilters: unknown = {}) {
   return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
 }
 
+// Divide o total em centavos pra nunca perder/sobrar 1 centavo por
+// arredondamento (ex: R$100,00 em 3x -> 33,34 + 33,33 + 33,33, não
+// 33,33 x3 = 99,99). O resto fica com as primeiras parcelas.
+function splitAmountIntoInstallments(total: number, installments: number): number[] {
+  const totalCents = Math.round(total * 100)
+  const baseCents = Math.floor(totalCents / installments)
+  const remainderCents = totalCents - baseCents * installments
+  return Array.from(
+    { length: installments },
+    (_, index) => (baseCents + (index < remainderCents ? 1 : 0)) / 100
+  )
+}
+
 export async function createFinancialEntry(input: unknown) {
   const session = await requireFinancialManage()
   const data = financialEntryInputSchema.parse(input)
 
-  const entry = await financialRepository.createEntry({
-    type: data.type,
-    category: data.category,
-    description: data.description,
-    amount: data.amount,
-    paidAmount: data.paidAmount,
-    status: data.status,
-    paymentMethod: data.paymentMethod,
-    notes: data.notes,
-    attachmentUrl: data.attachmentUrl,
-    attachmentName: data.attachmentName,
-    dueDate: data.dueDate,
-    paidAt: data.status === "PAID" ? (data.paidAt ?? new Date()) : undefined,
-    contract: data.contractId ? { connect: { id: data.contractId } } : undefined,
-    client: data.clientId ? { connect: { id: data.clientId } } : undefined,
-    realtor: data.realtorId ? { connect: { id: data.realtorId } } : undefined,
-    property: data.propertyId ? { connect: { id: data.propertyId } } : undefined,
+  if (data.installments <= 1) {
+    const entry = await financialRepository.createEntry({
+      type: data.type,
+      category: data.category,
+      description: data.description,
+      amount: data.amount,
+      paidAmount: data.paidAmount,
+      status: data.status,
+      paymentMethod: data.paymentMethod,
+      notes: data.notes,
+      attachmentUrl: data.attachmentUrl,
+      attachmentName: data.attachmentName,
+      dueDate: data.dueDate,
+      paidAt: data.status === "PAID" ? (data.paidAt ?? new Date()) : undefined,
+      contract: data.contractId ? { connect: { id: data.contractId } } : undefined,
+      client: data.clientId ? { connect: { id: data.clientId } } : undefined,
+      realtor: data.realtorId ? { connect: { id: data.realtorId } } : undefined,
+      property: data.propertyId ? { connect: { id: data.propertyId } } : undefined,
+    })
+
+    await logActivity({
+      userId: session.user.id,
+      action: "financial.create",
+      entityType: "FinancialEntry",
+      entityId: entry.id,
+    })
+
+    revalidatePath("/admin/financeiro")
+    // amount/paidAmount são Decimal — não devolver o objeto Prisma inteiro ao client.
+    return { id: entry.id }
+  }
+
+  // Parcelado: cada parcela nasce PENDING, sem valor pago — status/valor
+  // pago do formulário descrevem um pagamento único, não fazem sentido
+  // aplicados de uma vez em parcelas futuras que ainda vão vencer.
+  const amounts = splitAmountIntoInstallments(data.amount, data.installments)
+  const entriesData = amounts.map((amount, index) => {
+    const dueDate = new Date(data.dueDate)
+    dueDate.setMonth(dueDate.getMonth() + index)
+    return {
+      type: data.type,
+      category: data.category,
+      description: data.description
+        ? `${data.description} (${index + 1}/${data.installments})`
+        : `Parcela ${index + 1}/${data.installments}`,
+      amount,
+      status: "PENDING" as const,
+      paymentMethod: data.paymentMethod,
+      notes: data.notes,
+      dueDate,
+      contract: data.contractId ? { connect: { id: data.contractId } } : undefined,
+      client: data.clientId ? { connect: { id: data.clientId } } : undefined,
+      realtor: data.realtorId ? { connect: { id: data.realtorId } } : undefined,
+      property: data.propertyId ? { connect: { id: data.propertyId } } : undefined,
+    }
   })
+
+  const created = await financialRepository.createEntryInstallments(entriesData)
 
   await logActivity({
     userId: session.user.id,
     action: "financial.create",
     entityType: "FinancialEntry",
-    entityId: entry.id,
+    entityId: created[0].id,
+    metadata: { installments: data.installments },
   })
 
   revalidatePath("/admin/financeiro")
-  // amount/paidAmount são Decimal — não devolver o objeto Prisma inteiro ao client.
-  return { id: entry.id }
+  return { id: created[0].id }
 }
 
 export async function updateFinancialEntry(id: string, input: unknown) {

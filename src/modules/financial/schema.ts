@@ -17,6 +17,10 @@ export const financialEntryInputSchema = z.object({
   description: z.string().optional(),
   amount: z.coerce.number().positive("Informe um valor válido."),
   paidAmount: z.coerce.number().nonnegative().optional(),
+  // >1 divide o valor em parcelas mensais na criação (ver createFinancialEntry) —
+  // depois de criadas, cada parcela é um FinancialEntry independente, sem
+  // vínculo entre si no banco.
+  installments: z.coerce.number().int().min(1).max(60).default(1),
   status: z.enum(["PENDING", "SCHEDULED", "PARTIAL", "PAID", "CANCELED"]).default("PENDING"),
   paymentMethod: z.enum(["PIX", "TED", "CARD", "CASH", "BOLETO", "TRANSFER", "CHECK"]).optional(),
   notes: z.string().optional(),
