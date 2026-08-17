@@ -105,7 +105,6 @@ export default async function AdminRealtorsPage() {
                         creci: realtor.creci ?? "",
                         bio: realtor.bio ?? "",
                         photoUrl: realtor.photoUrl ?? "",
-                        photoPositionY: realtor.photoPositionY ?? 0,
                       }}
                       trigger={
                         <Button variant="ghost" size="sm">

@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { PhotoCropDialog } from "@/components/admin/realtors/photo-crop-dialog"
 import { createRealtor, updateRealtor } from "@/modules/realtor/actions"
 import { createRealtorPhotoUploadSignature } from "@/modules/upload/actions"
 import { uploadPropertyImage } from "@/modules/upload/client"
@@ -32,7 +33,6 @@ type FormValues = {
   creci: string
   bio: string
   photoUrl: string
-  photoPositionY: number
 }
 
 type RealtorFormDialogProps = {
@@ -46,7 +46,6 @@ type RealtorFormDialogProps = {
     creci: string
     bio: string
     photoUrl: string
-    photoPositionY: number
   }
 }
 
@@ -60,6 +59,7 @@ export function RealtorFormDialog({
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [cropSource, setCropSource] = useState<{ kind: "file"; file: File } | { kind: "url"; url: string } | null>(null)
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -70,27 +70,29 @@ export function RealtorFormDialog({
       creci: defaultValues?.creci ?? "",
       bio: defaultValues?.bio ?? "",
       photoUrl: defaultValues?.photoUrl ?? "",
-      photoPositionY: defaultValues?.photoPositionY ?? 0,
     },
   })
 
   const photoUrl = form.watch("photoUrl")
-  const photoPositionY = form.watch("photoPositionY")
 
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    setCropSource({ kind: "file", file })
+    e.target.value = ""
+  }
+
+  async function handleCropConfirm(croppedFile: File) {
+    setCropSource(null)
     setIsUploading(true)
     try {
       const signature = await createRealtorPhotoUploadSignature()
-      const uploaded = await uploadPropertyImage(file, signature)
+      const uploaded = await uploadPropertyImage(croppedFile, signature)
       form.setValue("photoUrl", uploaded.url)
-      form.setValue("photoPositionY", 0)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao enviar foto.")
     } finally {
       setIsUploading(false)
-      e.target.value = ""
     }
   }
 
@@ -131,14 +133,7 @@ export function RealtorFormDialog({
           <div className="flex items-center gap-4">
             <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
               {photoUrl ? (
-                <Image
-                  src={photoUrl}
-                  alt="Foto do corretor"
-                  fill
-                  className="object-cover"
-                  style={{ objectPosition: `center ${photoPositionY}%` }}
-                  sizes="64px"
-                />
+                <Image src={photoUrl} alt="Foto do corretor" fill className="object-cover" sizes="64px" />
               ) : (
                 <User className="size-7" />
               )}
@@ -146,27 +141,25 @@ export function RealtorFormDialog({
             <div className="space-y-1.5">
               <Label htmlFor="photo">Foto de perfil</Label>
               <Input id="photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePhotoChange} disabled={isUploading} />
-              {isUploading ? <p className="text-xs text-muted-foreground">Enviando...</p> : null}
+              {isUploading ? (
+                <p className="text-xs text-muted-foreground">Enviando...</p>
+              ) : photoUrl ? (
+                <button
+                  type="button"
+                  onClick={() => setCropSource({ kind: "url", url: photoUrl })}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Ajustar posição/zoom
+                </button>
+              ) : null}
             </div>
           </div>
 
-          {photoUrl ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="photoPositionY">Posição da foto</Label>
-              <input
-                id="photoPositionY"
-                type="range"
-                min={0}
-                max={100}
-                value={photoPositionY}
-                onChange={(e) => form.setValue("photoPositionY", Number(e.target.value))}
-                className="w-full accent-primary"
-              />
-              <p className="text-xs text-muted-foreground">
-                Ajuste pra centralizar o rosto no recorte redondo — vale pra todo lugar que essa foto aparece no site.
-              </p>
-            </div>
-          ) : null}
+          <PhotoCropDialog
+            source={cropSource}
+            onCancel={() => setCropSource(null)}
+            onConfirm={handleCropConfirm}
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
