@@ -107,9 +107,9 @@ function GlobalSearch() {
         onClick={() => setOpen(true)}
         className="hidden w-full max-w-md items-center gap-2 rounded-xl border border-border/60 bg-secondary/40 px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 sm:flex"
       >
-        <Search className="size-4" />
+        <Search className="size-4 shrink-0" />
         <span className="flex-1 truncate text-left">Buscar imóveis, leads, clientes…</span>
-        <kbd className="rounded-md border border-border/60 bg-background px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+        <kbd className="inline-flex shrink-0 items-center justify-center gap-0.5 rounded-md border border-border/60 bg-background px-1.5 py-0.5 text-[10px] leading-none font-medium text-muted-foreground">
           ⌘K
         </kbd>
       </button>
