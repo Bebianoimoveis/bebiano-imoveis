@@ -8,7 +8,7 @@ const CARDS = [
   {
     icon: Target,
     title: "Missão",
-    text: "Conectar pessoas ao imóvel certo, com um atendimento próximo e transparente em cada etapa da negociação.",
+    text: "Promover, por meio do mercado imobiliário, o desenvolvimento dos corretores de imóveis, formando profissionais autônomos comprometidos com a realização dos sonhos de todas as pessoas que Deus colocar no caminho deles.",
   },
   {
     icon: Eye,
@@ -18,7 +18,7 @@ const CARDS = [
   {
     icon: Compass,
     title: "Valores",
-    text: "Ética, transparência e compromisso genuíno com o sonho de quem confia em nós para comprar, vender ou alugar.",
+    text: "Somos uma empresa que acredita, valoriza, reconhece e investe em pessoas — ajudando e somando no propósito individual de cada cliente e cada corretor, formando profissionais com fundamentos, valores e princípios bíblicos e cristãos.",
   },
 ]
 
