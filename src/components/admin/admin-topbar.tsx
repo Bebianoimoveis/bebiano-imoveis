@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "cmdk"
-import { Building2, Contact, Menu, Moon, Search, Sparkles, Users2 } from "lucide-react"
+import { Building2, Contact, Menu, Search, Sparkles, Users2 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -236,19 +236,6 @@ export function AdminTopbar({
         ) : null}
 
         <NotificationBell />
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              aria-label="Tema (em breve)"
-              className="flex size-9 items-center justify-center rounded-lg text-muted-foreground/50 transition-colors"
-            >
-              <Moon className="size-[18px]" />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>Tema claro em breve</TooltipContent>
-        </Tooltip>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

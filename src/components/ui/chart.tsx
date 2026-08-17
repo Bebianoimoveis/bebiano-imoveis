@@ -53,7 +53,11 @@ export function ChartTooltipContent({
   payload?: Array<{ name?: string; value?: number | string; color?: string }>
   label?: string
   labelFormatter?: (label: string) => string
-  valueFormatter?: (value: number | string) => string
+  // `entry` é opcional pra não quebrar os formatadores existentes que só
+  // usam o primeiro argumento — permite diferenciar a formatação por
+  // série (ex: um dataKey em R$, outro em contagem simples) num mesmo
+  // tooltip, sem precisar de dois componentes de tooltip diferentes.
+  valueFormatter?: (value: number | string, entry?: { name?: string }) => string
 }) {
   const config = React.useContext(ChartConfigContext)
 
@@ -79,7 +83,7 @@ export function ChartTooltipContent({
             <span className="ml-auto font-medium text-popover-foreground">
               {entry.value !== undefined
                 ? valueFormatter
-                  ? valueFormatter(entry.value)
+                  ? valueFormatter(entry.value, entry)
                   : entry.value
                 : null}
             </span>
