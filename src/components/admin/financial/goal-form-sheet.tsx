@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { Sheet } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import {
   Select,
   SelectContent,
@@ -54,6 +55,7 @@ export function GoalFormSheet({
     resolver: zodResolver(goalInputSchema),
     defaultValues: {
       scope: "COMPANY",
+      metric: "REVENUE",
       year: defaultYear,
       targetAmount: "" as unknown as number,
     },
@@ -61,11 +63,17 @@ export function GoalFormSheet({
 
   useEffect(() => {
     if (open) {
-      form.reset({ scope: "COMPANY", year: defaultYear, targetAmount: "" as unknown as number })
+      form.reset({
+        scope: "COMPANY",
+        metric: "REVENUE",
+        year: defaultYear,
+        targetAmount: "" as unknown as number,
+      })
     }
   }, [open, defaultYear, form])
 
   const scope = form.watch("scope")
+  const metric = form.watch("metric")
 
   async function onSubmit(values: GoalInput) {
     setIsSubmitting(true)
@@ -103,6 +111,28 @@ export function GoalFormSheet({
                       <SelectItem value="COMPANY">Empresa</SelectItem>
                       <SelectItem value="REALTOR">Corretor</SelectItem>
                       <SelectItem value="CITY">Cidade</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="metric"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Métrica</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="REVENUE">Faturamento (R$)</SelectItem>
+                      <SelectItem value="SALES_COUNT">Quantidade de vendas</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -214,9 +244,19 @@ export function GoalFormSheet({
               name="targetAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Valor da meta</FormLabel>
+                  <FormLabel>{metric === "SALES_COUNT" ? "Quantidade de vendas (meta)" : "Valor da meta"}</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" value={String(field.value ?? "")} onChange={(e) => field.onChange(e.target.value)} />
+                    {metric === "SALES_COUNT" ? (
+                      <Input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={String(field.value ?? "")}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    ) : (
+                      <CurrencyInput value={field.value} onChange={field.onChange} />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>

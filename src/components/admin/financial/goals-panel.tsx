@@ -28,12 +28,17 @@ type CityOption = { id: string; name: string; state: string }
 type Goal = {
   id: string
   scope: "COMPANY" | "REALTOR" | "CITY"
+  metric: "REVENUE" | "SALES_COUNT"
   year: number
   month: number | null
   targetAmount: number
   realtorName: string | null
   cityName: string | null
   realized: number
+}
+
+function formatGoalValue(goal: Goal, value: number) {
+  return goal.metric === "SALES_COUNT" ? `${value} venda${value === 1 ? "" : "s"}` : formatCurrency(value)
 }
 
 const SCOPE_LABELS: Record<Goal["scope"], string> = {
@@ -133,8 +138,8 @@ export function GoalsPanel({
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{formatCurrency(goal.realized)}</span>
-                    <span>{formatCurrency(goal.targetAmount)}</span>
+                    <span>{formatGoalValue(goal, goal.realized)}</span>
+                    <span>{formatGoalValue(goal, goal.targetAmount)}</span>
                   </div>
                 </div>
                 <p className="text-xs font-medium text-muted-foreground">{percent}% da meta atingido</p>

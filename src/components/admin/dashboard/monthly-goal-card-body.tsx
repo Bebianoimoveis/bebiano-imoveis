@@ -9,7 +9,17 @@ import { formatCurrency } from "@/lib/format"
 
 type RealtorOption = { id: string; user: { name: string } }
 type CityOption = { id: string; name: string; state: string }
-type Goal = { id: string; targetAmount: number; realized: number; month: number | null } | null
+type Goal = {
+  id: string
+  metric: "REVENUE" | "SALES_COUNT"
+  targetAmount: number
+  realized: number
+  month: number | null
+} | null
+
+function formatGoalValue(goal: NonNullable<Goal>, value: number) {
+  return goal.metric === "SALES_COUNT" ? `${value} venda${value === 1 ? "" : "s"}` : formatCurrency(value)
+}
 
 export function MonthlyGoalCardBody({
   goal,
@@ -52,8 +62,8 @@ export function MonthlyGoalCardBody({
             />
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{formatCurrency(goal.realized)}</span>
-            <span>{formatCurrency(goal.targetAmount)}</span>
+            <span>{formatGoalValue(goal, goal.realized)}</span>
+            <span>{formatGoalValue(goal, goal.targetAmount)}</span>
           </div>
           <p className="text-xs font-medium text-muted-foreground">
             {percent}% da meta {goal.month ? "do mês" : "anual"} atingido

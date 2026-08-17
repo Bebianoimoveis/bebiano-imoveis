@@ -764,21 +764,32 @@ enum GoalScope {
   CITY
 }
 
+// REVENUE: targetAmount é R$ (faturamento recebido no período).
+// SALES_COUNT: targetAmount guarda a quantidade de vendas (contratos
+// ativos/concluídos no período) — mesmo campo Decimal reaproveitado pra
+// não duplicar coluna só por causa da unidade; a UI formata cada um do
+// seu jeito.
+enum GoalMetric {
+  REVENUE
+  SALES_COUNT
+}
+
 // month null = meta anual daquele ano. Sem @@unique: NULL não é único no
 // Postgres pra combinações de realtorId/cityId nulos — duplicidade é
 // evitada na camada de aplicação (poucas dezenas de metas, não escala).
 model Goal {
-  id           String    @id @default(cuid())
-  scope        GoalScope @default(COMPANY)
+  id           String     @id @default(cuid())
+  scope        GoalScope  @default(COMPANY)
+  metric       GoalMetric @default(REVENUE)
   year         Int
   month        Int?
-  targetAmount Decimal   @db.Decimal(12, 2)
+  targetAmount Decimal    @db.Decimal(12, 2)
   realtorId    String?
-  realtor      Realtor?  @relation(fields: [realtorId], references: [id])
+  realtor      Realtor?   @relation(fields: [realtorId], references: [id])
   cityId       String?
-  city         City?     @relation(fields: [cityId], references: [id])
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  city         City?      @relation(fields: [cityId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@index([scope, year, month])
 }

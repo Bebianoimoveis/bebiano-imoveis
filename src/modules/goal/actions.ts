@@ -34,6 +34,7 @@ export async function listAdminGoals(year: number) {
     goals.map(async (goal) => ({
       id: goal.id,
       scope: goal.scope,
+      metric: goal.metric,
       year: goal.year,
       month: goal.month,
       targetAmount: Number(goal.targetAmount),
