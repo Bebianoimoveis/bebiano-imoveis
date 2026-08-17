@@ -121,6 +121,16 @@ export function countPublishedProperties(): Promise<number> {
   return prisma.property.count({ where: { status: "PUBLISHED", deletedAt: null } })
 }
 
+// Leitura mínima usada pelo sitemap.xml — só o que precisa pra montar
+// a URL e o lastModified, sem puxar o resto do imóvel.
+export function listPublicPropertySlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return prisma.property.findMany({
+    where: { status: "PUBLISHED", deletedAt: null, type: { active: true } },
+    select: { slug: true, updatedAt: true },
+    orderBy: { updatedAt: "desc" },
+  })
+}
+
 // KPIs do portfólio — um total por status (inclusive os que a listagem
 // pública nunca usa, como DRAFT/ARCHIVED) mais os agregados de valor e
 // visualizações. `where` já vem com o escopo de corretor aplicado pelo

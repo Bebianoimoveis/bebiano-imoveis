@@ -456,6 +456,11 @@ export async function countPublicProperties() {
   return propertyRepository.countPublishedProperties()
 }
 
+// Uso público — sem autenticação. Só pro sitemap.xml.
+export async function listPublicPropertySlugs() {
+  return propertyRepository.listPublicPropertySlugs()
+}
+
 // Uso público — sem autenticação. Favoritos são guardados no localStorage
 // do visitante (sem conta), então a página de favoritos manda os ids que
 // tem aí e a gente busca os imóveis correspondentes (só publicados).
