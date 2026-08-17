@@ -13,8 +13,10 @@ export type GlobalSearchResult = {
 }
 
 // Busca global da topbar (⌘K) — mesmo escopo de visibilidade já usado
-// nas listagens de cada módulo (corretor sem "*.view.all" só encontra o
-// que é dele), não uma busca separada com regras próprias.
+// nas listagens de cada módulo, não uma busca separada com regras
+// próprias: leads seguem restritos a "só os meus" sem lead.view.all;
+// imóveis são visíveis pra todo corretor, exceto lançamentos (na
+// planta), que só quem tem property.view.all enxerga (ver property/actions.ts).
 export async function globalSearch(query: string): Promise<GlobalSearchResult[]> {
   const session = await auth()
   if (!session?.user) return []
@@ -33,7 +35,7 @@ export async function globalSearch(query: string): Promise<GlobalSearchResult[]>
     prisma.property.findMany({
       where: {
         deletedAt: null,
-        ...(canViewAllProperties ? {} : { realtorId: realtorScope }),
+        ...(canViewAllProperties ? {} : { isLaunch: false }),
         OR: [
           { title: { contains: q, mode: "insensitive" } },
           { code: { contains: q, mode: "insensitive" } },

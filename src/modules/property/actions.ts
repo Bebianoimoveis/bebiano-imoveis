@@ -259,11 +259,12 @@ async function buildAdminScopedWhere(
   return {
     ...buildCommonWhere(filters),
     status: filters.status,
-    // Corretores sem property.view.all só enxergam os próprios imóveis.
-    // O sentinel garante zero resultados caso o usuário não tenha realtorId.
-    realtorId: canViewAll
-      ? filters.realtorId
-      : (session.user.realtorId ?? "__none__"),
+    realtorId: filters.realtorId,
+    // Todo corretor vê o portfólio inteiro agora — só quem tem
+    // property.view.all (admin/gestor) enxerga lançamentos (imóveis na
+    // planta, ainda em construção). Pra quem não tem, a lista some de
+    // vez, mesmo tentando filtrar por isLaunch=true.
+    isLaunch: canViewAll ? filters.isLaunch : false,
   }
 }
 
@@ -320,7 +321,7 @@ export async function suggestProperties(query: string) {
 
   const canViewAll = await can(session.user, "property.view.all")
   const where: Prisma.PropertyWhereInput = {
-    realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
+    isLaunch: canViewAll ? undefined : false,
     OR: [
       { title: { contains: query, mode: "insensitive" } },
       { code: { contains: query, mode: "insensitive" } },
@@ -404,7 +405,7 @@ export async function exportPropertiesCsv(input: { rawFilters?: unknown; ids?: s
     const canViewAll = await can(session.user, "property.view.all")
     where = {
       id: { in: input.ids },
-      realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
+      isLaunch: canViewAll ? undefined : false,
     }
   } else {
     const filters = propertyFiltersSchema.parse(input.rawFilters ?? {})
@@ -498,7 +499,7 @@ export async function getAdminProperty(id: string) {
   if (!property) return null
 
   const canViewAll = await can(session.user, "property.view.all")
-  if (!canViewAll && property.realtorId !== session.user.realtorId) {
+  if (!canViewAll && property.isLaunch) {
     throw new Error("Sem permissão para visualizar este imóvel.")
   }
 
