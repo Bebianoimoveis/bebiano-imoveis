@@ -198,7 +198,7 @@ export default async function PropertyDetailPage({
                       key={item.featureId}
                       className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-card px-3 py-2.5"
                     >
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold">
                         <Icon className="size-4" strokeWidth={1.75} />
                       </span>
                       <span className="text-sm font-medium">{item.feature.name}</span>

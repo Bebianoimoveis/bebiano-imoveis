@@ -690,7 +690,7 @@ export function PropertyForm({
                                   )
                                 }}
                               />
-                              <Icon className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+                              <Icon className="size-4 shrink-0 text-gold-dark" strokeWidth={1.75} />
                               {feature.name}
                             </label>
                           )
