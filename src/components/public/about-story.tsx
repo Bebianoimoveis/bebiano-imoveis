@@ -29,15 +29,14 @@ export function AboutStory({
         </Reveal>
 
         <Reveal delay={0.1} className="order-1 lg:order-2">
-          <div className="relative aspect-square overflow-hidden rounded-[20px] ring-1 ring-border/60 sm:rounded-3xl">
+          <div className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-full ring-1 ring-border/60">
             <Image
               src={imageUrl}
               alt="Bebiano Imóveis"
               fill
-              className="object-cover object-top"
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover object-center"
+              sizes="(max-width: 1024px) 90vw, 400px"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
           </div>
         </Reveal>
       </div>
