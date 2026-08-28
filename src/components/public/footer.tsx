@@ -1,10 +1,9 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Mail } from "lucide-react"
+import { Mail, MapPin } from "lucide-react"
 
 import { InstagramIcon } from "@/components/shared/instagram-icon"
 import { FooterWhatsappLink } from "@/components/public/footer-whatsapp-link"
-import { getPublicSiteAddress } from "@/modules/settings/actions"
 import { siteConfig } from "@/config/site"
 
 const SOCIAL_LINK_CLASS =
@@ -12,7 +11,6 @@ const SOCIAL_LINK_CLASS =
 
 export async function Footer({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
   const year = new Date().getFullYear()
-  const address = await getPublicSiteAddress()
 
   return (
     <footer className="border-t border-border/60 bg-secondary/30 pb-16 md:pb-0">
@@ -74,23 +72,15 @@ export async function Footer({ rentalEnabled = false }: { rentalEnabled?: boolea
               <InstagramIcon className="size-5" />
             </a>
           </div>
-          {address ? <p className="text-muted-foreground">{address}</p> : null}
-        </div>
-      </div>
-
-      {address ? (
-        <div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6">
-          <div className="overflow-hidden rounded-2xl ring-1 ring-border/60">
-            <iframe
-              title="Localização da Bebiano Imóveis"
-              src={`https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`}
-              className="h-56 w-full grayscale-[35%] sm:h-72"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+          {/* Sem endereço fixo de propósito — mesmo motivo do bloco
+              "Localização" em /sobre: atendimento com hora marcada nos
+              estandes dos empreendimentos, não num escritório físico. */}
+          <div className="flex items-start gap-2 text-muted-foreground">
+            <MapPin className="mt-0.5 size-4 shrink-0" strokeWidth={1.5} />
+            <p>Atendemos toda a região do Alto Tietê</p>
           </div>
         </div>
-      ) : null}
+      </div>
 
       <div className="flex flex-col items-center gap-1 border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
         <p>
