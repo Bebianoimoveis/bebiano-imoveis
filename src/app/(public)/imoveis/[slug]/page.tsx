@@ -6,6 +6,7 @@ import { BedDouble, Building2, Car, Ruler, ShowerHead, User } from "lucide-react
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { resolvePropertyFeatureIcon } from "@/lib/property-feature-icons"
 import { BackButton } from "@/components/shared/back-button"
 import { PropertyDescription } from "@/components/public/property-description"
 import { FavoriteButton } from "@/components/public/favorite-button"
@@ -189,12 +190,21 @@ export default async function PropertyDetailPage({
               <h2 className="font-heading text-lg font-semibold">
                 Características
               </h2>
-              <div className="flex flex-wrap gap-2">
-                {property.features.map((item) => (
-                  <Badge key={item.featureId} variant="outline">
-                    {item.feature.name}
-                  </Badge>
-                ))}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {property.features.map((item) => {
+                  const Icon = resolvePropertyFeatureIcon(item.feature.name)
+                  return (
+                    <div
+                      key={item.featureId}
+                      className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-card px-3 py-2.5"
+                    >
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                        <Icon className="size-4" strokeWidth={1.75} />
+                      </span>
+                      <span className="text-sm font-medium">{item.feature.name}</span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ) : null}

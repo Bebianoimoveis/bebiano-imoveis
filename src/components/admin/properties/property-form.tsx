@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { resolvePropertyFeatureIcon } from "@/lib/property-feature-icons"
 import {
   Select,
   SelectContent,
@@ -670,26 +671,30 @@ export function PropertyForm({
                     <FormItem>
                       <FormLabel>Características do imóvel</FormLabel>
                       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                        {features.map((feature) => (
-                          <label
-                            key={feature.id}
-                            className="flex items-center gap-2 text-sm"
-                          >
-                            <input
-                              type="checkbox"
-                              className="size-4 rounded border-border"
-                              checked={selected.includes(feature.id)}
-                              onChange={(e) => {
-                                field.onChange(
-                                  e.target.checked
-                                    ? [...selected, feature.id]
-                                    : selected.filter((id) => id !== feature.id)
-                                )
-                              }}
-                            />
-                            {feature.name}
-                          </label>
-                        ))}
+                        {features.map((feature) => {
+                          const Icon = resolvePropertyFeatureIcon(feature.name)
+                          return (
+                            <label
+                              key={feature.id}
+                              className="flex items-center gap-2 text-sm"
+                            >
+                              <input
+                                type="checkbox"
+                                className="size-4 rounded border-border"
+                                checked={selected.includes(feature.id)}
+                                onChange={(e) => {
+                                  field.onChange(
+                                    e.target.checked
+                                      ? [...selected, feature.id]
+                                      : selected.filter((id) => id !== feature.id)
+                                  )
+                                }}
+                              />
+                              <Icon className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+                              {feature.name}
+                            </label>
+                          )
+                        })}
                       </div>
                       <FormMessage />
                     </FormItem>
