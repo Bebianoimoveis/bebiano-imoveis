@@ -29,7 +29,7 @@ export function AboutStory({
         </Reveal>
 
         <Reveal delay={0.1} className="order-1 lg:order-2">
-          <div className="relative aspect-4/5 overflow-hidden rounded-[20px] ring-1 ring-border/60 sm:rounded-3xl">
+          <div className="relative aspect-square overflow-hidden rounded-[20px] ring-1 ring-border/60 sm:rounded-3xl">
             <Image
               src={imageUrl}
               alt="Bebiano Imóveis"

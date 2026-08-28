@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { BedDouble, Building2, Car, ImageOff, ShowerHead } from "lucide-react"
+import { BedDouble, Building2, Car, ImageOff, ShowerHead, Waves } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { FavoriteButton } from "@/components/public/favorite-button"
@@ -55,7 +55,7 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
             {PURPOSE_LABEL[property.purpose]}
           </Badge>
           {property.featured ? (
-            <Badge className="border-0 bg-gold text-accent-foreground shadow-sm">
+            <Badge className="border-0 bg-gold text-primary shadow-sm">
               Exclusivo
             </Badge>
           ) : null}
@@ -99,6 +99,11 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
             <span className="flex items-center gap-1.5">
               <Car className="size-4 shrink-0" strokeWidth={1.5} />
               {property.parkingSpots}
+            </span>
+          ) : null}
+          {property.pool ? (
+            <span className="flex items-center gap-1.5" title="Piscina">
+              <Waves className="size-4 shrink-0" strokeWidth={1.5} />
             </span>
           ) : null}
           {property.availableUnits ? (

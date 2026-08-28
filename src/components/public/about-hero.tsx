@@ -56,14 +56,15 @@ export function AboutHero({ heroImageUrl }: { heroImageUrl?: string | null }) {
           variants={item}
           className="font-heading mt-2 max-w-3xl text-balance text-[1.9rem] leading-[1.15] font-semibold tracking-tight text-white sm:mt-4 sm:text-6xl sm:leading-tight"
         >
-          Mais do que vender imóveis. Realizamos <AccentWord>conquistas</AccentWord>.
+          Nada é sobre vendas. É sobre <AccentWord>pessoas</AccentWord>.
         </motion.h1>
         <motion.p
           variants={item}
           className="mt-4 max-w-lg text-base text-white/80 sm:mt-5 sm:text-lg"
         >
-          Na Bebiano Imóveis acreditamos que cada imóvel representa uma nova
-          fase da vida.
+          Cada imóvel representa mais do que uma conquista — representa
+          sonhos, histórias e recomeços. Visão que inspira, missão que
+          transforma, propósito que glorifica a Deus.
         </motion.p>
 
         <motion.div
@@ -73,7 +74,7 @@ export function AboutHero({ heroImageUrl }: { heroImageUrl?: string | null }) {
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
             <Button
               asChild
-              className="h-10 w-full px-5 text-sm bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
+              className="h-10 w-full px-5 text-sm bg-gold text-primary shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
             >
               <Link href="/imoveis">Conheça nossos imóveis</Link>
             </Button>

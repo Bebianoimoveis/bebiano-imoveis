@@ -18,7 +18,8 @@ export default async function AlugarPage({
     <PropertyListingPage
       searchParams={await searchParams}
       fixedPurpose="RENT"
-      title="Imóveis para alugar"
+      titlePrefix="Imóveis para"
+      titleAccent="alugar"
       basePath="/alugar"
     />
   )

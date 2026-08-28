@@ -23,6 +23,7 @@ const baseDefaultValues: PropertyInput = {
   acceptsFgts: false,
   furnished: false,
   gatedCommunity: false,
+  pool: false,
   featured: false,
   isLaunch: false,
   videoUrl: "",

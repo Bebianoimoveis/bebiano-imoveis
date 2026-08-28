@@ -103,7 +103,7 @@ export function HeroSearch({
             <Button
               onClick={handleSearch}
               size="lg"
-              className="h-12 w-full rounded-xl bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
+              className="h-12 w-full rounded-xl bg-gold text-primary shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
             >
               <Tag className="size-4" />
               Anunciar meu imóvel
@@ -156,7 +156,7 @@ export function HeroSearch({
             <Button
               onClick={handleSearch}
               size="lg"
-              className="h-12 w-full rounded-xl bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
+              className="h-12 w-full rounded-xl bg-gold text-primary shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
             >
               <Search className="size-4" />
               Buscar imóveis

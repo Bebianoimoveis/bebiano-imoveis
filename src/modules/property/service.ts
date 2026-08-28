@@ -72,6 +72,7 @@ function toPropertyCreateData(
     acceptsFgts: input.acceptsFgts,
     furnished: input.furnished,
     gatedCommunity: input.gatedCommunity,
+    pool: input.pool,
     videoUrl: input.videoUrl || null,
     realtor: input.realtorId ? { connect: { id: input.realtorId } } : undefined,
     createdBy: { connect: { id: extra.createdById } },
@@ -109,6 +110,7 @@ function toPropertyUpdateData(input: PropertyInput): Prisma.PropertyUpdateInput 
     acceptsFgts: input.acceptsFgts,
     furnished: input.furnished,
     gatedCommunity: input.gatedCommunity,
+    pool: input.pool,
     videoUrl: input.videoUrl || null,
     realtor: input.realtorId
       ? { connect: { id: input.realtorId } }
@@ -236,6 +238,7 @@ export async function duplicateProperty(id: string, createdById: string) {
     acceptsFgts: source.acceptsFgts,
     furnished: source.furnished,
     gatedCommunity: source.gatedCommunity,
+    pool: source.pool,
     videoUrl: source.videoUrl,
     realtor: source.realtorId ? { connect: { id: source.realtorId } } : undefined,
     createdBy: { connect: { id: createdById } },

@@ -370,6 +370,7 @@ model Property {
   acceptsFgts      Boolean @default(false)
   furnished        Boolean @default(false)
   gatedCommunity   Boolean @default(false)
+  pool             Boolean @default(false)
 
   videoUrl String?
 

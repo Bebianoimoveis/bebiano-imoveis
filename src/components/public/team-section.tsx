@@ -50,6 +50,9 @@ export async function TeamSection() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 </div>
                 <div className="flex flex-col gap-0.5 p-4">
+                  <p className="text-[10px] font-medium tracking-widest text-gold-dark uppercase">
+                    Corretora
+                  </p>
                   <p className="truncate font-medium transition-colors group-hover:text-gold-light">
                     {realtor.user.name}
                   </p>

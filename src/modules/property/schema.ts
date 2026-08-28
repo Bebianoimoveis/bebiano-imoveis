@@ -41,6 +41,7 @@ export const propertyInputSchema = z.object({
   acceptsFgts: z.coerce.boolean().default(false),
   furnished: z.coerce.boolean().default(false),
   gatedCommunity: z.coerce.boolean().default(false),
+  pool: z.coerce.boolean().default(false),
   featured: z.coerce.boolean().default(false),
 
   // "Lançamento" — categoria própria na home pública (ver seção
@@ -93,6 +94,7 @@ export const propertyFiltersSchema = z.object({
   acceptsFgts: z.coerce.boolean().optional(),
   furnished: z.coerce.boolean().optional(),
   gatedCommunity: z.coerce.boolean().optional(),
+  pool: z.coerce.boolean().optional(),
   search: z.string().optional(),
   createdFrom: z.coerce.date().optional(),
   createdTo: z.coerce.date().optional(),

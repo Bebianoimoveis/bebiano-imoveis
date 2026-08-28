@@ -18,7 +18,8 @@ export default async function ComprarPage({
     <PropertyListingPage
       searchParams={await searchParams}
       fixedPurpose="SALE"
-      title="Imóveis à venda"
+      titlePrefix="Imóveis à"
+      titleAccent="venda"
       basePath="/comprar"
     />
   )

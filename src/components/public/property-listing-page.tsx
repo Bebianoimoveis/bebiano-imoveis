@@ -6,6 +6,7 @@ import { Pagination } from "@/components/shared/pagination"
 import { PropertyCard } from "@/components/public/property-card"
 import { PropertyFiltersSidebar } from "@/components/public/property-filters-sidebar"
 import { MobileFiltersSheet } from "@/components/public/mobile-filters-sheet"
+import { AccentWord } from "@/components/public/accent-word"
 import { listPublicProperties } from "@/modules/property/actions"
 import { listCities, listPublicPropertyTypes } from "@/modules/taxonomy/actions"
 
@@ -21,12 +22,17 @@ function param(searchParams: SearchParams, key: string) {
 export async function PropertyListingPage({
   searchParams,
   fixedPurpose,
-  title,
+  titlePrefix,
+  titleAccent,
   basePath,
 }: {
   searchParams: SearchParams
   fixedPurpose?: "SALE" | "RENT"
-  title: string
+  // Título dividido em duas partes pra destacar a última palavra em
+  // dourado/cursivo (AccentWord), igual o resto do site (ex: "Imóveis em
+  // destaque").
+  titlePrefix: string
+  titleAccent: string
   basePath: string
 }) {
   const filters = {
@@ -67,7 +73,7 @@ export async function PropertyListingPage({
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <BackButton className="mb-4" />
       <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
-        {title}
+        {titlePrefix} <AccentWord>{titleAccent}</AccentWord>
       </h1>
 
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">

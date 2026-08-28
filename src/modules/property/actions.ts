@@ -220,6 +220,7 @@ function buildCommonWhere(
     acceptsFgts: filters.acceptsFgts,
     furnished: filters.furnished,
     gatedCommunity: filters.gatedCommunity,
+    pool: filters.pool,
     code: filters.code ? { contains: filters.code, mode: "insensitive" } : undefined,
     bedrooms: filters.bedrooms ? { gte: filters.bedrooms } : undefined,
     suites: filters.suites ? { gte: filters.suites } : undefined,

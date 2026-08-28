@@ -108,7 +108,7 @@ export function ContactSheet({
                         >
                           <span
                             className={cn(
-                              "flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+                              "flex size-11 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold"
                             )}
                           >
                             <option.icon className="size-5" />

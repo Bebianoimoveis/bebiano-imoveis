@@ -79,7 +79,7 @@ export function Hero({
           variants={item}
           className="font-heading mt-2 max-w-3xl text-balance text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-white sm:mt-4 sm:text-7xl sm:leading-tight"
         >
-          Mais do que imóveis. Encontramos o lugar certo para sua história.
+          Mais do que imóveis, levamos luz ao seu novo lar!
         </motion.h1>
         <motion.p
           variants={item}
@@ -94,7 +94,7 @@ export function Hero({
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
             <Button
               asChild
-              className="h-10 w-full px-5 text-sm bg-gold text-accent-foreground shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
+              className="h-10 w-full px-5 text-sm bg-gold text-primary shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
             >
               <Link href="/imoveis">Ver imóveis disponíveis</Link>
             </Button>

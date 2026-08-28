@@ -15,11 +15,11 @@ export function AboutFinalCta() {
           Vamos encontrar o imóvel ideal para você?
         </h2>
         <p className="max-w-xl text-primary-foreground/80">
-          Fale com nossos especialistas e receba um atendimento próximo,
-          transparente e sem compromisso.
+          Fale com os nossos especialistas, receba um atendimento
+          personalizado, rápido, transparente e humanizado.
         </p>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg" className="bg-gold text-accent-foreground hover:bg-gold-light">
+          <Button asChild size="lg" className="bg-gold text-primary hover:bg-gold-light">
             <Link href="/imoveis">Ver imóveis</Link>
           </Button>
           {siteConfig.whatsapp ? (

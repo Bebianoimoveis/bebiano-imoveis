@@ -8,17 +8,17 @@ const CARDS = [
   {
     icon: Target,
     title: "Missão",
-    text: "Promover, por meio do mercado imobiliário, o desenvolvimento dos corretores de imóveis, formando profissionais autônomos comprometidos com a realização dos sonhos de todas as pessoas que Deus colocar no caminho deles.",
+    text: "Transformar vidas por meio do mercado imobiliário, desenvolvendo corretores de imóveis de excelência, profissionais autônomos comprometidos em realizar sonhos, servindo com propósito cada pessoa que Deus colocar em seus caminhos.",
   },
   {
     icon: Eye,
     title: "Visão",
-    text: "Ser a imobiliária de referência da região, reconhecida pela confiança que constrói com cada cliente.",
+    text: "Ser a imobiliária de referência da região do Alto Tietê, reconhecida pela excelência, credibilidade, profissionalismo e, acima de tudo, pela confiança que construímos em cada relacionamento com nossos parceiros e clientes.",
   },
   {
     icon: Compass,
-    title: "Valores",
-    text: "Somos uma empresa que acredita, valoriza, reconhece e investe em pessoas — ajudando e somando no propósito individual de cada cliente e cada corretor, formando profissionais com fundamentos, valores e princípios bíblicos e cristãos.",
+    title: "Propósito",
+    text: "Acreditamos em pessoas, investimos em talentos e fortalecemos propósitos. Ajudamos cada cliente e cada corretor a avançar em seu propósito, formando profissionais firmados em valores, princípios e fundamentos cristãos, para transformar vidas e glorificar a Deus em tudo o que fazemos.",
   },
 ]
 
@@ -30,7 +30,7 @@ export function AboutMissionValues() {
           O que nos move
         </p>
         <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-          Missão, Visão e <AccentWord>Valores</AccentWord>
+          Missão, Visão e <AccentWord>Propósito</AccentWord>
         </h2>
       </Reveal>
 

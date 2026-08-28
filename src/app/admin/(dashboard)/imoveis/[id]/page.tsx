@@ -56,6 +56,7 @@ export default async function EditPropertyPage({
     acceptsFgts: property.acceptsFgts,
     furnished: property.furnished,
     gatedCommunity: property.gatedCommunity,
+    pool: property.pool,
     featured: property.featured,
     isLaunch: property.isLaunch,
     launchDeliveryAt: property.launchDeliveryAt ?? undefined,

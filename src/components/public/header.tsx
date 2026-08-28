@@ -101,7 +101,7 @@ export function Header({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
             className={cn(
               transparent
                 ? "border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
-                : "bg-gold text-accent-foreground hover:bg-gold-light"
+                : "bg-gold text-primary hover:bg-gold-light"
             )}
           >
             <Link href="/imoveis">Buscar imóveis</Link>

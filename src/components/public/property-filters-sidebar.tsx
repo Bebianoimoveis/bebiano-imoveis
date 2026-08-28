@@ -25,6 +25,7 @@ const CHECKBOX_FILTERS: { key: string; label: string }[] = [
   { key: "acceptsFgts", label: "Aceita FGTS" },
   { key: "furnished", label: "Mobiliado" },
   { key: "gatedCommunity", label: "Condomínio fechado" },
+  { key: "pool", label: "Piscina" },
 ]
 
 export function PropertyFiltersSidebar({

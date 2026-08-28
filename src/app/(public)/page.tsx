@@ -99,14 +99,14 @@ export default async function HomePage() {
             Encontrou o imóvel ideal?
           </h2>
           <p className="max-w-xl text-primary-foreground/80">
-            Fale com nossos especialistas e receba um atendimento próximo,
-            transparente e sem compromisso.
+            Fale com os nossos especialistas, receba um atendimento
+            personalizado, rápido, transparente e humanizado.
           </p>
           {siteConfig.whatsapp ? (
             <Button
               asChild
               size="lg"
-              className="mt-2 bg-gold text-accent-foreground hover:bg-gold-light"
+              className="mt-2 bg-gold text-primary hover:bg-gold-light"
             >
               <a
                 href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}

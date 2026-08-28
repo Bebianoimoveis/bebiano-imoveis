@@ -605,6 +605,7 @@ export function PropertyForm({
                   ["acceptsFgts", "Aceita FGTS"],
                   ["furnished", "Mobiliado"],
                   ["gatedCommunity", "Condomínio fechado"],
+                  ["pool", "Piscina"],
                   ["featured", "Imóvel em destaque"],
                   ["isLaunch", "Lançamento"],
                 ] as const

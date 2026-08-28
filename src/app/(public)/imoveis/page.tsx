@@ -17,7 +17,8 @@ export default async function ImoveisPage({
   return (
     <PropertyListingPage
       searchParams={await searchParams}
-      title="Todos os imóveis"
+      titlePrefix="Todos os"
+      titleAccent="imóveis"
       basePath="/imoveis"
     />
   )

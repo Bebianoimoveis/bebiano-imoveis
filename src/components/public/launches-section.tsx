@@ -61,7 +61,7 @@ export async function LaunchesSection() {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-                    <span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-gold px-3 py-1 text-xs font-semibold text-accent-foreground shadow-sm">
+                    <span className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-gold px-3 py-1 text-xs font-semibold text-primary shadow-sm">
                       <Building2 className="size-3.5" />
                       {launchStatusLabel(property)}
                     </span>

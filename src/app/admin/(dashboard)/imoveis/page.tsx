@@ -48,6 +48,7 @@ export default async function AdminPropertiesPage({
     acceptsFgts: paramString(params, "acceptsFgts"),
     furnished: paramString(params, "furnished"),
     gatedCommunity: paramString(params, "gatedCommunity"),
+    pool: paramString(params, "pool"),
     featured: paramString(params, "featured"),
     page: paramString(params, "page") ? Number(paramString(params, "page")) : 1,
     pageSize: paramString(params, "pageSize") ? Number(paramString(params, "pageSize")) : 20,
