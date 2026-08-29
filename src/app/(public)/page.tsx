@@ -106,7 +106,7 @@ export default async function HomePage() {
             <Button
               asChild
               size="lg"
-              className="mt-2 bg-gold text-primary hover:bg-gold-light"
+              className="mt-2 bg-gold text-black hover:bg-gold-light"
             >
               <a
                 href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}

@@ -19,7 +19,7 @@ export function AboutFinalCta() {
           personalizado, rápido, transparente e humanizado.
         </p>
         <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-          <Button asChild size="lg" className="bg-gold text-primary hover:bg-gold-light">
+          <Button asChild size="lg" className="bg-gold text-black hover:bg-gold-light">
             <Link href="/imoveis">Ver imóveis</Link>
           </Button>
           {siteConfig.whatsapp ? (

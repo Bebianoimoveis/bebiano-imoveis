@@ -227,7 +227,7 @@ export function PropertySubmissionForm({
       <Button
         type="submit"
         size="lg"
-        className="w-full bg-gold text-primary hover:bg-gold-light"
+        className="w-full bg-gold text-black hover:bg-gold-light"
         disabled={isSubmitting || isUploading}
       >
         {isSubmitting ? "Enviando..." : "Enviar meu imóvel"}

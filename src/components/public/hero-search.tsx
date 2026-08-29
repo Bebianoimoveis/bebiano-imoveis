@@ -74,7 +74,7 @@ export function HeroSearch({
               onClick={() => setFinalidade(option.value)}
               className={cn(
                 "relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium whitespace-nowrap transition-colors duration-300 sm:px-4 sm:text-sm",
-                active ? "text-primary-foreground" : "text-white/70 hover:text-white"
+                active ? "text-black" : "text-white/70 hover:text-white"
               )}
             >
               {active ? (
@@ -84,8 +84,8 @@ export function HeroSearch({
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
                 />
               ) : null}
-              <Icon className={cn("relative z-10 size-3.5", active && "text-accent-foreground")} />
-              <span className={cn("relative z-10", active && "text-accent-foreground")}>
+              <Icon className={cn("relative z-10 size-3.5", active && "text-black")} />
+              <span className={cn("relative z-10", active && "text-black")}>
                 {option.label}
               </span>
             </button>
@@ -103,7 +103,7 @@ export function HeroSearch({
             <Button
               onClick={handleSearch}
               size="lg"
-              className="h-12 w-full rounded-xl bg-gold text-primary shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
+              className="h-12 w-full rounded-xl bg-gold text-black shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
             >
               <Tag className="size-4" />
               Anunciar meu imóvel
@@ -156,7 +156,7 @@ export function HeroSearch({
             <Button
               onClick={handleSearch}
               size="lg"
-              className="h-12 w-full rounded-xl bg-gold text-primary shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
+              className="h-12 w-full rounded-xl bg-gold text-black shadow-lg shadow-black/20 hover:bg-gold-light sm:h-13 sm:w-auto sm:px-7"
             >
               <Search className="size-4" />
               Buscar imóveis

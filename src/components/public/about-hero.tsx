@@ -74,7 +74,7 @@ export function AboutHero({ heroImageUrl }: { heroImageUrl?: string | null }) {
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.25 }}>
             <Button
               asChild
-              className="h-10 w-full px-5 text-sm bg-gold text-primary shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
+              className="h-10 w-full px-5 text-sm bg-gold text-black shadow-lg shadow-black/20 hover:bg-gold-light hover:shadow-xl hover:shadow-black/25 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
             >
               <Link href="/imoveis">Conheça nossos imóveis</Link>
             </Button>
