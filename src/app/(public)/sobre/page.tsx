@@ -4,6 +4,7 @@ import { AboutHero } from "@/components/public/about-hero"
 import { AboutStory } from "@/components/public/about-story"
 import { AboutStats } from "@/components/public/about-stats"
 import { AboutMissionValues } from "@/components/public/about-mission-values"
+import { AboutFoundations } from "@/components/public/about-foundations"
 import { AboutDifferentiators } from "@/components/public/about-differentiators"
 import { TeamSection } from "@/components/public/team-section"
 import { AboutHowWeWork } from "@/components/public/about-how-we-work"
@@ -54,8 +55,12 @@ export default async function AboutPage() {
       {/* 3. Números */}
       <AboutStats />
 
-      {/* 4. Missão / Visão / Valores */}
+      {/* 4. Missão / Visão / Propósito */}
       <AboutMissionValues />
+
+      {/* 4b. Guiados por uma palavra — versículo-base, regra de vida,
+          placa invisível, prioridades e propósito detalhado */}
+      <AboutFoundations />
 
       {/* 5. Nosso Diferencial */}
       <AboutDifferentiators />
