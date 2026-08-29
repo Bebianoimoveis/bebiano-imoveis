@@ -56,7 +56,7 @@ export function AboutHero({ heroImageUrl }: { heroImageUrl?: string | null }) {
           variants={item}
           className="font-heading mt-2 max-w-3xl text-balance text-[1.9rem] leading-[1.15] font-semibold tracking-tight text-white sm:mt-4 sm:text-6xl sm:leading-tight"
         >
-          Nada é sobre vendas. É sobre <AccentWord>pessoas</AccentWord>.
+          Nada é sobre vendas. Tudo é sobre <AccentWord>pessoas</AccentWord>.
         </motion.h1>
         <motion.p
           variants={item}
