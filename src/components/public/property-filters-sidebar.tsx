@@ -188,6 +188,23 @@ export function PropertyFiltersSidebar({
       </div>
 
       <div className="space-y-2">
+        <Label>Situação</Label>
+        <Select
+          defaultValue={searchParams.get("situacao") ?? ALL}
+          onValueChange={(value) => updateParams({ situacao: value })}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todos</SelectItem>
+            <SelectItem value="pronto">Pronto para morar</SelectItem>
+            <SelectItem value="planta">Na planta</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label>Área mínima (m²)</Label>
         <Input
           type="number"

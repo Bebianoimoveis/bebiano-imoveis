@@ -35,6 +35,12 @@ export async function PropertyListingPage({
   titleAccent: string
   basePath: string
 }) {
+  // "situacao" (pronto/planta) vira isLaunch true/false/undefined como
+  // booleano de verdade, não string — z.coerce.boolean() do schema trata
+  // qualquer string não-vazia (inclusive "false") como true, então
+  // repassar "false" cru quebraria o filtro "Pronto para morar".
+  const situacao = param(searchParams, "situacao")
+
   const filters = {
     purpose: fixedPurpose ?? (param(searchParams, "purpose") as "SALE" | "RENT" | undefined),
     search: param(searchParams, "search"),
@@ -50,6 +56,8 @@ export async function PropertyListingPage({
     acceptsFgts: param(searchParams, "acceptsFgts"),
     furnished: param(searchParams, "furnished"),
     gatedCommunity: param(searchParams, "gatedCommunity"),
+    pool: param(searchParams, "pool"),
+    isLaunch: situacao === "planta" ? true : situacao === "pronto" ? false : undefined,
     page: param(searchParams, "page") ? Number(param(searchParams, "page")) : 1,
   }
 
