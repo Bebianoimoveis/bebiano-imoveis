@@ -37,10 +37,10 @@ export function AboutFoundations() {
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <Reveal className="mb-10 text-center sm:mb-12">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
-          Guiados por uma palavra
+          Nascemos através de uma palavra
         </p>
         <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-          O Que Nos <AccentWord>Guia</AccentWord>
+          E seremos sempre <AccentWord>guiados</AccentWord> por ela!
         </h2>
       </Reveal>
 
@@ -58,7 +58,9 @@ export function AboutFoundations() {
 
       <div className="mb-12 grid gap-5 sm:grid-cols-2">
         <Reveal className="rounded-[20px] border border-border/60 bg-card p-6">
-          <p className="font-heading font-semibold">Temos uma Regra de Vida</p>
+          <p className="font-heading font-semibold">
+            Temos uma Regra de <AccentWord>Vida</AccentWord>
+          </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">
             &ldquo;Façam aos outros o que querem que eles façam a vocês, e não façam aos outros o
             que não querem que eles façam a vocês.&rdquo;
@@ -66,7 +68,9 @@ export function AboutFoundations() {
           <p className="mt-2 text-xs font-medium text-gold-dark">Mateus 7:12</p>
         </Reveal>
         <Reveal delay={0.1} className="rounded-[20px] border border-border/60 bg-card p-6">
-          <p className="font-heading font-semibold">A Placa Invisível</p>
+          <p className="font-heading font-semibold">
+            A Placa <AccentWord>Invisível</AccentWord>
+          </p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">
             &ldquo;Imagine uma placa invisível ao redor do pescoço de cada pessoa dizendo:
             'Faça-me sentir importante!'&rdquo;
@@ -90,9 +94,9 @@ export function AboutFoundations() {
       </Reveal>
 
       <Reveal className="mb-8 text-center">
-        <h3 className="font-heading text-2xl font-semibold tracking-tight">
-          Qual o Nosso <AccentWord>Propósito</AccentWord>?
-        </h3>
+        <p className="font-heading font-semibold">
+          Qual o nosso <AccentWord>Propósito</AccentWord>?
+        </p>
       </Reveal>
 
       <StaggerGroup className="grid gap-6 sm:grid-cols-3">

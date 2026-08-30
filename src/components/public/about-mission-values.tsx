@@ -1,4 +1,4 @@
-import { Compass, Eye, Target } from "lucide-react"
+import { Compass, Eye, Heart, Target } from "lucide-react"
 
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
@@ -16,6 +16,11 @@ const CARDS = [
     text: "Ser a imobiliária de referência da região do Alto Tietê, reconhecida pela excelência, credibilidade, profissionalismo e, acima de tudo, pela confiança que construímos em cada relacionamento com nossos parceiros e clientes.",
   },
   {
+    icon: Heart,
+    title: "Valores",
+    text: "Ser uma empresa que acredita, valoriza, reconhece e investe em pessoas, ajudando e somando no propósito individual de cada cliente e cada corretor, formando profissionais com fundamentos, valores e princípios bíblicos e cristãos.",
+  },
+  {
     icon: Compass,
     title: "Propósito",
     text: "Acreditamos em pessoas, investimos em talentos e fortalecemos propósitos. Ajudamos cada cliente e cada corretor a avançar em seu propósito, formando profissionais firmados em valores, princípios e fundamentos cristãos, para transformar vidas e glorificar a Deus em tudo o que fazemos.",
@@ -30,11 +35,11 @@ export function AboutMissionValues() {
           O que nos move
         </p>
         <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-          Missão, Visão e <AccentWord>Propósito</AccentWord>
+          Missão, Visão, Valores e <AccentWord>Propósito</AccentWord>
         </h2>
       </Reveal>
 
-      <StaggerGroup className="grid gap-6 sm:grid-cols-3">
+      <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {CARDS.map((card) => (
           <StaggerItem
             key={card.title}
