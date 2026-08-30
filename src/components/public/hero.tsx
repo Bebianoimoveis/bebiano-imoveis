@@ -79,7 +79,7 @@ export function Hero({
           variants={item}
           className="font-heading mt-2 max-w-3xl text-balance text-[1.75rem] leading-[1.15] font-semibold tracking-tight text-white sm:mt-4 sm:text-7xl sm:leading-tight"
         >
-          Mais do que imóveis, levamos luz ao seu novo lar!
+          Mais do que imóveis, levamos Luz ao seu novo lar!
         </motion.h1>
         <motion.p
           variants={item}
