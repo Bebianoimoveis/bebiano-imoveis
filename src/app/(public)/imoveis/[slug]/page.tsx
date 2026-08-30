@@ -7,6 +7,7 @@ import { BedDouble, Building2, Car, Ruler, ShowerHead, User } from "lucide-react
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { resolvePropertyFeatureIcon } from "@/lib/property-feature-icons"
+import { Reveal } from "@/components/motion/reveal"
 import { BackButton } from "@/components/shared/back-button"
 import { PropertyDescription } from "@/components/public/property-description"
 import { FavoriteButton } from "@/components/public/favorite-button"
@@ -102,7 +103,7 @@ export default async function PropertyDetailPage({
         <div className="space-y-8">
           <PropertyGallery images={property.images} title={property.title} />
 
-          <div className="space-y-4">
+          <Reveal y={16} className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-transparent bg-primary text-primary-foreground">
                 {PURPOSE_LABEL[property.purpose]}
@@ -144,7 +145,7 @@ export default async function PropertyDetailPage({
               <FavoriteButton propertyId={property.id} variant="button" />
               <ShareButton title={property.title} />
             </div>
-          </div>
+          </Reveal>
 
           <div className="grid grid-cols-2 gap-4 rounded-xl border border-border/60 p-5 sm:grid-cols-4">
             {property.bedrooms > 0 ? (

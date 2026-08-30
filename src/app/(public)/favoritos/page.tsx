@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Heart } from "lucide-react"
 
+import { Reveal } from "@/components/motion/reveal"
 import { BackButton } from "@/components/shared/back-button"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PropertyCard } from "@/components/public/property-card"
@@ -28,9 +29,11 @@ export default function FavoritesPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <BackButton className="mb-4" />
-      <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
-        Meus favoritos
-      </h1>
+      <Reveal y={16}>
+        <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
+          Meus favoritos
+        </h1>
+      </Reveal>
 
       {properties === null ? null : properties.length === 0 ? (
         <EmptyState

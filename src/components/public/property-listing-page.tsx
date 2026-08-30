@@ -1,5 +1,6 @@
 import { Building2 } from "lucide-react"
 
+import { Reveal } from "@/components/motion/reveal"
 import { BackButton } from "@/components/shared/back-button"
 import { EmptyState } from "@/components/shared/empty-state"
 import { Pagination } from "@/components/shared/pagination"
@@ -80,9 +81,11 @@ export async function PropertyListingPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <BackButton className="mb-4" />
-      <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
-        {titlePrefix} <AccentWord>{titleAccent}</AccentWord>
-      </h1>
+      <Reveal y={16}>
+        <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
+          {titlePrefix} <AccentWord>{titleAccent}</AccentWord>
+        </h1>
+      </Reveal>
 
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
         <div className="hidden lg:block">
