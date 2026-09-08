@@ -178,7 +178,7 @@ export default async function PublicProposalPage({
           href={`/proposta/${proposal.shareToken}/pdf`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-medium text-black transition-colors hover:bg-gold-light"
         >
           <Download className="size-4" /> Baixar proposta em PDF
         </a>
