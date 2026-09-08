@@ -59,7 +59,7 @@ export default async function PublicProposalPage({
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/60 bg-card">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
-          <p className="font-heading text-lg font-semibold text-primary">{siteConfig.name}</p>
+          <p className="font-heading text-lg font-semibold text-gold">{siteConfig.name}</p>
           <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground">
             {PROPOSAL_STATUS_LABELS[proposal.status]}
           </span>
@@ -116,7 +116,7 @@ export default async function PublicProposalPage({
             ) : null}
             <div>
               <p className="text-muted-foreground">Valor proposto</p>
-              <p className="text-lg font-semibold text-primary">{formatCurrency(proposal.value.toString())}</p>
+              <p className="text-lg font-semibold text-gold">{formatCurrency(proposal.value.toString())}</p>
             </div>
             {proposal.downPayment ? (
               <div>
@@ -167,7 +167,7 @@ export default async function PublicProposalPage({
               href={`https://wa.me/${proposal.realtor.phone.replace(/\D/g, "")}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-block text-primary hover:underline"
+              className="mt-2 inline-block text-gold hover:underline"
             >
               Falar no WhatsApp
             </a>
