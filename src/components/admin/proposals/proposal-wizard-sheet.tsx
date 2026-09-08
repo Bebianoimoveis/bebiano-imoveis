@@ -9,6 +9,7 @@ import { AlertTriangle, Bath, BedDouble, Car, Check, ImageOff, Search } from "lu
 import { Sheet } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -376,11 +377,11 @@ export function ProposalWizardSheet({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Valor anunciado</Label>
-                <Input type="number" step="0.01" value={originalValue} onChange={(e) => setOriginalValue(e.target.value)} />
+                <CurrencyInput value={originalValue} onChange={(v) => setOriginalValue(v ? v.toString() : "")} />
               </div>
               <div className="space-y-1.5">
                 <Label>Valor ofertado</Label>
-                <Input type="number" step="0.01" value={value} onChange={(e) => setValue(e.target.value)} />
+                <CurrencyInput value={value} onChange={(v) => setValue(v ? v.toString() : "")} />
               </div>
             </div>
 
@@ -393,15 +394,15 @@ export function ProposalWizardSheet({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Entrada</Label>
-                <Input type="number" step="0.01" value={downPayment} onChange={(e) => setDownPayment(e.target.value)} />
+                <CurrencyInput value={downPayment} onChange={(v) => setDownPayment(v ? v.toString() : "")} />
               </div>
               <div className="space-y-1.5">
                 <Label>Financiamento</Label>
-                <Input type="number" step="0.01" value={financingValue} onChange={(e) => setFinancingValue(e.target.value)} />
+                <CurrencyInput value={financingValue} onChange={(v) => setFinancingValue(v ? v.toString() : "")} />
               </div>
               <div className="space-y-1.5">
                 <Label>FGTS</Label>
-                <Input type="number" step="0.01" value={fgtsValue} onChange={(e) => setFgtsValue(e.target.value)} />
+                <CurrencyInput value={fgtsValue} onChange={(v) => setFgtsValue(v ? v.toString() : "")} />
               </div>
               <div className="space-y-1.5">
                 <Label>Comissão (%)</Label>
@@ -413,7 +414,7 @@ export function ProposalWizardSheet({
               </div>
               <div className="space-y-1.5">
                 <Label>Valor da parcela</Label>
-                <Input type="number" step="0.01" value={installmentValue} onChange={(e) => setInstallmentValue(e.target.value)} />
+                <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
               </div>
             </div>
 
