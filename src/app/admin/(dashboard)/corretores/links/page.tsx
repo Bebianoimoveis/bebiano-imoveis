@@ -20,7 +20,7 @@ export default async function RealtorLinksPage() {
   const rows = await Promise.all(
     stats.map(async (realtor) => {
       const link = `${siteConfig.url}/?ref=${realtor.slug}`
-      const qrCode = await QRCode.toDataURL(link, { width: 96, margin: 1 })
+      const qrCode = await QRCode.toDataURL(link, { width: 160, margin: 4, errorCorrectionLevel: "H" })
       return { ...realtor, link, qrCode }
     })
   )

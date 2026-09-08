@@ -8,9 +8,33 @@ import { PROPOSAL_STATUS_LABELS } from "@/components/admin/proposals/proposal-st
 import { formatCurrency, getDisplayAddress } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 
-export const metadata: Metadata = {
-  title: "Sua proposta",
-  robots: { index: false, follow: false },
+// Sem isso, o link compartilhado (WhatsApp, iMessage etc.) não tinha
+// nenhuma imagem/descrição pra montar uma prévia rica — cada app cai
+// num fallback próprio (texto cru sem estilo, links azuis padrão) que
+// não lembra em nada a página real.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>
+}): Promise<Metadata> {
+  const { token } = await params
+  const proposal = await findProposalByShareToken(token)
+  if (!proposal) return { robots: { index: false, follow: false } }
+
+  const cover =
+    proposal.property.images.find((image) => image.isCover)?.url ??
+    proposal.property.images[0]?.url
+
+  return {
+    title: `Proposta — ${proposal.property.title}`,
+    description: `Proposta preparada para ${proposal.client.name} · ${formatCurrency(proposal.value.toString())}.`,
+    robots: { index: false, follow: false },
+    openGraph: {
+      title: `Proposta — ${proposal.property.title}`,
+      description: `Preparada especialmente para ${proposal.client.name} por ${proposal.realtor.user.name}.`,
+      images: cover ? [cover] : undefined,
+    },
+  }
 }
 
 export default async function PublicProposalPage({

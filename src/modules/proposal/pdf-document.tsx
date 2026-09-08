@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
   value: { fontFamily: "Helvetica-Bold" },
   table: { borderWidth: 1, borderColor: "#e5ded8", borderRadius: 6, padding: 12 },
   footer: { position: "absolute", bottom: 30, left: 40, right: 40, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  qr: { width: 64, height: 64 },
+  qr: { width: 96, height: 96 },
   signatureLine: { marginTop: 40, borderTopWidth: 1, borderTopColor: "#2b2320", width: 220, paddingTop: 4 },
 })
 

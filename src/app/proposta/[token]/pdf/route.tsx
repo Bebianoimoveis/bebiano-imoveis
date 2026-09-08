@@ -26,9 +26,13 @@ export async function GET(
     logoBase64 = null
   }
 
+  // margin baixo (1 módulo) deixa a zona de silêncio fina demais pra
+  // câmera de celular focar em impressão pequena — o próprio spec de QR
+  // pede >=4 módulos de quiet zone pra leitura confiável.
   const qrCodeDataUrl = await QRCode.toDataURL(`${siteConfig.url}/proposta/${token}`, {
-    width: 160,
-    margin: 1,
+    width: 240,
+    margin: 4,
+    errorCorrectionLevel: "H",
   })
 
   const buffer = await renderToBuffer(
