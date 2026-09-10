@@ -25,7 +25,7 @@ export function QuickActions({ permissions }: { permissions: Set<string> }) {
           href={action.href}
           className="group flex flex-col items-center gap-2 rounded-[20px] border border-border/60 bg-card p-4 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-black/20"
         >
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground admin-light:bg-[linear-gradient(145deg,#8F1238,#650923)] admin-light:text-white admin-light:shadow-sm">
             <action.icon className="size-5" />
           </span>
           <span className="text-xs font-medium text-foreground">{action.label}</span>

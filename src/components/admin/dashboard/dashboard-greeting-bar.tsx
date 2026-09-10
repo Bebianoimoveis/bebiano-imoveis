@@ -59,9 +59,9 @@ export function DashboardGreetingBar({
 
       <div className="flex flex-wrap items-center gap-2">
         {visibleShortcuts.map((shortcut) => (
-          <Button key={shortcut.href} asChild variant="outline" size="sm" className="gap-1.5">
+          <Button key={shortcut.href} asChild variant="outline" size="sm" className="gap-1.5 admin-light:border-input admin-light:bg-card">
             <Link href={shortcut.href}>
-              <shortcut.icon className="size-3.5" />
+              <shortcut.icon className="size-3.5 admin-light:text-primary" />
               {shortcut.label}
             </Link>
           </Button>

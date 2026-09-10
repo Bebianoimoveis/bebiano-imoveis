@@ -36,7 +36,9 @@ export function StatCard({
       <span
         className={cn(
           "flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium",
-          delta >= 0 ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"
+          delta >= 0
+            ? "bg-emerald-500/15 text-emerald-400 admin-light:bg-emerald-500/15 admin-light:text-emerald-700"
+            : "bg-destructive/15 text-destructive"
         )}
       >
         {delta >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
@@ -55,7 +57,7 @@ export function StatCard({
           alto demais numa grade de 2 colunas. A partir de sm volta ao
           layout original (ícone sozinho em cima, valor grande embaixo). */}
       <div className="flex items-center gap-2.5 sm:hidden">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary [&_svg]:size-3.5">
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary [&_svg]:size-3.5 admin-light:bg-[linear-gradient(145deg,#8F1238,#650923)] admin-light:text-white admin-light:shadow-sm">
           {icon}
         </span>
         <p className="truncate font-heading text-base font-semibold text-foreground" title={value}>
@@ -66,7 +68,7 @@ export function StatCard({
       <p className="mt-1 truncate text-[11px] text-muted-foreground sm:hidden">{label}</p>
 
       <div className="hidden sm:flex sm:items-start sm:justify-between">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary [&_svg]:size-5">
+        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary [&_svg]:size-5 admin-light:size-[46px] admin-light:bg-[linear-gradient(145deg,#8F1238,#650923)] admin-light:text-white admin-light:shadow-sm">
           {icon}
         </span>
         {deltaBadge}

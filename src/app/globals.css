@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant admin-light (&:is(.admin-light *));
 
 @theme inline {
   --color-background: var(--background);
@@ -147,49 +148,53 @@
 }
 
 .admin-light {
-  /* Painel admin — modo claro. Mesma identidade de marca do escuro
-     (marsala primário, dourado só em detalhe), mas invertendo a
-     profundidade: fundo levemente âmbar-acinzentado, cards brancos
-     "flutuando" por cima, texto grafite (nunca preto puro). Tons
-     recalculados pra manter contraste de leitura (AA) em vez de só
-     inverter luminosidade — muted-foreground, destructive e chart-2
-     (dourado) ficam mais escuros aqui do que no modo escuro porque
-     precisam valer sobre fundo claro, não escuro. */
-  --color-gold: oklch(0.62 0.13 78);
-  --color-gold-light: oklch(0.72 0.12 80);
-  --color-gold-dark: oklch(0.5 0.13 70);
+  /* Painel admin — modo claro. Paleta pedida explicitamente em hex
+     literal (imobiliária de alto padrão + SaaS moderno): marsala como
+     cor de prioridade/ação, branco/off-white como base, dourado só em
+     detalhe de marca, verde/vermelho reservados a estados positivos e
+     de erro. Diferente do dark mode (que deriva tudo de 3 tons neutros
+     porque o marsala já é o único acento), aqui cada token tem um valor
+     literal pedido — evita "regressão pro rosa pastel" que já
+     aconteceu antes quando cores derivadas de opacidade (bg-primary/15)
+     foram usadas sobre fundo claro. */
+  --color-gold: #d4a43a;
+  --color-gold-light: #e9c86a;
+  --color-gold-dark: #b8862a;
 
-  --background: oklch(0.965 0.008 60);
-  --foreground: oklch(0.22 0.02 30);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 30);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 30);
-  --primary: #6b0f24;
-  --primary-foreground: oklch(0.98 0.006 60);
-  --secondary: oklch(0.94 0.009 50);
-  --secondary-foreground: oklch(0.22 0.02 30);
-  --muted: oklch(0.945 0.007 50);
-  --muted-foreground: oklch(0.46 0.02 30);
-  --accent: oklch(0.93 0.045 82);
-  --accent-foreground: oklch(0.3 0.05 40);
-  --destructive: oklch(0.55 0.22 25);
-  --border: oklch(0.88 0.012 40);
-  --input: oklch(0.85 0.014 40);
-  --ring: #6b0f24;
-  --chart-1: #6b0f24;
-  --chart-2: oklch(0.62 0.13 78);
-  --chart-3: oklch(0.5 0.02 30);
-  --chart-4: oklch(0.35 0.02 30);
-  --chart-5: oklch(0.68 0.02 40);
-  --sidebar: oklch(0.955 0.01 45);
-  --sidebar-foreground: oklch(0.22 0.02 30);
-  --sidebar-primary: #6b0f24;
-  --sidebar-primary-foreground: oklch(0.98 0.006 60);
-  --sidebar-accent: oklch(0.93 0.045 82);
-  --sidebar-accent-foreground: oklch(0.3 0.05 40);
-  --sidebar-border: oklch(0.88 0.012 40);
-  --sidebar-ring: #6b0f24;
+  --background: #faf8f5;
+  --foreground: #181317;
+  --card: #ffffff;
+  --card-foreground: #181317;
+  --popover: #ffffff;
+  --popover-foreground: #181317;
+  --primary: #7a0c2e;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f0ec;
+  --secondary-foreground: #181317;
+  --muted: #f5f0ec;
+  --muted-foreground: #696064;
+  --accent: #f4e8ec;
+  --accent-foreground: #4a0a1d;
+  --destructive: #dc2626;
+  --border: #e9e1dd;
+  --input: #ded4d0;
+  --ring: #7a0c2e;
+  --chart-1: #7a0c2e;
+  --chart-2: #d4a43a;
+  --chart-3: #8f1238;
+  --chart-4: #a89d97;
+  --chart-5: #6b615c;
+  /* --sidebar é o fallback sólido (usado só se o degradê em
+     .admin-sidebar-surface, definido mais abaixo, não se aplicar por
+     algum motivo) — o visual real da sidebar vem do gradiente. */
+  --sidebar: #4a0a1d;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #7a0c2e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #8f1238;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #7a0c2e;
 }
 
 @layer base {
@@ -221,4 +226,29 @@
 
 @utility text-balance {
   text-wrap: balance;
+}
+
+/* Sidebar do admin em modo claro — degradê vertical + halo marsala atrás
+   da logo, pedidos com stops específicos que os utilitários de gradiente
+   do Tailwind não expressam bem (stop no meio em 55%, radial com 3 paradas
+   de opacidade). Regras fora de @layer pra vencer a camada de utilities
+   do Tailwind (bg-sidebar) sem precisar de !important. Só existem dentro
+   de .admin-light — o tema escuro nunca entra aqui, continua exatamente
+   como antes (bg-sidebar sólido). */
+.admin-light .admin-sidebar-surface {
+  background: linear-gradient(180deg, #4a0a1d 0%, #310812 55%, #23060d 100%);
+}
+
+.admin-light .admin-sidebar-halo::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 220px;
+  background: radial-gradient(
+    circle at 50% 20%,
+    rgba(143, 18, 56, 0.55) 0%,
+    rgba(122, 12, 46, 0.25) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
 }

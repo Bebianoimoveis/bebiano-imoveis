@@ -36,7 +36,9 @@ export function DashboardInsightBanner({
       <span
         className={cn(
           "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase",
-          tone === "warning" ? "bg-amber-500/15 text-amber-400" : "bg-emerald-500/15 text-emerald-400"
+          tone === "warning"
+            ? "bg-amber-500/15 text-amber-400 admin-light:bg-amber-500/15 admin-light:text-amber-700"
+            : "bg-emerald-500/15 text-emerald-400 admin-light:bg-emerald-500/15 admin-light:text-emerald-700"
         )}
       >
         <Icon className="size-3" /> Resumo

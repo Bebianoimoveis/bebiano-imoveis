@@ -105,9 +105,9 @@ function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden w-full max-w-md items-center gap-2 rounded-xl border border-border/60 bg-secondary/40 px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 sm:flex"
+        className="hidden w-full max-w-md items-center gap-2 rounded-xl border border-border/60 bg-secondary/40 px-3.5 py-2 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-secondary/70 sm:flex admin-light:bg-white admin-light:hover:bg-white"
       >
-        <Search className="size-4 shrink-0" />
+        <Search className="size-4 shrink-0 admin-light:text-primary" />
         <span className="flex-1 truncate text-left">Buscar imóveis, leads, clientes…</span>
         <kbd className="inline-flex shrink-0 items-center justify-center gap-0.5 rounded-md border border-border/60 bg-background px-1.5 py-0.5 text-[10px] leading-none font-medium text-muted-foreground">
           ⌘K
@@ -202,7 +202,7 @@ export function AdminTopbar({
   const firstName = user.name?.split(" ")[0] ?? "por aqui"
 
   return (
-    <header className="flex h-16 items-center gap-4 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md md:px-8">
+    <header className="flex h-16 items-center gap-4 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md admin-light:bg-white/90 md:px-8">
       <button
         type="button"
         aria-label="Abrir menu"

@@ -30,7 +30,7 @@ export function PeriodSelect({ periodDays }: { periodDays: number }) {
           type="button"
           className="flex items-center gap-2 rounded-xl border border-border/60 bg-card px-3.5 py-2 text-sm font-medium text-foreground transition-colors hover:border-border hover:bg-secondary/60"
         >
-          <CalendarRange className="size-4 text-muted-foreground" />
+          <CalendarRange className="size-4 text-muted-foreground admin-light:text-primary" />
           {current.label}
         </button>
       </DropdownMenuTrigger>

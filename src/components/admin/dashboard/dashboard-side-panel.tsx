@@ -31,7 +31,7 @@ function Section({
     <div className="space-y-3 border-b border-border/60 px-5 py-4 last:border-0">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon className="size-3.5 text-muted-foreground" />
+          <Icon className="size-3.5 text-muted-foreground admin-light:text-primary" />
           <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{title}</p>
         </div>
         {count !== undefined && count > 0 ? (
@@ -72,7 +72,7 @@ export function DashboardSidePanel({ data }: { data: SidePanelData }) {
                   href={alert.href}
                   className="flex items-start gap-1.5 text-sm text-foreground hover:text-primary"
                 >
-                  <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-400" />
+                  <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-400 admin-light:text-amber-600" />
                   {alert.label}
                 </Link>
               </li>

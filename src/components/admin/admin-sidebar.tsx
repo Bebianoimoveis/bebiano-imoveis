@@ -131,33 +131,37 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-6 py-7">
+      {/* halo pedido atrás da logo só existe em modo claro (::before de
+          .admin-sidebar-halo, ver globals.css) — precisa de position:
+          relative aqui pro ::before absoluto se ancorar. Espaçamento
+          maior (py-8) pra logo "respirar" mais dentro do halo. */}
+      <div className="admin-sidebar-halo relative overflow-hidden px-6 py-8">
         <Image
           src="/images/logo.png"
           alt="Bebiano Imóveis"
           width={97}
           height={80}
           priority
-          className="h-16 w-auto"
+          className="relative h-16 w-auto"
         />
       </div>
 
-      <div className="mx-4 mb-5 flex items-center gap-3 rounded-2xl bg-secondary/60 p-3">
+      <div className="mx-4 mb-5 flex items-center gap-3 rounded-2xl bg-secondary/60 p-3 admin-light:bg-white/[0.07]">
         <Avatar size="default">
-          <AvatarFallback className="bg-primary/20 text-primary">
+          <AvatarFallback className="bg-primary/20 text-primary admin-light:bg-white/15 admin-light:text-white">
             {initials(user.name)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">{user.name}</p>
-          <p className="truncate text-xs text-muted-foreground">{user.roleName}</p>
+          <p className="truncate text-sm font-medium text-foreground admin-light:text-white">{user.name}</p>
+          <p className="truncate text-xs text-muted-foreground admin-light:text-white/65">{user.roleName}</p>
         </div>
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase admin-light:text-white/60">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -171,21 +175,23 @@ function SidebarContent({
                     className={cn(
                       "group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-primary/15 text-foreground"
-                        : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+                        ? "bg-primary/15 text-foreground admin-light:border admin-light:border-white/10 admin-light:bg-[linear-gradient(90deg,#8F1238,#700B29)] admin-light:text-white admin-light:shadow-[0_4px_16px_rgba(122,12,46,0.30)]"
+                        : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground admin-light:text-white/75 admin-light:hover:bg-white/[0.08] admin-light:hover:text-white"
                     )}
                   >
                     {isActive ? (
                       <motion.span
                         layoutId="admin-nav-active"
                         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                        className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 rounded-full bg-primary"
+                        className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 rounded-full bg-primary admin-light:bg-white/80"
                       />
                     ) : null}
                     <item.icon
                       className={cn(
                         "size-4 shrink-0 transition-colors",
-                        isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                        isActive
+                          ? "text-primary admin-light:text-white"
+                          : "text-muted-foreground group-hover:text-foreground admin-light:text-white/75 admin-light:group-hover:text-white"
                       )}
                     />
                     <span className="truncate">{item.label}</span>
@@ -201,7 +207,7 @@ function SidebarContent({
         <Button
           type="submit"
           variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground admin-light:text-white/70 admin-light:hover:bg-white/[0.08] admin-light:hover:text-white"
         >
           <LogOut className="size-4" />
           Sair
@@ -221,7 +227,7 @@ export function AdminSidebar({
   const pathname = usePathname()
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-border/60 bg-sidebar text-sidebar-foreground md:block">
+    <aside className="admin-sidebar-surface hidden w-72 shrink-0 border-r border-border/60 bg-sidebar text-sidebar-foreground admin-light:border-transparent md:block">
       <SidebarContent user={user} permissions={permissions} pathname={pathname} />
     </aside>
   )
@@ -243,7 +249,12 @@ export function AdminMobileSidebar({
   const pathname = usePathname()
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} side="left" className="bg-sidebar text-sidebar-foreground">
+    <Sheet
+      open={open}
+      onOpenChange={onOpenChange}
+      side="left"
+      className="admin-sidebar-surface bg-sidebar text-sidebar-foreground"
+    >
       <SidebarContent
         user={user}
         permissions={permissions}
