@@ -146,6 +146,52 @@
   --sidebar-ring: #6b0f24;
 }
 
+.admin-light {
+  /* Painel admin — modo claro. Mesma identidade de marca do escuro
+     (marsala primário, dourado só em detalhe), mas invertendo a
+     profundidade: fundo levemente âmbar-acinzentado, cards brancos
+     "flutuando" por cima, texto grafite (nunca preto puro). Tons
+     recalculados pra manter contraste de leitura (AA) em vez de só
+     inverter luminosidade — muted-foreground, destructive e chart-2
+     (dourado) ficam mais escuros aqui do que no modo escuro porque
+     precisam valer sobre fundo claro, não escuro. */
+  --color-gold: oklch(0.62 0.13 78);
+  --color-gold-light: oklch(0.72 0.12 80);
+  --color-gold-dark: oklch(0.5 0.13 70);
+
+  --background: oklch(0.965 0.008 60);
+  --foreground: oklch(0.22 0.02 30);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 30);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.02 30);
+  --primary: #6b0f24;
+  --primary-foreground: oklch(0.98 0.006 60);
+  --secondary: oklch(0.94 0.009 50);
+  --secondary-foreground: oklch(0.22 0.02 30);
+  --muted: oklch(0.945 0.007 50);
+  --muted-foreground: oklch(0.46 0.02 30);
+  --accent: oklch(0.93 0.045 82);
+  --accent-foreground: oklch(0.3 0.05 40);
+  --destructive: oklch(0.55 0.22 25);
+  --border: oklch(0.88 0.012 40);
+  --input: oklch(0.85 0.014 40);
+  --ring: #6b0f24;
+  --chart-1: #6b0f24;
+  --chart-2: oklch(0.62 0.13 78);
+  --chart-3: oklch(0.5 0.02 30);
+  --chart-4: oklch(0.35 0.02 30);
+  --chart-5: oklch(0.68 0.02 40);
+  --sidebar: oklch(0.955 0.01 45);
+  --sidebar-foreground: oklch(0.22 0.02 30);
+  --sidebar-primary: #6b0f24;
+  --sidebar-primary-foreground: oklch(0.98 0.006 60);
+  --sidebar-accent: oklch(0.93 0.045 82);
+  --sidebar-accent-foreground: oklch(0.3 0.05 40);
+  --sidebar-border: oklch(0.88 0.012 40);
+  --sidebar-ring: #6b0f24;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

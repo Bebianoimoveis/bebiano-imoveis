@@ -7,6 +7,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -203,7 +204,11 @@ export function SegmentFormDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="minPrice">Preço mínimo (opcional)</Label>
-              <Input id="minPrice" type="number" step="0.01" {...form.register("minPrice")} />
+              <Controller
+                control={form.control}
+                name="minPrice"
+                render={({ field }) => <CurrencyInput value={field.value} onChange={field.onChange} />}
+              />
             </div>
           </div>
 

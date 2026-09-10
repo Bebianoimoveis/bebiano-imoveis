@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
@@ -46,6 +47,12 @@ export function ClientPreferenceForm({
   const [cityId, setCityId] = useState(preference?.cityId ?? NONE)
   const [neighborhoodId, setNeighborhoodId] = useState(preference?.neighborhoodId ?? NONE)
   const [neighborhoods, setNeighborhoods] = useState<NeighborhoodOption[]>([])
+  const [minValue, setMinValue] = useState<number | undefined>(
+    preference?.minValue != null ? Number(preference.minValue) : undefined
+  )
+  const [maxValue, setMaxValue] = useState<number | undefined>(
+    preference?.maxValue != null ? Number(preference.maxValue) : undefined
+  )
   const [pool, setPool] = useState(preference?.pool ?? false)
   const [gatedCommunity, setGatedCommunity] = useState(preference?.gatedCommunity ?? false)
   const [acceptsFinancing, setAcceptsFinancing] = useState(preference?.acceptsFinancing ?? false)
@@ -64,8 +71,8 @@ export function ClientPreferenceForm({
         await saveClientPreference(clientId, {
           propertyTypeId: propertyTypeId === NONE ? null : propertyTypeId,
           purpose: purpose === NONE ? null : purpose,
-          minValue: formData.get("minValue") ? Number(formData.get("minValue")) : null,
-          maxValue: formData.get("maxValue") ? Number(formData.get("maxValue")) : null,
+          minValue: minValue ?? null,
+          maxValue: maxValue ?? null,
           cityId: cityId === NONE ? null : cityId,
           neighborhoodId: neighborhoodId === NONE ? null : neighborhoodId,
           bedrooms: formData.get("bedrooms") ? Number(formData.get("bedrooms")) : null,
@@ -120,11 +127,11 @@ export function ClientPreferenceForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="minValue">Valor mín.</Label>
-          <Input id="minValue" name="minValue" type="number" step="0.01" defaultValue={preference?.minValue?.toString() ?? ""} />
+          <CurrencyInput value={minValue} onChange={setMinValue} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="maxValue">Valor máx.</Label>
-          <Input id="maxValue" name="maxValue" type="number" step="0.01" defaultValue={preference?.maxValue?.toString() ?? ""} />
+          <CurrencyInput value={maxValue} onChange={setMaxValue} />
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { CheckCircle2, ImagePlus, Loader2, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import {
@@ -178,7 +179,11 @@ export function PropertySubmissionForm({
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="askingPrice">Valor pretendido (opcional)</Label>
-          <Input id="askingPrice" type="number" step="0.01" placeholder="R$" {...form.register("askingPrice")} />
+          <Controller
+            control={form.control}
+            name="askingPrice"
+            render={({ field }) => <CurrencyInput value={field.value} onChange={field.onChange} />}
+          />
         </div>
       </div>
 

@@ -10,7 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "cmdk"
-import { Building2, Contact, Menu, Search, Sparkles, Users2 } from "lucide-react"
+import { Building2, Contact, Menu, Moon, Search, Sparkles, Sun, Users2 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -188,10 +188,14 @@ export function AdminTopbar({
   user,
   permissions,
   onOpenMobileSidebar,
+  theme,
+  onToggleTheme,
 }: {
   user: AdminTopbarUser
   permissions: Set<string>
   onOpenMobileSidebar: () => void
+  theme: "dark" | "light"
+  onToggleTheme: () => void
 }) {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const canUseAssistant = permissions.has("assistant.use")
@@ -234,6 +238,20 @@ export function AdminTopbar({
             />
           </>
         ) : null}
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              aria-label={theme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+              onClick={onToggleTheme}
+              className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              {theme === "dark" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>{theme === "dark" ? "Tema claro" : "Tema escuro"}</TooltipContent>
+        </Tooltip>
 
         <NotificationBell />
 

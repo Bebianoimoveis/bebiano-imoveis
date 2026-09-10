@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -8,6 +8,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CurrencyInput } from "@/components/ui/currency-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { resolvePropertyFeatureIcon } from "@/lib/property-feature-icons"
@@ -29,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PropertyImageUploader } from "@/components/admin/properties/property-image-uploader"
 import { createProperty, updateProperty } from "@/modules/property/actions"
-import { listNeighborhoods } from "@/modules/taxonomy/actions"
+import { createNeighborhood, listNeighborhoods } from "@/modules/taxonomy/actions"
 import {
   propertyInputSchema,
   type PropertyFormValues,
@@ -41,6 +42,34 @@ import {
 function toInputValue(value: unknown): string {
   return value === undefined || value === null ? "" : String(value)
 }
+
+// Usado por onInvalid pra saber pra qual aba pular quando o campo com erro
+// de validação não está na aba atualmente visível.
+const FIELD_TAB = {
+  title: "dados",
+  description: "dados",
+  typeId: "dados",
+  price: "dados",
+  condoFee: "dados",
+  iptu: "dados",
+  realtorId: "dados",
+  zipCode: "localizacao",
+  cityId: "localizacao",
+  neighborhoodId: "localizacao",
+  addressVisibility: "localizacao",
+  street: "localizacao",
+  number: "localizacao",
+  bedrooms: "caracteristicas",
+  suites: "caracteristicas",
+  bathrooms: "caracteristicas",
+  parkingSpots: "caracteristicas",
+  builtArea: "caracteristicas",
+  totalArea: "caracteristicas",
+  availableUnits: "caracteristicas",
+  launchDeliveryAt: "caracteristicas",
+  featureIds: "caracteristicas",
+  videoUrl: "caracteristicas",
+} as const
 
 type Option = { id: string; name: string }
 type CityOption = Option & { state: string }
@@ -73,6 +102,7 @@ export function PropertyForm({
   const router = useRouter()
   const [neighborhoods, setNeighborhoods] = useState(initialNeighborhoods)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState("dados")
 
   const form = useForm<PropertyFormValues, unknown, PropertyInput>({
     resolver: zodResolver(propertyInputSchema),
@@ -87,6 +117,23 @@ export function PropertyForm({
   const isApartment =
     propertyTypes.find((type) => type.id === selectedTypeId)?.name === "Apartamento"
   const isLaunch = useWatch({ control: form.control, name: "isLaunch" })
+
+  // Estimativa automática de IPTU mensal (0,5% ao ano do valor do imóvel,
+  // dividido em 12x) — só uma sugestão de ponto de partida, nunca o valor
+  // oficial da prefeitura. Some da autocompleção assim que a pessoa editar
+  // o campo manualmente, e nunca sobrescreve um IPTU que já veio preenchido
+  // (imóvel existente em edição).
+  const priceValue = useWatch({ control: form.control, name: "price" })
+  const iptuTouchedRef = useRef(
+    defaultValues.iptu !== undefined && defaultValues.iptu !== null && defaultValues.iptu !== ("" as unknown)
+  )
+  useEffect(() => {
+    if (iptuTouchedRef.current) return
+    const numericPrice = Number(priceValue)
+    if (!numericPrice || numericPrice <= 0) return
+    const estimated = Math.round(((numericPrice * 0.005) / 12) * 100) / 100
+    form.setValue("iptu", estimated)
+  }, [priceValue, form])
 
   async function handleCityChange(cityId: string) {
     // shouldValidate: sem isso, setValue não limpa um erro de validação
@@ -145,9 +192,30 @@ export function PropertyForm({
       }
 
       const list = await handleCityChange(matchedCity.id)
-      const matchedNeighborhood = list.find(
+      let matchedNeighborhood = list.find(
         (n) => normalize(n.name) === normalize(data.bairro ?? "")
       )
+
+      // O bairro que os Correios devolvem pro CEP pode simplesmente não
+      // estar cadastrado ainda em Taxonomias pra essa cidade — antes isso
+      // falhava calado (campo ficava vazio sem explicação nenhuma). Agora
+      // tentamos cadastrar o bairro na hora (só funciona pra quem tem
+      // permissão de gerenciar taxonomias); se não der, avisamos em vez de
+      // deixar o campo vazio sem dizer o motivo.
+      if (!matchedNeighborhood && data.bairro) {
+        try {
+          const created = await createNeighborhood({ name: data.bairro, cityId: matchedCity.id })
+          const refreshed = await listNeighborhoods(matchedCity.id)
+          setNeighborhoods(refreshed)
+          matchedNeighborhood = refreshed.find((n) => n.id === created.id)
+          toast.info(`Bairro "${data.bairro}" cadastrado automaticamente.`)
+        } catch {
+          toast.info(
+            `Bairro "${data.bairro}" ainda não está cadastrado em ${matchedCity.name} — selecione outro ou peça pra um admin cadastrar em Taxonomias.`
+          )
+        }
+      }
+
       if (matchedNeighborhood) {
         // O <SelectContent> do bairro só recebe os novos itens depois que
         // o setNeighborhoods() acima é processado pelo React — sem esse
@@ -161,6 +229,18 @@ export function PropertyForm({
     } finally {
       setIsLookingUpCep(false)
     }
+  }
+
+  // Sem isso, um campo obrigatório numa aba diferente da aba aberta no
+  // momento falhava a validação do react-hook-form completamente calado —
+  // a mensagem de erro existia, mas dentro de uma TabsContent escondida,
+  // então "Salvar" parecia não fazer nada. Agora avisamos e pulamos pra
+  // aba certa.
+  function onInvalid(errors: Record<string, unknown>) {
+    const firstField = Object.keys(errors)[0]
+    const tab = FIELD_TAB[firstField as keyof typeof FIELD_TAB]
+    if (tab) setActiveTab(tab)
+    toast.error("Confira os campos obrigatórios destacados.")
   }
 
   async function onSubmit(values: PropertyInput) {
@@ -184,8 +264,8 @@ export function PropertyForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <Tabs defaultValue="dados">
+      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="dados">Dados</TabsTrigger>
             <TabsTrigger value="localizacao">Localização</TabsTrigger>
@@ -260,12 +340,7 @@ export function PropertyForm({
                   <FormItem>
                     <FormLabel>Valor</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
-                        value={toInputValue(field.value)}
-                      />
+                      <CurrencyInput value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -278,15 +353,7 @@ export function PropertyForm({
                   <FormItem>
                     <FormLabel>Condomínio</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
-                        value={toInputValue(field.value)}
-                        onChange={(e) =>
-                          field.onChange(e.target.value === "" ? undefined : e.target.value)
-                        }
-                      />
+                      <CurrencyInput value={field.value} onChange={field.onChange} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -299,16 +366,17 @@ export function PropertyForm({
                   <FormItem>
                     <FormLabel>IPTU</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...field}
-                        value={toInputValue(field.value)}
-                        onChange={(e) =>
-                          field.onChange(e.target.value === "" ? undefined : e.target.value)
-                        }
+                      <CurrencyInput
+                        value={field.value}
+                        onChange={(v) => {
+                          iptuTouchedRef.current = true
+                          field.onChange(v)
+                        }}
                       />
                     </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Estimado automaticamente a partir do valor — ajuste se souber o valor real.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
