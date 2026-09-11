@@ -227,7 +227,7 @@ export function AdminSidebar({
   const pathname = usePathname()
 
   return (
-    <aside className="admin-sidebar-surface hidden w-72 shrink-0 border-r border-border/60 bg-sidebar text-sidebar-foreground admin-light:border-transparent md:block">
+    <aside className="admin-sidebar-surface sticky top-0 hidden h-screen w-72 shrink-0 self-start overflow-hidden border-r border-border/60 bg-sidebar text-sidebar-foreground admin-light:border-transparent md:block">
       <SidebarContent user={user} permissions={permissions} pathname={pathname} />
     </aside>
   )
