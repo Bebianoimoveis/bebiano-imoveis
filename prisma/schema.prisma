@@ -662,8 +662,11 @@ enum ContractStatus {
 
 model Contract {
   id         String         @id @default(cuid())
-  proposalId String         @unique
-  proposal   Proposal       @relation(fields: [proposalId], references: [id])
+  // Opcional: contrato pode ser gerado a partir de uma proposta aceita OU
+  // cadastrado direto (ex: negócio fechado fora do sistema, contrato
+  // antigo) anexando o arquivo assinado sem nenhuma proposta vinculada.
+  proposalId String?        @unique
+  proposal   Proposal?      @relation(fields: [proposalId], references: [id])
   propertyId String
   property   Property       @relation(fields: [propertyId], references: [id])
   clientId   String

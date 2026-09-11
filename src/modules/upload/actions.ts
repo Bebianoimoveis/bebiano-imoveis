@@ -176,6 +176,45 @@ export async function createSiteImageUploadSignature(): Promise<UploadSignature>
   }
 }
 
+const CONTRACT_ALLOWED_FORMATS = "pdf,jpg,jpeg,png"
+const CONTRACT_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
+
+// Mesmo esquema de assinatura acima, pro contrato assinado anexado direto
+// (Contract.fileUrl) — cadastro manual de contrato ou upload posterior.
+export async function createContractFileUploadSignature(): Promise<UploadSignature> {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Não autenticado.")
+  }
+  if (!(await can(session.user, "contract.manage"))) {
+    throw new Error("Sem permissão para gerenciar contratos.")
+  }
+
+  const timestamp = Math.round(Date.now() / 1000)
+  const folder = "bebiano-imoveis/contratos"
+
+  const paramsToSign = {
+    timestamp,
+    folder,
+    allowed_formats: CONTRACT_ALLOWED_FORMATS,
+  }
+
+  const signature = cloudinary.utils.api_sign_request(
+    paramsToSign,
+    process.env.CLOUDINARY_API_SECRET as string
+  )
+
+  return {
+    timestamp,
+    signature,
+    apiKey: process.env.CLOUDINARY_API_KEY as string,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+    folder,
+    allowedFormats: CONTRACT_ALLOWED_FORMATS,
+    maxFileSize: CONTRACT_MAX_FILE_SIZE_BYTES,
+  }
+}
+
 const SUBMISSION_ALLOWED_FORMATS = "jpg,jpeg,png,webp"
 const SUBMISSION_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 // 8MB
 

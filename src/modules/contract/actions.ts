@@ -8,6 +8,7 @@ import { logActivity } from "@/lib/activity-log"
 import type { Prisma, ContractStatus } from "@/generated/prisma/client"
 import * as contractRepository from "@/modules/contract/repository"
 import * as proposalRepository from "@/modules/proposal/repository"
+import { manualContractInputSchema } from "@/modules/contract/schema"
 
 async function requireSession() {
   const session = await auth()
@@ -70,6 +71,35 @@ export async function generateContractFromProposal(proposalId: string) {
 
   revalidatePath("/admin/contratos")
   revalidatePath("/admin/propostas")
+  // `value` é Decimal — não devolver o objeto Prisma inteiro ao client.
+  return { id: contract.id }
+}
+
+// Cadastro direto de contrato, sem passar por uma proposta — pensado
+// pra negócio fechado fora do sistema ou contrato antigo, anexando o
+// arquivo assinado (opcional) na hora.
+export async function createManualContract(input: unknown) {
+  const session = await requireContractManage()
+  const data = manualContractInputSchema.parse(input)
+
+  const contract = await contractRepository.createContract({
+    value: data.value,
+    status: data.status,
+    fileUrl: data.fileUrl,
+    property: { connect: { id: data.propertyId } },
+    client: { connect: { id: data.clientId } },
+    realtor: { connect: { id: data.realtorId } },
+  })
+
+  await logActivity({
+    userId: session.user.id,
+    action: "contract.create.manual",
+    entityType: "Contract",
+    entityId: contract.id,
+  })
+
+  revalidatePath("/admin/contratos")
+  revalidatePath("/admin/clientes")
   // `value` é Decimal — não devolver o objeto Prisma inteiro ao client.
   return { id: contract.id }
 }

@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { ContractStatus } from "@/generated/prisma/client"
 
-const LABELS: Record<ContractStatus, string> = {
+export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   DRAFT: "Rascunho",
   ACTIVE: "Ativo",
   COMPLETED: "Concluído",
@@ -19,7 +19,7 @@ const STYLES: Record<ContractStatus, string> = {
 export function ContractStatusBadge({ status }: { status: ContractStatus }) {
   return (
     <Badge variant="outline" className={cn("border-transparent", STYLES[status])}>
-      {LABELS[status]}
+      {CONTRACT_STATUS_LABELS[status]}
     </Badge>
   )
 }

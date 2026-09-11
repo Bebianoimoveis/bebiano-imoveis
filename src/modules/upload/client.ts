@@ -81,3 +81,38 @@ export async function uploadFinancialAttachment(
 
   return { url: data.secure_url, name: file.name }
 }
+
+// Mesmo princípio, pro arquivo do contrato assinado (Contract.fileUrl,
+// ver createContractFileUploadSignature).
+export async function uploadContractFile(
+  file: File,
+  signature: UploadSignature
+): Promise<UploadedAttachment> {
+  if (file.size === 0) {
+    throw new Error("Esse arquivo está vazio ou corrompido. Tente selecionar o arquivo novamente.")
+  }
+  if (file.size > signature.maxFileSize) {
+    throw new Error("Arquivo excede o tamanho máximo permitido (10MB).")
+  }
+
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("api_key", signature.apiKey)
+  formData.append("timestamp", String(signature.timestamp))
+  formData.append("signature", signature.signature)
+  formData.append("folder", signature.folder)
+  formData.append("allowed_formats", signature.allowedFormats)
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${signature.cloudName}/raw/upload`,
+    { method: "POST", body: formData }
+  )
+
+  if (!response.ok) {
+    throw new Error("Falha ao enviar o contrato para o Cloudinary.")
+  }
+
+  const data = (await response.json()) as { secure_url: string }
+
+  return { url: data.secure_url, name: file.name }
+}

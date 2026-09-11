@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { APPOINTMENT_TYPE_OPTIONS } from "@/components/admin/agenda/appointment-type-badge"
+import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 import {
   createAppointment,
   updateAppointment,
@@ -38,6 +39,21 @@ function toDatetimeLocal(date: Date) {
   const pad = (n: number) => String(n).padStart(2, "0")
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
+
+const WHATSAPP_TYPE_PHRASE: Record<AppointmentType, string> = {
+  VISIT: "uma visita",
+  CALL: "uma ligação",
+  RETURN: "um retorno",
+  OTHER: "um compromisso",
+}
+
+function buildWhatsAppMessage(name: string, type: AppointmentType, scheduledAt: Date) {
+  const dateLabel = scheduledAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })
+  const timeLabel = scheduledAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+  return `Olá, ${name}! Agendamos ${WHATSAPP_TYPE_PHRASE[type]} para o dia ${dateLabel} às ${timeLabel}. Você pode confirmar sua presença?`
+}
+
+type PendingWhatsAppContact = { name: string; phone: string; type: AppointmentType; scheduledAt: Date }
 
 // Combobox mínimo pra vincular lead/cliente por busca — mesmo espírito
 // do padrão search-with-suggestions (LeadSearch/ClientSearch), só que
@@ -157,6 +173,7 @@ export function AppointmentFormSheet({
   const [propertyCode, setPropertyCode] = useState("")
   const [property, setProperty] = useState<LinkedItem | null>(null)
   const [conflicts, setConflicts] = useState<{ id: string; label: string; time: string }[]>([])
+  const [pendingWhatsApp, setPendingWhatsApp] = useState<PendingWhatsAppContact | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -185,6 +202,7 @@ export function AppointmentFormSheet({
       setPropertyCode("")
     }
     setConflicts([])
+    setPendingWhatsApp(null)
   }, [open, appointment, defaultScheduledAt, realtors, currentRealtorId])
 
   useEffect(() => {
@@ -240,17 +258,41 @@ export function AppointmentFormSheet({
       if (isEditing) {
         await updateAppointment(appointment.id, payload)
         toast.success("Compromisso atualizado.")
+        onOpenChange(false)
+        router.refresh()
       } else {
-        await createAppointment(payload)
+        const created = await createAppointment(payload)
         toast.success("Compromisso agendado.")
+        router.refresh()
+
+        // Pergunta se quer avisar por WhatsApp em vez de já fechar — só
+        // faz sentido se sobrar um telefone (lead ou cliente vinculado).
+        const contact = created.lead ?? created.client
+        if (contact?.phone) {
+          setPendingWhatsApp({
+            name: contact.name,
+            phone: contact.phone,
+            type: payload.type,
+            scheduledAt: payload.scheduledAt,
+          })
+        } else {
+          onOpenChange(false)
+        }
       }
-      onOpenChange(false)
-      router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar compromisso.")
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  function handleSendWhatsApp() {
+    if (!pendingWhatsApp) return
+    const message = buildWhatsAppMessage(pendingWhatsApp.name, pendingWhatsApp.type, pendingWhatsApp.scheduledAt)
+    const digits = pendingWhatsApp.phone.replace(/\D/g, "")
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer")
+    setPendingWhatsApp(null)
+    onOpenChange(false)
   }
 
   return (
@@ -260,6 +302,32 @@ export function AppointmentFormSheet({
       side="right"
       title={isEditing ? "Editar compromisso" : "Novo compromisso"}
     >
+      {pendingWhatsApp ? (
+        <div className="flex flex-1 flex-col justify-between p-5">
+          <div className="space-y-2">
+            <p className="font-heading text-base font-semibold">Compromisso agendado!</p>
+            <p className="text-sm text-muted-foreground">
+              Quer avisar {pendingWhatsApp.name} pelo WhatsApp, confirmando a presença e informando
+              o horário combinado?
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Button className="gap-1.5" onClick={handleSendWhatsApp}>
+              <WhatsAppIcon className="size-4" /> Enviar mensagem
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setPendingWhatsApp(null)
+                onOpenChange(false)
+              }}
+            >
+              Agora não
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
       <div className="flex-1 space-y-4 overflow-y-auto p-5">
         {contextLabel ? <p className="text-sm text-muted-foreground">{contextLabel}</p> : null}
 
@@ -398,6 +466,8 @@ export function AppointmentFormSheet({
           {isSubmitting ? "Salvando..." : isEditing ? "Salvar alterações" : "Agendar compromisso"}
         </Button>
       </div>
+        </>
+      )}
     </Sheet>
   )
 }

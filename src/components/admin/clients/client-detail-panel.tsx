@@ -38,6 +38,7 @@ import { AppointmentStatusBadge } from "@/components/admin/agenda/appointment-st
 import { ProposalFormDialog } from "@/components/admin/proposals/proposal-form-dialog"
 import { ProposalStatusBadge } from "@/components/admin/proposals/proposal-status-badge"
 import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
+import { ManualContractFormDialog } from "@/components/admin/contracts/manual-contract-form-dialog"
 import { getAdminClient, deleteClient } from "@/modules/client/actions"
 import { formatCurrency } from "@/lib/format"
 import type { ClientDetail } from "@/modules/client/repository"
@@ -207,15 +208,15 @@ export function ClientDetailPanel({
           </div>
 
           <Tabs defaultValue="geral" className="flex min-h-0 flex-1 flex-col">
-            <TabsList className="mx-5 mt-3 w-fit flex-wrap">
-              <TabsTrigger value="geral">Visão Geral</TabsTrigger>
-              <TabsTrigger value="preferencias">Preferências</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="agenda">Agenda</TabsTrigger>
-              <TabsTrigger value="propostas">Propostas</TabsTrigger>
-              <TabsTrigger value="contratos">Contratos</TabsTrigger>
-              <TabsTrigger value="leads">Leads</TabsTrigger>
-              <TabsTrigger value="notas">Notas</TabsTrigger>
+            <TabsList className="mx-5 mt-3 w-auto max-w-[calc(100%-2.5rem)] justify-start overflow-x-auto">
+              <TabsTrigger value="geral" className="shrink-0">Visão Geral</TabsTrigger>
+              <TabsTrigger value="preferencias" className="shrink-0">Preferências</TabsTrigger>
+              <TabsTrigger value="timeline" className="shrink-0">Timeline</TabsTrigger>
+              <TabsTrigger value="agenda" className="shrink-0">Agenda</TabsTrigger>
+              <TabsTrigger value="propostas" className="shrink-0">Propostas</TabsTrigger>
+              <TabsTrigger value="contratos" className="shrink-0">Contratos</TabsTrigger>
+              <TabsTrigger value="leads" className="shrink-0">Leads</TabsTrigger>
+              <TabsTrigger value="notas" className="shrink-0">Notas</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-y-auto p-5">
@@ -292,12 +293,22 @@ export function ClientDetailPanel({
                 )}
               </TabsContent>
 
-              <TabsContent value="contratos">
+              <TabsContent value="contratos" className="space-y-4">
+                <ManualContractFormDialog
+                  clientId={client.id}
+                  realtors={realtors}
+                  defaultRealtorId={client.realtorId}
+                  trigger={
+                    <Button variant="outline" className="w-full">
+                      Adicionar contrato
+                    </Button>
+                  }
+                />
                 {client.contracts.length === 0 ? (
                   <EmptyState
                     icon={FileText}
                     title="Nenhum contrato ainda"
-                    description="Aparece aqui quando uma proposta deste cliente virar contrato."
+                    description="Aparece aqui quando uma proposta deste cliente virar contrato, ou cadastre um direto pelo botão acima."
                   />
                 ) : (
                   <ul className="space-y-2">

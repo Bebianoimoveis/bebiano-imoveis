@@ -51,6 +51,51 @@ export function ClientDetailsForm({
   const [vip, setVip] = useState(client.vip)
   const [tagsValue, setTagsValue] = useState(client.tags.join(", "))
   const [maritalStatus, setMaritalStatus] = useState(client.maritalStatus ?? "")
+  const [street, setStreet] = useState(client.street ?? "")
+  const [zipCode, setZipCode] = useState(client.zipCode ?? "")
+  const [isLookingUpCep, setIsLookingUpCep] = useState(false)
+
+  async function handleCepLookup(rawValue: string) {
+    const digits = rawValue.replace(/\D/g, "")
+    setZipCode(digits)
+    if (digits.length !== 8) return
+
+    setIsLookingUpCep(true)
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const data = await response.json()
+
+      if (data.erro) {
+        toast.error("CEP não encontrado.")
+        return
+      }
+
+      if (data.logradouro) setStreet(data.logradouro)
+
+      const normalize = (value: string) =>
+        value
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "")
+          .trim()
+          .toLowerCase()
+
+      const matchedCity = cities.find(
+        (city) =>
+          normalize(city.name) === normalize(data.localidade ?? "") &&
+          city.state === data.uf
+      )
+
+      if (matchedCity) {
+        setCityId(matchedCity.id)
+      } else {
+        toast.info("CEP fora da área cadastrada — selecione a cidade manualmente.")
+      }
+    } catch {
+      toast.error("Não foi possível buscar o CEP. Tente novamente.")
+    } finally {
+      setIsLookingUpCep(false)
+    }
+  }
 
   function toggleType(type: ClientType) {
     setTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]))
@@ -68,9 +113,9 @@ export function ClientDetailsForm({
           birthDate: formData.get("birthDate") ? new Date(String(formData.get("birthDate"))) : undefined,
           profession: String(formData.get("profession") ?? ""),
           maritalStatus,
-          street: String(formData.get("street") ?? ""),
+          street,
           number: String(formData.get("number") ?? ""),
-          zipCode: String(formData.get("zipCode") ?? ""),
+          zipCode,
           cityId: cityId === NO_CITY ? null : cityId,
           notes: String(formData.get("notes") ?? ""),
           types,
@@ -155,12 +200,24 @@ export function ClientDetailsForm({
 
       <div className="space-y-1.5">
         <Label>Endereço</Label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input name="street" placeholder="Rua" defaultValue={client.street ?? ""} className="col-span-2" />
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            name="zipCode"
+            placeholder="CEP"
+            value={zipCode}
+            onChange={(e) => handleCepLookup(e.target.value)}
+            disabled={isLookingUpCep}
+          />
           <Input name="number" placeholder="Número" defaultValue={client.number ?? ""} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Input name="zipCode" placeholder="CEP" defaultValue={client.zipCode ?? ""} />
+        <div className="grid grid-cols-3 gap-3">
+          <Input
+            name="street"
+            placeholder="Rua"
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            className="col-span-2"
+          />
           <Select value={cityId} onValueChange={setCityId}>
             <SelectTrigger className="w-full">
               <SelectValue />
