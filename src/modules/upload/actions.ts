@@ -1,7 +1,17 @@
 "use server"
 
+import { headers } from "next/headers"
+
 import { auth } from "@/lib/auth"
+import { can } from "@/lib/permissions"
 import { cloudinary } from "@/lib/cloudinary"
+import { isRateLimited } from "@/lib/rate-limit"
+
+async function getClientIp() {
+  const headerList = await headers()
+  const forwardedFor = headerList.get("x-forwarded-for")
+  return forwardedFor?.split(",")[0]?.trim() ?? "unknown"
+}
 
 const ALLOWED_FORMATS = "jpg,jpeg,png,webp"
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 // 8MB
@@ -23,6 +33,9 @@ export async function createPropertyImageUploadSignature(): Promise<UploadSignat
   const session = await auth()
   if (!session?.user) {
     throw new Error("Não autenticado.")
+  }
+  if (!(await can(session.user, "property.edit"))) {
+    throw new Error("Sem permissão para editar imagens de imóvel.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -61,6 +74,9 @@ export async function createFinancialAttachmentUploadSignature(): Promise<Upload
   if (!session?.user) {
     throw new Error("Não autenticado.")
   }
+  if (!(await can(session.user, "financial.manage"))) {
+    throw new Error("Sem permissão para gerenciar o financeiro.")
+  }
 
   const timestamp = Math.round(Date.now() / 1000)
   const folder = "bebiano-imoveis/financeiro"
@@ -93,6 +109,9 @@ export async function createRealtorPhotoUploadSignature(): Promise<UploadSignatu
   const session = await auth()
   if (!session?.user) {
     throw new Error("Não autenticado.")
+  }
+  if (!(await can(session.user, "realtor.manage"))) {
+    throw new Error("Sem permissão para gerenciar corretores.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -128,6 +147,9 @@ export async function createSiteImageUploadSignature(): Promise<UploadSignature>
   if (!session?.user) {
     throw new Error("Não autenticado.")
   }
+  if (!(await can(session.user, "settings.manage"))) {
+    throw new Error("Sem permissão para gerenciar configurações do site.")
+  }
 
   const timestamp = Math.round(Date.now() / 1000)
   const folder = "bebiano-imoveis/site"
@@ -160,8 +182,14 @@ const SUBMISSION_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 // 8MB
 // Sem checagem de sessão de propósito: usado pelo formulário público
 // "Quero vender meu imóvel" (src/app/(public)/anunciar), preenchido por
 // visitantes sem conta. Pasta e formatos restritos (só imagem) limitam o
-// uso indevido da assinatura.
+// uso indevido da assinatura; o rate limit por IP evita um script pedir
+// milhares de assinaturas por minuto pra encher a pasta no Cloudinary.
 export async function createSubmissionImageUploadSignature(): Promise<UploadSignature> {
+  const ip = await getClientIp()
+  if (isRateLimited(`submission-upload:${ip}`, { maxAttempts: 30, windowMs: 10 * 60 * 1000 })) {
+    throw new Error("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
+  }
+
   const timestamp = Math.round(Date.now() / 1000)
   const folder = "bebiano-imoveis/captacao"
 

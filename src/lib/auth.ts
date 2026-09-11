@@ -5,6 +5,14 @@ import { z } from "zod"
 
 import { prisma } from "@/lib/prisma"
 import { authConfig } from "@/lib/auth.config"
+import { isRateLimited } from "@/lib/rate-limit"
+
+// Sem isso, o login não tinha nenhum limite de tentativas — alguém podia
+// tentar milhares de senhas por minuto contra uma conta específica
+// (força bruta/credential stuffing). Chave por e-mail (não por IP): quem
+// ataca já roda por trás de proxies/IPs rotativos, então travar a conta
+// alvo é a defesa que realmente importa aqui.
+const LOGIN_RATE_LIMIT = { maxAttempts: 8, windowMs: 10 * 60 * 1000 }
 
 const credentialsSchema = z.object({
   email: z.email(),
@@ -25,6 +33,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null
 
         const { email, password } = parsed.data
+        const rateLimitKey = email.trim().toLowerCase()
+
+        if (isRateLimited(rateLimitKey, LOGIN_RATE_LIMIT)) {
+          throw new Error("Muitas tentativas de login. Aguarde alguns minutos e tente novamente.")
+        }
 
         const user = await prisma.user.findUnique({
           where: { email, active: true, deletedAt: null },

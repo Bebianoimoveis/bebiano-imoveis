@@ -14,6 +14,8 @@ import {
   appointmentRescheduleSchema,
 } from "@/modules/appointment/schema"
 import * as appointmentRepository from "@/modules/appointment/repository"
+import * as leadRepository from "@/modules/lead/repository"
+import * as clientRepository from "@/modules/client/repository"
 import { visitRequestSchema } from "@/modules/lead/schema"
 import { submitPublicVisitRequest } from "@/modules/lead/service"
 import { SpamRejectedError } from "@/modules/lead/service"
@@ -76,6 +78,22 @@ async function requireAppointmentManage() {
   return session
 }
 
+// Sem isso, `appointment.manage` sozinho bastava pra editar/excluir/
+// reagendar o compromisso de QUALQUER corretor — bastava saber o id.
+// Mesmo padrão de posse já usado em lead/actions.ts (assertCanManageLead).
+async function assertCanManageAppointment(
+  session: Awaited<ReturnType<typeof requireAppointmentManage>>,
+  id: string
+) {
+  const canViewAll = await can(session.user, "appointment.view.all")
+  if (canViewAll) return
+
+  const appointment = await appointmentRepository.findAppointmentById(id)
+  if (!appointment || appointment.realtorId !== session.user.realtorId) {
+    throw new Error("Sem permissão para gerenciar este compromisso.")
+  }
+}
+
 async function buildAppointmentScopeWhere(
   session: Awaited<ReturnType<typeof requireSession>>,
   filters: ReturnType<typeof appointmentFiltersSchema.parse>
@@ -121,7 +139,16 @@ export async function checkAppointmentConflict(input: {
   durationMinutes: number
   excludeId?: string
 }) {
-  await requireSession()
+  const session = await requireSession()
+
+  // Sem essa checagem, qualquer usuário logado podia passar o realtorId de
+  // um colega e receber nome/telefone dos leads/clientes dele de volta —
+  // a resposta inclui esses dados pra exibir o aviso de conflito.
+  const canViewAll = await can(session.user, "appointment.view.all")
+  if (!canViewAll && input.realtorId !== session.user.realtorId) {
+    return []
+  }
+
   const conflicts = await appointmentRepository.findConflicts({
     realtorId: input.realtorId,
     scheduledAt: new Date(input.scheduledAt),
@@ -135,12 +162,37 @@ export async function createAppointment(input: unknown) {
   const session = await requireAppointmentManage()
   const data = appointmentInputSchema.parse(input)
 
+  // Sem isso, um Corretor sem appointment.view.all podia criar um
+  // compromisso em nome de outro corretor (realtorId livre vindo do
+  // client) e vincular lead/cliente que não são dele — o "connect" só
+  // falha se o id não existir, então também servia pra confirmar por
+  // tentativa e erro se um determinado lead/cliente de outro corretor
+  // existe.
+  const canViewAll = await can(session.user, "appointment.view.all")
+  const realtorId = canViewAll ? data.realtorId : (session.user.realtorId ?? data.realtorId)
+  if (!canViewAll && realtorId !== session.user.realtorId) {
+    throw new Error("Sem permissão para agendar em nome de outro corretor.")
+  }
+
+  if (!canViewAll && data.leadId) {
+    const lead = await leadRepository.findLeadById(data.leadId)
+    if (!lead || lead.realtorId !== session.user.realtorId) {
+      throw new Error("Sem permissão para vincular este lead.")
+    }
+  }
+  if (!canViewAll && data.clientId) {
+    const client = await clientRepository.findClientById(data.clientId)
+    if (!client || client.realtorId !== session.user.realtorId) {
+      throw new Error("Sem permissão para vincular este cliente.")
+    }
+  }
+
   const appointment = await appointmentRepository.createAppointment({
     scheduledAt: data.scheduledAt,
     durationMinutes: data.durationMinutes,
     type: data.type,
     notes: data.notes,
-    realtor: { connect: { id: data.realtorId } },
+    realtor: { connect: { id: realtorId } },
     lead: data.leadId ? { connect: { id: data.leadId } } : undefined,
     client: data.clientId ? { connect: { id: data.clientId } } : undefined,
     property: data.propertyId ? { connect: { id: data.propertyId } } : undefined,
@@ -160,6 +212,7 @@ export async function createAppointment(input: unknown) {
 
 export async function updateAppointment(id: string, input: unknown) {
   const session = await requireAppointmentManage()
+  await assertCanManageAppointment(session, id)
   const data = appointmentInputSchema.parse(input)
 
   const appointment = await appointmentRepository.updateAppointment(id, {
@@ -188,6 +241,7 @@ export async function updateAppointment(id: string, input: unknown) {
 // inteiro só pra mudar o horário.
 export async function rescheduleAppointment(id: string, input: unknown) {
   const session = await requireAppointmentManage()
+  await assertCanManageAppointment(session, id)
   const data = appointmentRescheduleSchema.parse(input)
 
   const appointment = await appointmentRepository.updateAppointment(id, {
@@ -210,6 +264,7 @@ export async function updateAppointmentStatus(
   status: AppointmentStatus
 ) {
   const session = await requireAppointmentManage()
+  await assertCanManageAppointment(session, id)
   const appointment = await appointmentRepository.updateAppointmentStatus(id, status)
 
   await logActivity({
@@ -225,6 +280,7 @@ export async function updateAppointmentStatus(
 
 export async function deleteAppointment(id: string) {
   const session = await requireAppointmentManage()
+  await assertCanManageAppointment(session, id)
   await appointmentRepository.deleteAppointment(id)
 
   await logActivity({

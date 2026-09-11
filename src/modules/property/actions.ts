@@ -530,9 +530,16 @@ export async function trackPropertyView(id: string) {
 // Usado no formulário de propostas para localizar um imóvel pelo código
 // interno, sem precisar carregar a lista completa de imóveis num select.
 export async function findPropertyByCode(code: string) {
-  await requireSession()
+  const session = await requireSession()
+  // Sem o filtro de isLaunch, quem não tem property.view.all conseguia
+  // achar um lançamento (preço, endereço, corretor) só sabendo o código —
+  // a única busca administrativa do módulo que não aplicava essa regra.
+  const canViewAll = await can(session.user, "property.view.all")
   const { items } = await propertyRepository.listProperties({
-    where: { code: { equals: code, mode: "insensitive" } },
+    where: {
+      code: { equals: code, mode: "insensitive" },
+      isLaunch: canViewAll ? undefined : false,
+    },
     skip: 0,
     take: 1,
   })

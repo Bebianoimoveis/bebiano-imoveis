@@ -6,6 +6,17 @@ import {
 } from "@/modules/attribution/constants"
 import { captureReferral } from "@/modules/attribution/service"
 
+// `dest`/`landing` vêm de query string controlada por quem gerou o link
+// (potencialmente um atacante) — sem essa checagem, `dest=https://evil.com`
+// ou `dest=//evil.com` (URL protocol-relative) faziam este endpoint
+// redirecionar pra fora do site (open redirect), útil em phishing porque
+// o link inicial é do domínio real. Só aceita caminho relativo começando
+// com uma única barra.
+function safeRelativePath(value: string | null, fallback: string): string {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback
+  return value
+}
+
 // Único ponto que efetivamente grava uma atribuição — o middleware (Edge
 // Runtime, sem acesso a Prisma nesta versão do Next) só detecta que uma
 // referência nova precisa ser capturada e redireciona pra cá. Roda em
@@ -16,9 +27,9 @@ import { captureReferral } from "@/modules/attribution/service"
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const code = url.searchParams.get("code")
-  const dest = url.searchParams.get("dest") || "/"
+  const dest = safeRelativePath(url.searchParams.get("dest"), "/")
   const source = url.searchParams.get("source")
-  const landing = url.searchParams.get("landing") || dest
+  const landing = safeRelativePath(url.searchParams.get("landing"), dest)
 
   const response = NextResponse.redirect(new URL(dest, url))
   if (!code || !source) return response

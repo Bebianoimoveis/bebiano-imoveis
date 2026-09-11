@@ -1,12 +1,20 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
+import { isRateLimited } from "@/lib/rate-limit"
 import { submissionFiltersSchema, submissionInputSchema } from "@/modules/submission/schema"
 import * as submissionRepository from "@/modules/submission/repository"
+
+async function getClientIp() {
+  const headerList = await headers()
+  const forwardedFor = headerList.get("x-forwarded-for")
+  return forwardedFor?.split(",")[0]?.trim() ?? "unknown"
+}
 
 async function requireSubmissionManage() {
   const session = await auth()
@@ -19,6 +27,11 @@ async function requireSubmissionManage() {
 
 // Uso público — formulário "Quero vender meu imóvel", sem autenticação.
 export async function createPropertySubmission(input: unknown) {
+  const ip = await getClientIp()
+  if (isRateLimited(`submission:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
+    throw new Error("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
+  }
+
   const data = submissionInputSchema.parse(input)
 
   const submission = await submissionRepository.createSubmission({
