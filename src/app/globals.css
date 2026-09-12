@@ -228,6 +228,55 @@
   text-wrap: balance;
 }
 
+/* Barra de rolagem fina e discreta, combinando com o tema — usada nos
+   containers de scroll interno do admin (painéis laterais, listas
+   longas) em vez da barra grossa/padrão do sistema operacional, que
+   destoava do resto do design. Some quando não precisa de scroll (trilho
+   transparente) e só destaca um pouco mais no hover. */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+  }
+}
+
+/* Mesma ideia, mas pro menu da sidebar — o fundo dela é sempre escuro
+   nos dois temas (preto no escuro, degradê marsala no claro), então usa
+   tons de branco translúcido fixos em vez de --border/--muted-foreground
+   (calibrados pro fundo claro/escuro do conteúdo principal, quase
+   invisíveis sobre o fundo da sidebar). */
+.admin-sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
 /* Sidebar do admin em modo claro — degradê vertical + halo marsala atrás
    da logo, pedidos com stops específicos que os utilitários de gradiente
    do Tailwind não expressam bem (stop no meio em 55%, radial com 3 paradas

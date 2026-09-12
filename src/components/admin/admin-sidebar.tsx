@@ -158,7 +158,7 @@ function SidebarContent({
         </div>
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-4">
+      <nav className="admin-sidebar-scrollbar flex-1 space-y-6 overflow-y-auto px-3 pb-4">
         {groups.map((group) => (
           <div key={group.label}>
             <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase admin-light:text-white/60">

@@ -64,7 +64,7 @@ export function Sheet({
             exit={SIDE_INITIAL[side]}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
             className={cn(
-              "absolute flex w-[85%] max-w-sm flex-col overflow-y-auto bg-popover shadow-2xl",
+              "scrollbar-thin absolute flex w-[85%] max-w-sm flex-col overflow-y-auto bg-popover shadow-2xl",
               SIDE_CLASS[side],
               className
             )}
