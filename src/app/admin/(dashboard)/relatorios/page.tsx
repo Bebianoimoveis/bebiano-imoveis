@@ -5,12 +5,16 @@ import { SalesByMonthChart } from "@/components/admin/reports/sales-by-month-cha
 import { LeadsByOriginChart } from "@/components/admin/reports/leads-by-origin-chart"
 import { LeadsByStageChart } from "@/components/admin/reports/leads-by-stage-chart"
 import { TopPropertiesPanel } from "@/components/admin/reports/top-properties-panel"
-import { getBusinessReport } from "@/modules/report/actions"
+import { RealtorBreakdownPanel } from "@/components/admin/reports/realtor-breakdown-panel"
+import { getBusinessReport, canViewRealtorBreakdown } from "@/modules/report/actions"
 
 const REPORT_MONTHS = 6
 
 export default async function AdminReportsPage() {
-  const report = await getBusinessReport(REPORT_MONTHS)
+  const [report, showRealtorBreakdown] = await Promise.all([
+    getBusinessReport(REPORT_MONTHS),
+    canViewRealtorBreakdown(),
+  ])
 
   return (
     <div className="space-y-6">
@@ -72,6 +76,8 @@ export default async function AdminReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {showRealtorBreakdown ? <RealtorBreakdownPanel /> : null}
     </div>
   )
 }

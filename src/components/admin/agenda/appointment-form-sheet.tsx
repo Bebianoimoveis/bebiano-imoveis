@@ -411,7 +411,7 @@ export function AppointmentFormSheet({
             value={lead}
             onChange={setLead}
             search={async (query) => {
-              const rows = await suggestLeads(query)
+              const rows = await suggestLeads(query, realtorId || undefined)
               return rows.map((row) => ({ id: row.id, label: `${row.name} · ${row.phone}` }))
             }}
           />
@@ -424,7 +424,7 @@ export function AppointmentFormSheet({
             value={client}
             onChange={setClient}
             search={async (query) => {
-              const rows = await suggestClients(query)
+              const rows = await suggestClients(query, realtorId || undefined)
               return rows.map((row) => ({ id: row.id, label: `${row.name} · ${row.code}` }))
             }}
           />

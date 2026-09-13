@@ -144,3 +144,37 @@ export async function salesByMonth(scope: Scope, months: number) {
 
   return buckets
 }
+
+// Levantamento de novos leads e clientes por corretor num mês específico
+// — usado no bloco "somente Admin" da Inteligência de Negócios, pra dar
+// visibilidade de captação por corretor sem misturar com o financeiro.
+export async function countNewLeadsAndClientsByRealtor(monthStart: Date, monthEnd: Date) {
+  const realtors = await prisma.realtor.findMany({
+    where: { active: true, deletedAt: null },
+    select: { id: true, user: { select: { name: true } } },
+    orderBy: { user: { name: "asc" } },
+  })
+
+  const [leadCounts, clientCounts] = await Promise.all([
+    prisma.lead.groupBy({
+      by: ["realtorId"],
+      where: { realtorId: { not: null }, createdAt: { gte: monthStart, lte: monthEnd }, deletedAt: null },
+      _count: { _all: true },
+    }),
+    prisma.client.groupBy({
+      by: ["realtorId"],
+      where: { realtorId: { not: null }, createdAt: { gte: monthStart, lte: monthEnd }, deletedAt: null },
+      _count: { _all: true },
+    }),
+  ])
+
+  const leadsByRealtor = new Map(leadCounts.map((row) => [row.realtorId, row._count._all]))
+  const clientsByRealtor = new Map(clientCounts.map((row) => [row.realtorId, row._count._all]))
+
+  return realtors.map((realtor) => ({
+    realtorId: realtor.id,
+    realtorName: realtor.user.name,
+    newLeads: leadsByRealtor.get(realtor.id) ?? 0,
+    newClients: clientsByRealtor.get(realtor.id) ?? 0,
+  }))
+}

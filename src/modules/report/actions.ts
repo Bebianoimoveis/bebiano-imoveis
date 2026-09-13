@@ -166,6 +166,29 @@ async function requireReportView(session: Awaited<ReturnType<typeof requireSessi
   }
 }
 
+// Levantamento por corretor é intencionalmente mais restrito que o resto
+// da Inteligência de Negócios: usa `user.manage` (hoje, só o papel Admin
+// tem essa permissão — nem Gerente/Financeiro legados) em vez de
+// `report.view`, porque é sobre desempenho individual de cada corretor,
+// não um número agregado da imobiliária.
+export async function canViewRealtorBreakdown() {
+  const session = await auth()
+  if (!session?.user) return false
+  return can(session.user, "user.manage")
+}
+
+export async function getNewLeadsAndClientsByRealtor(month: number, year: number) {
+  const session = await requireSession()
+  if (!(await can(session.user, "user.manage"))) {
+    throw new Error("Sem permissão para ver o levantamento por corretor.")
+  }
+
+  const monthStart = new Date(year, month - 1, 1)
+  const monthEnd = new Date(year, month, 0, 23, 59, 59, 999)
+
+  return reportRepository.countNewLeadsAndClientsByRealtor(monthStart, monthEnd)
+}
+
 // Página "Inteligência de Negócios" — visão consolidada de vendas, leads e
 // portfólio, no mesmo nível de detalhe da Gestão Financeira (KPIs +
 // gráficos), mas sem se sobrepor a ela: nada de receita/despesa aqui, isso

@@ -134,13 +134,18 @@ export async function listAdminLeads(rawFilters: unknown) {
 
 // Sugestões instantâneas da busca — mesmo escopo de visibilidade da
 // listagem.
-export async function suggestLeads(query: string) {
+// `realtorId` opcional escopa a busca pro corretor já selecionado no
+// formulário que está chamando (ex: agendar compromisso) — sem isso, um
+// Admin buscando um lead pra vincular via a lista inteira do sistema,
+// mesmo já tendo escolhido um corretor específico no formulário,
+// misturando leads de outros corretores na sugestão.
+export async function suggestLeads(query: string, realtorId?: string) {
   const session = await requireSession()
   if (query.trim().length < 2) return []
 
   const canViewAll = await can(session.user, "lead.view.all")
   const where: Prisma.LeadWhereInput = {
-    realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
+    realtorId: canViewAll ? realtorId : (session.user.realtorId ?? "__none__"),
     OR: [
       { name: { contains: query, mode: "insensitive" } },
       { phone: { contains: query } },
