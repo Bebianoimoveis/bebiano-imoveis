@@ -129,7 +129,13 @@ export async function softDeleteClient(id: string) {
 export async function suggestClients(where: Prisma.ClientWhereInput, take: number) {
   return prisma.client.findMany({
     where: { ...where, deletedAt: null },
-    select: { id: true, name: true, phone: true, code: true },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      code: true,
+      realtor: { select: { user: { select: { name: true } } } },
+    },
     orderBy: { createdAt: "desc" },
     take,
   })

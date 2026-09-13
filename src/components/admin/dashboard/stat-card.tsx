@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { motion } from "motion/react"
 import { ArrowDownRight, ArrowUpRight } from "lucide-react"
 
@@ -17,6 +18,7 @@ export function StatCard({
   description,
   previousValue,
   currentValue,
+  href,
 }: {
   icon: React.ReactNode
   label: string
@@ -25,6 +27,9 @@ export function StatCard({
   /** Se informados junto com `currentValue`, mostra o indicador de crescimento. */
   previousValue?: number
   currentValue?: number
+  /** Se informado, o card inteiro vira um link (ex: KPI de status leva
+   *  pra listagem já filtrada por aquele status). */
+  href?: string
 }) {
   const delta =
     previousValue !== undefined && currentValue !== undefined
@@ -46,11 +51,14 @@ export function StatCard({
       </span>
     ) : null
 
-  return (
+  const card = (
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className="group rounded-xl border border-border/60 bg-card p-2.5 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/20 sm:rounded-[20px] sm:p-5"
+      className={cn(
+        "group rounded-xl border border-border/60 bg-card p-2.5 shadow-sm transition-shadow hover:shadow-lg hover:shadow-black/20 sm:rounded-[20px] sm:p-5",
+        href && "cursor-pointer hover:border-primary/40"
+      )}
     >
       {/* No mobile o ícone fica ao lado do valor (uma linha só) e a
           descrição some — o card vertical de 4 linhas empilhadas era
@@ -80,4 +88,14 @@ export function StatCard({
       <p className="mt-0.5 hidden truncate text-xs text-muted-foreground sm:block">{description}</p>
     </motion.div>
   )
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {card}
+      </Link>
+    )
+  }
+
+  return card
 }

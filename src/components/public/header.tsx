@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 const BASE_NAV_LINKS = [
   { href: "/imoveis", label: "Todos os imóveis" },
   { href: "/comprar", label: "Comprar" },
+  { href: "/anunciar", label: "Anunciar Imóvel" },
   { href: "/sobre", label: "Sobre Nós" },
 ]
 

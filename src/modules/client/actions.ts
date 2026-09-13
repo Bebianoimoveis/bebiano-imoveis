@@ -79,16 +79,13 @@ export async function listAdminClients(rawFilters: unknown) {
   return clientRepository.listClients(where)
 }
 
-// `realtorId` opcional escopa a busca pro corretor já selecionado no
-// formulário que está chamando (ex: agendar compromisso, criar proposta)
-// — mesma lógica de suggestLeads.
-export async function suggestClients(query: string, realtorId?: string) {
+export async function suggestClients(query: string) {
   const session = await requireSession()
   if (query.trim().length < 2) return []
 
   const canViewAll = await can(session.user, "client.view.all")
   const where: Prisma.ClientWhereInput = {
-    realtorId: canViewAll ? realtorId : (session.user.realtorId ?? "__none__"),
+    realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
     OR: [
       { name: { contains: query, mode: "insensitive" } },
       { phone: { contains: query } },

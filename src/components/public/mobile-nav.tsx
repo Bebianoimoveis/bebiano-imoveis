@@ -15,6 +15,7 @@ import {
   KeyRound,
   Lock,
   Mail,
+  Megaphone,
   Search,
   User,
   X,
@@ -38,6 +39,7 @@ const RENT_NAV_ITEM = { href: "/alugar", label: "Alugar", icon: KeyRound }
 
 const TAIL_NAV_ITEMS = [
   { href: "/favoritos", label: "Favoritos", icon: Heart },
+  { href: "/anunciar", label: "Anunciar Imóvel", icon: Megaphone },
   { href: "/sobre", label: "Sobre Nós", icon: Info },
 ]
 

@@ -251,7 +251,7 @@ export async function listLeadIds(where: Prisma.LeadWhereInput) {
 export async function suggestLeads(where: Prisma.LeadWhereInput, take: number) {
   return prisma.lead.findMany({
     where: { ...where, deletedAt: null },
-    select: { id: true, name: true, phone: true },
+    select: { id: true, name: true, phone: true, realtor: { select: { user: { select: { name: true } } } } },
     orderBy: { createdAt: "desc" },
     take,
   })

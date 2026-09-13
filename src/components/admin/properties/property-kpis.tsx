@@ -26,36 +26,47 @@ export function PropertyKpis({ stats }: { stats: Stats }) {
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-      <StatCard icon={<Building2 className="size-5" />} label="Total" value={String(stats.total)} description="No portfólio" />
+      <StatCard
+        icon={<Building2 className="size-5" />}
+        label="Total"
+        value={String(stats.total)}
+        description="No portfólio"
+        href="/admin/imoveis"
+      />
       <StatCard
         icon={<CheckCircle2 className="size-5" />}
         label="Publicados"
         value={String(c.PUBLISHED ?? 0)}
         description="Ativos no site"
+        href="/admin/imoveis?status=PUBLISHED"
       />
       <StatCard
         icon={<Clock className="size-5" />}
         label="Em análise"
         value={String(c.IN_REVIEW ?? 0)}
         description="Aguardando revisão"
+        href="/admin/imoveis?status=IN_REVIEW"
       />
       <StatCard
         icon={<Handshake className="size-5" />}
         label="Reservados"
         value={String(c.RESERVED ?? 0)}
         description="Negociação em curso"
+        href="/admin/imoveis?status=RESERVED"
       />
       <StatCard
         icon={<TrendingUp className="size-5" />}
         label="Vendidos"
         value={String((c.SOLD ?? 0) + (c.RENTED ?? 0))}
         description="Concluídos"
+        href="/admin/imoveis?status=SOLD"
       />
       <StatCard
         icon={<Archive className="size-5" />}
         label="Arquivados"
         value={String(c.ARCHIVED ?? 0)}
         description="Fora da listagem ativa"
+        href="/admin/imoveis?status=ARCHIVED"
       />
       <StatCard
         icon={<Banknote className="size-5" />}
