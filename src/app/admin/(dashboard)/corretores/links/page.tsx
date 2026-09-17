@@ -3,6 +3,7 @@ import { Link2 } from "lucide-react"
 
 import { EmptyState } from "@/components/shared/empty-state"
 import { CopyLinkButton } from "@/components/admin/realtors/copy-link-button"
+import { QrCodeCell } from "@/components/admin/realtors/qr-code-cell"
 import {
   Table,
   TableBody,
@@ -20,7 +21,7 @@ export default async function RealtorLinksPage() {
   const rows = await Promise.all(
     stats.map(async (realtor) => {
       const link = `${siteConfig.url}/?ref=${realtor.slug}`
-      const qrCode = await QRCode.toDataURL(link, { width: 160, margin: 4, errorCorrectionLevel: "H" })
+      const qrCode = await QRCode.toDataURL(link, { width: 512, margin: 2, errorCorrectionLevel: "M" })
       return { ...realtor, link, qrCode }
     })
   )
@@ -71,14 +72,7 @@ export default async function RealtorLinksPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {/* eslint-disable-next-line @next/next/no-img-element -- data URI gerada no servidor, não faz sentido passar pelo otimizador de imagens */}
-                    <img
-                      src={realtor.qrCode}
-                      alt={`QR Code do link de ${realtor.name}`}
-                      width={48}
-                      height={48}
-                      className="rounded"
-                    />
+                    <QrCodeCell name={realtor.name} link={realtor.link} qrCode={realtor.qrCode} />
                   </TableCell>
                   <TableCell className="text-right">{realtor.visits}</TableCell>
                   <TableCell className="text-right">{realtor.leads}</TableCell>
