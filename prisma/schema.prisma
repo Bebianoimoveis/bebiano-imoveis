@@ -92,6 +92,7 @@ model Realtor {
   visitorAttributions VisitorAttribution[]
   defaultForSettings  SiteSettings[]
   financialEntries    FinancialEntry[]
+  testimonials        Testimonial[]
   goals               Goal[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -802,8 +803,12 @@ model Goal {
 // Site público / marketing
 // ---------------------------------------------------------------------------
 
-// Depoimentos de clientes exibidos na home pública — gerenciados pelo
-// admin (não há formulário público de envio, evita moderação de spam).
+// Depoimentos de clientes exibidos na home pública. Podem ser cadastrados
+// direto pelo admin (published default true) ou enviados pelo próprio
+// cliente através do link de avaliação de um corretor (/avaliar/[slug])
+// — nesse caso entram com published false, e a Bebiano decide manualmente
+// quais aparecem no site (moderação evita depoimento ruim/spam ir direto
+// ao ar).
 model Testimonial {
   id        String   @id @default(cuid())
   name      String
@@ -813,10 +818,20 @@ model Testimonial {
   photoUrl  String?
   published Boolean  @default(true)
   order     Int      @default(0)
+
+  // Preenchidos só quando o depoimento vem do formulário público de
+  // avaliação — perguntas extras além da experiência geral (que vai em
+  // `message`), pra dar mais contexto pra Bebiano decidir se publica.
+  realtorId        String?
+  realtor          Realtor? @relation(fields: [realtorId], references: [id])
+  highlight        String?
+  improvementNotes String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([published, order])
+  @@index([realtorId])
 }
 
 // Categoria administrável exibida como banner na home ("Apartamentos",
