@@ -51,7 +51,11 @@ export function AppointmentBoard({
   function navigateToDay(date: Date) {
     const params = new URLSearchParams(searchParams.toString())
     params.set("view", "day")
-    params.set("date", date.toISOString().slice(0, 10))
+    // Data local (não `toISOString`, que converte pra UTC e podia mandar
+    // pro dia errado dependendo do horário) — mesmo raciocínio de
+    // `dayKey` em appointment-time-grid.tsx.
+    const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+    params.set("date", localDate)
     router.push(`${pathname}?${params.toString()}`)
   }
   const [appointments, setAppointments] = useState(initialAppointments)

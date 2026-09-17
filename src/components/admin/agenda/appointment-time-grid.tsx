@@ -12,8 +12,14 @@ const END_HOUR = 21
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i)
 const HOUR_HEIGHT = 56
 
+// Chave por dia LOCAL (não UTC): `toISOString` converte pro fuso UTC, o
+// que empurrava compromissos de horários avançados (à noite, no fuso do
+// Brasil) pra coluna do dia seguinte/anterior na visão Semana — as
+// colunas em si (`days`) e os cabeçalhos já são montados em hora local,
+// então a chave de agrupamento precisa estar no mesmo referencial.
 function dayKey(date: Date) {
-  return date.toISOString().slice(0, 10)
+  const d = new Date(date)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
 function AppointmentBlock({

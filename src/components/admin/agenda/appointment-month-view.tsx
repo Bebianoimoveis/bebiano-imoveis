@@ -6,8 +6,11 @@ import type { AppointmentListItem } from "@/modules/appointment/repository"
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
 
+// Data local, não UTC (`toISOString` desalinhava compromissos à noite
+// pro dia seguinte/anterior) — mesmo raciocínio de appointment-time-grid.tsx.
 function dayKey(date: Date) {
-  return date.toISOString().slice(0, 10)
+  const d = new Date(date)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
 }
 
 function buildMonthGrid(anchor: Date) {
