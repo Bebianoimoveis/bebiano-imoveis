@@ -21,8 +21,8 @@ export function ProposalTableView({
   onOpenProposal: (id: string) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-[20px] border border-border/60 bg-card">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-[20px] border border-border/60 bg-card">
+      <table className="w-full min-w-[960px] text-sm">
         <thead>
           <tr className="border-b border-border/60 text-left text-xs font-medium text-muted-foreground uppercase">
             <th className="px-4 py-3">Código</th>
