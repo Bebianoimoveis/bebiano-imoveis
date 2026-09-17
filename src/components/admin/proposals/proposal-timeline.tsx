@@ -1,7 +1,7 @@
 import type { ComponentType } from "react"
 import { CheckCircle2, Eye, Mail, MessageCircle, Phone, Home as HomeIcon, Send, StickyNote, UserPlus } from "lucide-react"
 
-import type { ProposalDetail } from "@/modules/proposal/repository"
+import type { AdminProposalDetail } from "@/modules/proposal/actions"
 
 type TimelineEvent = {
   id: string
@@ -31,7 +31,7 @@ const INTERACTION_LABELS: Record<string, string> = {
 // (sentAt) e visualização (viewedAt, marcado de verdade pela página
 // pública) + as interações registradas manualmente. Não inclui "valor
 // alterado" — exigiria auditoria de campo que não existe.
-export function ProposalTimeline({ proposal }: { proposal: ProposalDetail }) {
+export function ProposalTimeline({ proposal }: { proposal: AdminProposalDetail }) {
   const events: TimelineEvent[] = []
 
   events.push({

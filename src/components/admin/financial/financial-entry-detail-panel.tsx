@@ -32,7 +32,8 @@ import {
   markFinancialEntryStatus,
 } from "@/modules/financial/actions"
 import { formatCurrency } from "@/lib/format"
-import type { FinancialEntryDetail } from "@/modules/financial/repository"
+
+type FinancialEntryDetail = NonNullable<Awaited<ReturnType<typeof getAdminFinancialEntry>>>
 
 type ClientOption = { id: string; name: string }
 type RealtorOption = { id: string; user: { name: string } }

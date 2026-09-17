@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
+import { serializeDecimals } from "@/lib/serialize"
 import type { Prisma, ProposalStatus } from "@/generated/prisma/client"
 import {
   proposalFiltersSchema,
@@ -165,8 +166,13 @@ export async function getAdminProposal(id: string) {
     throw new Error("Sem permissão para visualizar esta proposta.")
   }
 
-  return proposal
+  return serializeDecimals(proposal)
 }
+
+// Tipo do detalhe já serializado (Decimal -> string) — usado pelos
+// componentes client que consomem getAdminProposal (painel de detalhe,
+// timeline, edição), pra não vazar `Decimal` de volta pro client.
+export type AdminProposalDetail = NonNullable<Awaited<ReturnType<typeof getAdminProposal>>>
 
 async function assertCanManageProposal(
   session: Awaited<ReturnType<typeof requireSession>>,

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
+import { serializeDecimals } from "@/lib/serialize"
 import type { Prisma } from "@/generated/prisma/client"
 import {
   financialEntryInputSchema,
@@ -328,7 +329,8 @@ export async function duplicateFinancialEntry(id: string) {
 
 export async function getAdminFinancialEntry(id: string) {
   await requireFinancialView()
-  return financialRepository.findEntryById(id)
+  const entry = await financialRepository.findEntryById(id)
+  return entry ? serializeDecimals(entry) : null
 }
 
 export async function addFinancialEntryInteraction(entryId: string, input: unknown) {

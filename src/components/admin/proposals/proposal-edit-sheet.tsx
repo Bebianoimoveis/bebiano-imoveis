@@ -11,7 +11,7 @@ import { CurrencyInput } from "@/components/ui/currency-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { updateProposal } from "@/modules/proposal/actions"
-import type { ProposalDetail } from "@/modules/proposal/repository"
+import type { AdminProposalDetail } from "@/modules/proposal/actions"
 
 export function ProposalEditSheet({
   open,
@@ -21,7 +21,7 @@ export function ProposalEditSheet({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  proposal: ProposalDetail
+  proposal: AdminProposalDetail
   onSuccess?: () => void
 }) {
   const router = useRouter()

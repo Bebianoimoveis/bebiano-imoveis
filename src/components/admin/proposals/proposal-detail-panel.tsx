@@ -57,7 +57,7 @@ import {
 } from "@/modules/proposal/actions"
 import { formatCurrency, getDisplayAddress } from "@/lib/format"
 import { siteConfig } from "@/config/site"
-import type { ProposalDetail } from "@/modules/proposal/repository"
+import type { AdminProposalDetail } from "@/modules/proposal/actions"
 import type { ProposalStatus } from "@/generated/prisma/client"
 
 type RealtorOption = { id: string; user: { name: string } }
@@ -72,7 +72,7 @@ export function ProposalDetailPanel({
   realtors: RealtorOption[]
 }) {
   const router = useRouter()
-  const [proposal, setProposal] = useState<ProposalDetail | null>(null)
+  const [proposal, setProposal] = useState<AdminProposalDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [editOpen, setEditOpen] = useState(false)
