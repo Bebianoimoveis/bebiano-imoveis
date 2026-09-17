@@ -44,7 +44,12 @@ export async function listRealtorReviewLinks() {
 export async function getRealtorForReview(slug: string) {
   const realtor = await testimonialRepository.findActiveRealtorBySlug(slug)
   if (!realtor) return null
-  return { id: realtor.id, name: realtor.user.name, photoUrl: realtor.photoUrl }
+  return {
+    id: realtor.id,
+    name: realtor.user.name,
+    photoUrl: realtor.photoUrl,
+    photoPositionY: realtor.photoPositionY,
+  }
 }
 
 // Envio público do formulário de avaliação — sem autenticação. Sempre
