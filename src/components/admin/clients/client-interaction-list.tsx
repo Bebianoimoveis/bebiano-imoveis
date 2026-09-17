@@ -1,5 +1,6 @@
 import { Phone, MessageCircle, Mail, Home, StickyNote } from "lucide-react"
 
+import { formatDateTimeBR } from "@/lib/format"
 import type { ClientDetail } from "@/modules/client/repository"
 
 const TYPE_ICONS = {
@@ -42,7 +43,7 @@ export function ClientInteractionList({
               <p className="text-sm">{interaction.description}</p>
               <p className="text-xs text-muted-foreground">
                 {TYPE_LABELS[interaction.type]} · {interaction.user.name} ·{" "}
-                {new Date(interaction.createdAt).toLocaleString("pt-BR")}
+                {formatDateTimeBR(interaction.createdAt)}
               </p>
             </div>
           </li>

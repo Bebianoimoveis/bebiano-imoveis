@@ -8,7 +8,7 @@ import {
   Wallet,
 } from "lucide-react"
 
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatTimeBR } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import type { getDashboardSidePanel } from "@/modules/report/actions"
 
@@ -89,10 +89,7 @@ export function DashboardSidePanel({ data }: { data: SidePanelData }) {
             {todayAppointments.slice(0, 4).map((appointment) => (
               <li key={appointment.id} className="text-sm">
                 <p className="font-medium text-foreground">
-                  {new Date(appointment.scheduledAt).toLocaleTimeString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
+                  {formatTimeBR(appointment.scheduledAt)}{" "}
                   · {appointment.lead?.name ?? appointment.client?.name ?? "Compromisso"}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">{appointment.realtor.user.name}</p>

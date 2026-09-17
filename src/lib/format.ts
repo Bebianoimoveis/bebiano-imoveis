@@ -5,6 +5,28 @@ export function formatCurrency(value: number | string) {
   }).format(Number(value))
 }
 
+// Server Components renderizam no servidor (Vercel, UTC) — `toLocaleString`
+// sem `timeZone` explícito usa o fuso do runtime, não o de Brasília, e
+// mostrava hora/data erradas em até 3h (22h virava "01:00", por exemplo).
+// Componentes client não precisam disso: já rodam no navegador, em hora
+// de Brasília de verdade.
+const BRAZIL_TIME_ZONE = "America/Sao_Paulo"
+
+export function formatDateBR(date: Date | string, options?: Intl.DateTimeFormatOptions) {
+  const d = typeof date === "string" ? new Date(date) : date
+  return d.toLocaleDateString("pt-BR", { timeZone: BRAZIL_TIME_ZONE, ...options })
+}
+
+export function formatTimeBR(date: Date | string, options?: Intl.DateTimeFormatOptions) {
+  const d = typeof date === "string" ? new Date(date) : date
+  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: BRAZIL_TIME_ZONE, ...options })
+}
+
+export function formatDateTimeBR(date: Date | string, options?: Intl.DateTimeFormatOptions) {
+  const d = typeof date === "string" ? new Date(date) : date
+  return d.toLocaleString("pt-BR", { timeZone: BRAZIL_TIME_ZONE, ...options })
+}
+
 // Usado no Kanban de leads pra "tempo no estágio"/"última interação" —
 // por extenso (sem abreviação) porque "1m" era ambíguo entre minuto e
 // mês.

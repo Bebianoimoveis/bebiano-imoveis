@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import { EmptyState } from "@/components/shared/empty-state"
+import { formatDateTimeBR } from "@/lib/format"
 
 const RESOURCE_META: Record<string, { icon: LucideIcon; label: string }> = {
   property: { icon: Building2, label: "Imóvel" },
@@ -65,7 +66,7 @@ export function ActivityTimeline({ items }: { items: ActivityItem[] }) {
                 <span className="text-muted-foreground">{text}</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                {new Date(item.createdAt).toLocaleString("pt-BR")}
+                {formatDateTimeBR(item.createdAt)}
               </p>
             </div>
           </li>

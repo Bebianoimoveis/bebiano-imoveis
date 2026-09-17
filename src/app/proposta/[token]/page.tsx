@@ -5,7 +5,7 @@ import { Check, Download, ImageOff, MapPin } from "lucide-react"
 
 import { findProposalByShareToken, markProposalViewed } from "@/modules/proposal/repository"
 import { PROPOSAL_STATUS_LABELS } from "@/components/admin/proposals/proposal-status-badge"
-import { formatCurrency, getDisplayAddress } from "@/lib/format"
+import { formatCurrency, formatDateBR, getDisplayAddress } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 
 // Sem isso, o link compartilhado (WhatsApp, iMessage etc.) não tinha
@@ -153,7 +153,7 @@ export default async function PublicProposalPage({
           ) : null}
           {proposal.validUntil ? (
             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Check className="size-4" /> Válida até {new Date(proposal.validUntil).toLocaleDateString("pt-BR")}
+              <Check className="size-4" /> Válida até {formatDateBR(proposal.validUntil)}
             </p>
           ) : null}
           {proposal.notes ? <p className="text-sm text-muted-foreground">{proposal.notes}</p> : null}

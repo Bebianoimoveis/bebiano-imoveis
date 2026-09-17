@@ -1,6 +1,7 @@
 import type { ComponentType } from "react"
 import { CheckCircle2, Eye, Mail, MessageCircle, Phone, Home as HomeIcon, Send, StickyNote, UserPlus } from "lucide-react"
 
+import { formatDateTimeBR } from "@/lib/format"
 import type { AdminProposalDetail } from "@/modules/proposal/actions"
 
 type TimelineEvent = {
@@ -96,7 +97,7 @@ export function ProposalTimeline({ proposal }: { proposal: AdminProposalDetail }
             <div className="space-y-0.5">
               <p className="text-sm font-medium">{event.title}</p>
               <p className="text-xs text-muted-foreground">{event.description}</p>
-              <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleString("pt-BR")}</p>
+              <p className="text-xs text-muted-foreground">{formatDateTimeBR(event.date)}</p>
             </div>
           </li>
         )

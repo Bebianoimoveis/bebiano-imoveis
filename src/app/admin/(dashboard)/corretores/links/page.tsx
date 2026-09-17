@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { listRealtorLinkStats } from "@/modules/attribution/actions"
 import { siteConfig } from "@/config/site"
+import { formatDateBR } from "@/lib/format"
 
 export default async function RealtorLinksPage() {
   const stats = await listRealtorLinkStats()
@@ -81,9 +82,7 @@ export default async function RealtorLinksPage() {
                     {(realtor.conversion * 100).toFixed(0)}%
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {realtor.lastAccess
-                      ? realtor.lastAccess.toLocaleDateString("pt-BR")
-                      : "—"}
+                    {realtor.lastAccess ? formatDateBR(realtor.lastAccess) : "—"}
                   </TableCell>
                 </TableRow>
               ))}

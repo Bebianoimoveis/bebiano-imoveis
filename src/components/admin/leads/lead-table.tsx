@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { LeadStageBadge } from "@/components/admin/leads/lead-stage-badge"
+import { formatDateBR } from "@/lib/format"
 import type { LeadListItem } from "@/modules/lead/repository"
 
 export function LeadTable({ leads }: { leads: LeadListItem[] }) {
@@ -47,12 +48,10 @@ export function LeadTable({ leads }: { leads: LeadListItem[] }) {
                 <LeadStageBadge stage={lead.stage} />
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {lead.nextActionAt
-                  ? new Date(lead.nextActionAt).toLocaleDateString("pt-BR")
-                  : "—"}
+                {lead.nextActionAt ? formatDateBR(lead.nextActionAt) : "—"}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {new Date(lead.createdAt).toLocaleDateString("pt-BR")}
+                {formatDateBR(lead.createdAt)}
               </TableCell>
             </TableRow>
           ))}

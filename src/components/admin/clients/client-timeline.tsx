@@ -12,7 +12,7 @@ import {
   Users2,
 } from "lucide-react"
 
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatDateTimeBR } from "@/lib/format"
 import { LEAD_STAGE_LABELS } from "@/components/admin/leads/lead-stage"
 import type { ClientDetail } from "@/modules/client/repository"
 
@@ -71,7 +71,7 @@ export function ClientTimeline({ client }: { client: ClientDetail }) {
       date: appointment.scheduledAt,
       icon: CalendarCheck,
       title: "Visita agendada",
-      description: new Date(appointment.scheduledAt).toLocaleString("pt-BR"),
+      description: formatDateTimeBR(appointment.scheduledAt),
     })
   }
 
@@ -124,7 +124,7 @@ export function ClientTimeline({ client }: { client: ClientDetail }) {
               <p className="text-sm font-medium">{event.title}</p>
               <p className="text-xs text-muted-foreground">{event.description}</p>
               <p className="text-xs text-muted-foreground">
-                {new Date(event.date).toLocaleString("pt-BR")}
+                {formatDateTimeBR(event.date)}
               </p>
             </div>
           </li>
