@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
+import { brazilDateOnly } from "@/lib/date"
 
 const entryListInclude = {
   contract: {
@@ -60,11 +61,8 @@ export async function createEntryInstallments(entries: Prisma.FinancialEntryCrea
 // atrasado usada em isEntryOverdue (financial-entry-status-badge.tsx):
 // status pendente/agendado com dueDate no passado, calculado na hora.
 export async function listEntriesDueToday(): Promise<FinancialEntryListItem[]> {
-  const now = new Date()
-  const start = new Date(now)
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(now)
-  end.setHours(23, 59, 59, 999)
+  const start = brazilDateOnly()
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
 
   return prisma.financialEntry.findMany({
     where: {
@@ -81,9 +79,8 @@ export async function listEntriesDueToday(): Promise<FinancialEntryListItem[]> {
 // de "atrasado" acima, resolve sozinho quando a data passa ou a conta é
 // paga, sem precisar de um cron pra manter registro sincronizado.
 export async function listEntriesDueSoon(days: number): Promise<FinancialEntryListItem[]> {
-  const limit = new Date()
-  limit.setDate(limit.getDate() + days)
-  limit.setHours(23, 59, 59, 999)
+  const futureDay = brazilDateOnly(new Date(Date.now() + days * 24 * 60 * 60 * 1000))
+  const limit = new Date(futureDay.getTime() + 24 * 60 * 60 * 1000 - 1)
 
   return prisma.financialEntry.findMany({
     where: {

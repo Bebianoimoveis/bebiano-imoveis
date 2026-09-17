@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import type { Prisma, AppointmentStatus } from "@/generated/prisma/client"
 import { upsertLeadByPhone } from "@/modules/lead/repository"
 import type { LeadAttributionInput } from "@/modules/lead/repository"
+import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 
 const appointmentInclude = {
   realtor: { include: { user: true } },
@@ -152,16 +153,14 @@ export async function findConflicts(input: {
 
 export async function getAppointmentStats(where: Prisma.AppointmentWhereInput) {
   const now = new Date()
-  const todayStart = new Date(now)
-  todayStart.setHours(0, 0, 0, 0)
-  const todayEnd = new Date(now)
-  todayEnd.setHours(23, 59, 59, 999)
+  const todayStart = startOfDayBrazil(now)
+  const todayEnd = endOfDayBrazil(now)
 
   const weekStart = new Date(todayStart)
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay())
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekEnd.getDate() + 6)
-  weekEnd.setHours(23, 59, 59, 999)
+  weekStart.setUTCDate(weekStart.getUTCDate() - weekStart.getUTCDay())
+  const weekEnd = endOfDayBrazil(
+    new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000)
+  )
 
   const [today, week, confirmed, scheduled, done, noShow, canceled] = await Promise.all([
     prisma.appointment.count({ where: { ...where, scheduledAt: { gte: todayStart, lte: todayEnd } } }),

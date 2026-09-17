@@ -8,6 +8,7 @@ import { getFinancialKpis, getFinancialCashFlowTimeline, getFinancialMonthlySeri
 import { getProposalCrmStats, listAdminProposals } from "@/modules/proposal/actions"
 import { getAppointmentStats, listAdminAppointments } from "@/modules/appointment/actions"
 import { getPublicAboutText, getPublicContactInfo } from "@/modules/settings/actions"
+import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 
 // Cada ferramenta é só uma casca fina em cima de uma action que já existe
 // e já aplica a mesma permissão/escopo por corretor do resto do painel —
@@ -226,10 +227,8 @@ async function getFinancialForecast() {
 
 async function getTodayAgendaDetail() {
   const now = new Date()
-  const start = new Date(now)
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(now)
-  end.setHours(23, 59, 59, 999)
+  const start = startOfDayBrazil(now)
+  const end = endOfDayBrazil(now)
 
   const appointments = await listAdminAppointments({ from: start, to: end })
 

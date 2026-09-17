@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { formatCurrency } from "@/lib/format"
+import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 import * as notificationRepository from "@/modules/notification/repository"
 import * as financialRepository from "@/modules/financial/repository"
 import { listAdminAppointments } from "@/modules/appointment/actions"
@@ -36,11 +37,8 @@ async function buildLiveReminders(
 ): Promise<NotificationView[]> {
   const reminders: NotificationView[] = []
 
-  const now = new Date()
-  const startOfDay = new Date(now)
-  startOfDay.setHours(0, 0, 0, 0)
-  const endOfDay = new Date(now)
-  endOfDay.setHours(23, 59, 59, 999)
+  const startOfDay = startOfDayBrazil()
+  const endOfDay = endOfDayBrazil()
 
   try {
     const appointments = await listAdminAppointments({ from: startOfDay, to: endOfDay })

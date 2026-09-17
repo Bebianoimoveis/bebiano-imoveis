@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
+import { startOfDayBrazil } from "@/lib/date"
 
 type Scope = { realtorId?: string }
 
@@ -119,10 +120,9 @@ export async function recentActivity(take: number, where?: Prisma.ActivityLogWhe
 }
 
 export async function salesByMonth(scope: Scope, months: number) {
-  const since = new Date()
-  since.setMonth(since.getMonth() - months + 1)
-  since.setDate(1)
-  since.setHours(0, 0, 0, 0)
+  const since = startOfDayBrazil()
+  since.setUTCMonth(since.getUTCMonth() - months + 1)
+  since.setUTCDate(1)
 
   const contracts = await prisma.contract.findMany({
     where: {

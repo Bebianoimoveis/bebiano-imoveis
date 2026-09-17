@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
+import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 import * as reportRepository from "@/modules/report/repository"
 import { listAdminAppointments } from "@/modules/appointment/actions"
 import { listAdminUpcomingBirthdays } from "@/modules/client/actions"
@@ -117,10 +118,8 @@ export async function getDashboardSidePanel() {
   await requireSession()
 
   const now = new Date()
-  const todayStart = new Date(now)
-  todayStart.setHours(0, 0, 0, 0)
-  const todayEnd = new Date(now)
-  todayEnd.setHours(23, 59, 59, 999)
+  const todayStart = startOfDayBrazil(now)
+  const todayEnd = endOfDayBrazil(now)
 
   const [todayAppointments, birthdays, expiringProposals, financialAlerts] = await Promise.all([
     listAdminAppointments({ from: todayStart, to: todayEnd }),

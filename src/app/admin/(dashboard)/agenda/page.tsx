@@ -14,6 +14,7 @@ import { getAppointmentStats, listAdminAppointments } from "@/modules/appointmen
 import { listRealtors } from "@/modules/realtor/actions"
 import { auth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
+import { brazilDateOnly, brazilDayWindow, startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -22,33 +23,21 @@ function paramString(params: SearchParams, key: string) {
   return typeof value === "string" ? value : undefined
 }
 
-function startOfDay(date: Date) {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-function endOfDay(date: Date) {
-  const d = new Date(date)
-  d.setHours(23, 59, 59, 999)
-  return d
-}
-
 function monthGridRange(anchor: Date) {
-  const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
+  const first = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1))
   const start = new Date(first)
-  start.setDate(start.getDate() - start.getDay())
+  start.setUTCDate(start.getUTCDate() - start.getUTCDay())
   const end = new Date(start)
-  end.setDate(end.getDate() + 41)
-  return { from: startOfDay(start), to: endOfDay(end) }
+  end.setUTCDate(end.getUTCDate() + 41)
+  return { from: brazilDayWindow(start).from, to: brazilDayWindow(end).to }
 }
 
 function weekRange(anchor: Date) {
   const start = new Date(anchor)
-  start.setDate(start.getDate() - start.getDay())
+  start.setUTCDate(start.getUTCDate() - start.getUTCDay())
   const end = new Date(start)
-  end.setDate(end.getDate() + 6)
-  return { from: startOfDay(start), to: endOfDay(end) }
+  end.setUTCDate(end.getUTCDate() + 6)
+  return { from: brazilDayWindow(start).from, to: brazilDayWindow(end).to }
 }
 
 export default async function AdminAgendaPage({
@@ -62,25 +51,29 @@ export default async function AdminAgendaPage({
   const activeView = validViews.includes(view) ? view : "list"
 
   const anchorParam = paramString(params, "date")
-  const anchor = anchorParam ? new Date(`${anchorParam}T00:00:00`) : new Date()
+  // `anchor` é uma identidade de dia (meia-noite UTC), não um instante
+  // real — parseada explicitamente como UTC (`Z`) pra não depender do
+  // fuso do servidor. Convertida pra janela real em Brasília só na hora
+  // de montar o range de busca (`brazilDayWindow`).
+  const anchor = anchorParam ? new Date(`${anchorParam}T00:00:00Z`) : brazilDateOnly()
 
   const mine = paramString(params, "mine") === "true"
 
   let range: { from: Date; to: Date }
   if (activeView === "month") range = monthGridRange(anchor)
   else if (activeView === "week") range = weekRange(anchor)
-  else if (activeView === "day") range = { from: startOfDay(anchor), to: endOfDay(anchor) }
+  else if (activeView === "day") range = brazilDayWindow(anchor)
   else if (activeView === "kanban") {
     const from = new Date()
     from.setDate(from.getDate() - 30)
     const to = new Date()
     to.setDate(to.getDate() + 90)
-    range = { from: startOfDay(from), to: endOfDay(to) }
+    range = { from: startOfDayBrazil(from), to: endOfDayBrazil(to) }
   } else {
     const from = new Date()
     const to = new Date()
     to.setDate(to.getDate() + 90)
-    range = { from: startOfDay(from), to: endOfDay(to) }
+    range = { from: startOfDayBrazil(from), to: endOfDayBrazil(to) }
   }
 
   const filters = {

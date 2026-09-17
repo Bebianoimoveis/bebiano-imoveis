@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma, LeadStage } from "@/generated/prisma/client"
 import { LEAD_STAGES } from "@/modules/lead/schema"
+import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 
 type TransactionClient = Prisma.TransactionClient
 
@@ -275,10 +276,8 @@ export async function getLeadStats(
   appointmentWhere: Prisma.AppointmentWhereInput
 ) {
   const base = { ...where, deletedAt: null }
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-  const todayEnd = new Date()
-  todayEnd.setHours(23, 59, 59, 999)
+  const todayStart = startOfDayBrazil()
+  const todayEnd = endOfDayBrazil()
 
   const [byStage, newInPeriod, closedForAvg, visitsToday, openProposals] = await Promise.all([
     prisma.lead.groupBy({ by: ["stage"], where: base, _count: true }),
