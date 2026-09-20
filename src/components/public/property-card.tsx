@@ -56,7 +56,7 @@ export function PropertyCard({ property }: { property: PropertyListItem }) {
           </Badge>
           {property.featured ? (
             <Badge className="border-0 bg-gold text-black shadow-sm">
-              Exclusivo
+              Destaque
             </Badge>
           ) : null}
           {showNew ? (
