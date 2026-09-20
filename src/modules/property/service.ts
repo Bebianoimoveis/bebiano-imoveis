@@ -194,6 +194,31 @@ export async function archiveProperty(id: string) {
   return propertyRepository.softDeleteProperty(id)
 }
 
+// Exclusão de verdade (diferente de arquivar): só permitida se o imóvel
+// não tiver nenhum lead/agendamento/proposta/contrato/lançamento
+// financeiro vinculado — apagar isso junto perderia histórico real do
+// negócio. Nesses casos a saída é arquivar em vez de excluir.
+export async function deleteProperty(id: string) {
+  const existing = await propertyRepository.findPropertyById(id)
+  if (!existing) throw new PropertyServiceError("Imóvel não encontrado.")
+
+  const dependents = await propertyRepository.countPropertyDependents(id)
+  const total = Object.values(dependents).reduce((sum, n) => sum + n, 0)
+  if (total > 0) {
+    const parts: string[] = []
+    if (dependents.leads > 0) parts.push(`${dependents.leads} lead(s)`)
+    if (dependents.appointments > 0) parts.push(`${dependents.appointments} compromisso(s)`)
+    if (dependents.proposals > 0) parts.push(`${dependents.proposals} proposta(s)`)
+    if (dependents.contracts > 0) parts.push(`${dependents.contracts} contrato(s)`)
+    if (dependents.financialEntries > 0) parts.push(`${dependents.financialEntries} lançamento(s) financeiro(s)`)
+    throw new PropertyServiceError(
+      `Este imóvel tem ${parts.join(", ")} vinculado(s) e não pode ser excluído — arquive em vez de excluir.`
+    )
+  }
+
+  return propertyRepository.hardDeleteProperty(id)
+}
+
 export async function duplicateProperty(id: string, createdById: string) {
   const source = await propertyRepository.findPropertyById(id)
   if (!source) throw new PropertyServiceError("Imóvel não encontrado.")

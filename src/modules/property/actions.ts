@@ -120,6 +120,24 @@ export async function archiveProperty(id: string) {
   revalidatePropertyPaths()
 }
 
+export async function deleteProperty(id: string) {
+  const session = await requireSession()
+  if (!(await can(session.user, "property.delete"))) {
+    throw new Error("Sem permissão para excluir imóveis.")
+  }
+
+  await propertyService.deleteProperty(id)
+
+  await logActivity({
+    userId: session.user.id,
+    action: "property.delete",
+    entityType: "Property",
+    entityId: id,
+  })
+
+  revalidatePropertyPaths()
+}
+
 export async function duplicateProperty(id: string) {
   const session = await requireSession()
   if (!(await can(session.user, "property.create"))) {

@@ -101,15 +101,21 @@ export async function listProperties({
   take,
   orderBy,
 }: ListPropertiesParams): Promise<{ items: PropertyListItem[]; total: number }> {
+  // Arquivar grava `deletedAt` (soft-delete) — filtrar `deletedAt: null`
+  // incondicionalmente escondia os arquivados mesmo pedindo
+  // status=ARCHIVED explicitamente (o card "Arquivados" do portfólio
+  // levava pra uma lista sempre vazia).
+  const scopedWhere = where.status === "ARCHIVED" ? where : { ...where, deletedAt: null }
+
   const [items, total] = await Promise.all([
     prisma.property.findMany({
-      where: { ...where, deletedAt: null },
+      where: scopedWhere,
       include: adminListInclude,
       orderBy: orderBy ?? { createdAt: "desc" },
       skip,
       take,
     }),
-    prisma.property.count({ where: { ...where, deletedAt: null } }),
+    prisma.property.count({ where: scopedWhere }),
   ])
 
   return { items, total }
@@ -245,6 +251,24 @@ export async function softDeleteProperty(id: string) {
     where: { id },
     data: { deletedAt: new Date(), status: "ARCHIVED" },
   })
+}
+
+// Checagem antes de excluir de vez — leads/propostas/contratos/
+// financeiro apontando pro imóvel viram histórico do negócio, não dá
+// pra apagar sem perder rastro dessas relações.
+export async function countPropertyDependents(id: string) {
+  const [leads, appointments, proposals, contracts, financialEntries] = await Promise.all([
+    prisma.lead.count({ where: { propertyId: id } }),
+    prisma.appointment.count({ where: { propertyId: id } }),
+    prisma.proposal.count({ where: { propertyId: id } }),
+    prisma.contract.count({ where: { propertyId: id } }),
+    prisma.financialEntry.count({ where: { propertyId: id } }),
+  ])
+  return { leads, appointments, proposals, contracts, financialEntries }
+}
+
+export async function hardDeleteProperty(id: string) {
+  return prisma.property.delete({ where: { id } })
 }
 
 export async function replacePropertyFeatures(

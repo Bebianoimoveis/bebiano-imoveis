@@ -1,6 +1,6 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
   Archive,
@@ -11,6 +11,7 @@ import {
   Pencil,
   Share2,
   Sparkles,
+  Trash2,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -38,6 +39,7 @@ import { Button } from "@/components/ui/button"
 import {
   archiveProperty,
   changePropertyStatus,
+  deleteProperty,
   duplicateProperty,
 } from "@/modules/property/actions"
 import { getCurrentUserRealtorShareInfo } from "@/modules/realtor/actions"
@@ -69,6 +71,7 @@ const NEXT_STATUS_OPTIONS: Partial<Record<PropertyStatus, { label: string; statu
 export function PropertyRowActions({ propertyId, status, slug, title }: PropertyRowActionsProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [confirmAction, setConfirmAction] = useState<"archive" | "delete" | null>(null)
 
   // Se quem está logado for corretor, o link leva o próprio código de
   // indicação (?ref=<slug>) — o middleware de atribuição já existente
@@ -99,7 +102,7 @@ export function PropertyRowActions({ propertyId, status, slug, title }: Property
   const publicUrl = `${siteConfig.url}/imoveis/${slug}`
 
   return (
-    <AlertDialog>
+    <AlertDialog open={confirmAction !== null} onOpenChange={(open) => !open && setConfirmAction(null)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" disabled={isPending}>
@@ -161,30 +164,68 @@ export function PropertyRowActions({ propertyId, status, slug, title }: Property
           <DropdownMenuSeparator />
 
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={(e) => {
+                e.preventDefault()
+                setConfirmAction("archive")
+              }}
+            >
               <Archive /> Arquivar
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={(e) => {
+                e.preventDefault()
+                setConfirmAction("delete")
+              }}
+            >
+              <Trash2 /> Excluir
             </DropdownMenuItem>
           </AlertDialogTrigger>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Arquivar este imóvel?</AlertDialogTitle>
-          <AlertDialogDescription>
-            O imóvel sai do site e da listagem ativa. Você pode encontrá-lo depois filtrando por
-            status &ldquo;Arquivado&rdquo;, mas essa ação não pode ser desfeita por aqui.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel />
-          <AlertDialogAction
-            onClick={() => runAction(() => archiveProperty(propertyId), "Imóvel arquivado.")}
-          >
-            Arquivar
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      {confirmAction === "archive" ? (
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arquivar este imóvel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O imóvel sai do site e da listagem ativa. Você pode encontrá-lo depois filtrando por
+              status &ldquo;Arquivado&rdquo;, e restaurar quando quiser.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel />
+            <AlertDialogAction
+              onClick={() => runAction(() => archiveProperty(propertyId), "Imóvel arquivado.")}
+            >
+              Arquivar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      ) : (
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir este imóvel definitivamente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. Só é possível excluir um imóvel sem leads,
+              compromissos, propostas, contratos ou lançamentos financeiros vinculados — se ele já
+              tiver histórico, prefira arquivar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel />
+            <AlertDialogAction
+              onClick={() => runAction(() => deleteProperty(propertyId), "Imóvel excluído.")}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      )}
     </AlertDialog>
   )
 }

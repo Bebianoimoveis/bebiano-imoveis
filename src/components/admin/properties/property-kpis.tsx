@@ -3,8 +3,8 @@ import {
   Banknote,
   Building2,
   CheckCircle2,
-  Clock,
   Eye,
+  FileEdit,
   Handshake,
   MessagesSquare,
   TrendingUp,
@@ -41,11 +41,11 @@ export function PropertyKpis({ stats }: { stats: Stats }) {
         href="/admin/imoveis?status=PUBLISHED"
       />
       <StatCard
-        icon={<Clock className="size-5" />}
-        label="Em análise"
-        value={String(c.IN_REVIEW ?? 0)}
-        description="Aguardando revisão"
-        href="/admin/imoveis?status=IN_REVIEW"
+        icon={<FileEdit className="size-5" />}
+        label="Rascunho"
+        value={String(c.DRAFT ?? 0)}
+        description="Ainda não publicado"
+        href="/admin/imoveis?status=DRAFT"
       />
       <StatCard
         icon={<Handshake className="size-5" />}
