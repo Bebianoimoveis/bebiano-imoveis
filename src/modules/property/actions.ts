@@ -321,10 +321,16 @@ export async function getPropertyPortfolioStats(rawFilters: unknown) {
   const session = await requireSession()
   const filters = propertyFiltersSchema.parse(rawFilters ?? {})
   const where = await buildAdminScopedWhere(session, filters)
+  // Os cards mostram a distribuição POR status — filtrar o dado de
+  // entrada também por status zeraria todos os outros cards sempre que
+  // um card fosse clicado (ex: em "Arquivados", nenhum imóvel também é
+  // "Publicado", então esse card apareceria como 0). Os demais filtros
+  // (cidade, busca...) continuam valendo, só o status é ignorado aqui.
+  const { status: _status, ...statsWhere } = where
 
   const [stats, ids] = await Promise.all([
-    propertyRepository.getPortfolioStats(where),
-    propertyRepository.listPropertyIds(where),
+    propertyRepository.getPortfolioStats(statsWhere),
+    propertyRepository.listPropertyIds(statsWhere),
   ])
   const leadCounts = await propertyRepository.leadCountsByProperty(ids)
   const totalLeads = [...leadCounts.values()].reduce((sum, count) => sum + count, 0)
