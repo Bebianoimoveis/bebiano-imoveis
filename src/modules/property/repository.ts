@@ -92,7 +92,7 @@ type ListPropertiesParams = {
   where: Prisma.PropertyWhereInput
   skip: number
   take: number
-  orderBy?: Prisma.PropertyOrderByWithRelationInput
+  orderBy?: Prisma.PropertyOrderByWithRelationInput | Prisma.PropertyOrderByWithRelationInput[]
 }
 
 export async function listProperties({
@@ -366,13 +366,17 @@ export async function listFeaturedProperties(
   })
 }
 
+// Destaque sempre na frente nas listagens públicas, antes de qualquer
+// outro critério — é o propósito do campo "featured".
+const FEATURED_FIRST_ORDER = [{ featured: "desc" }, { publishedAt: "desc" }] satisfies Prisma.PropertyOrderByWithRelationInput[]
+
 export async function listRecentProperties(
   take: number
 ): Promise<PropertyListItem[]> {
   return prisma.property.findMany({
     where: PUBLIC_WHERE,
     include: adminListInclude,
-    orderBy: { publishedAt: "desc" },
+    orderBy: FEATURED_FIRST_ORDER,
     take,
   })
 }
@@ -384,7 +388,7 @@ export async function listPublicPropertiesByRealtor(
   return prisma.property.findMany({
     where: { ...PUBLIC_WHERE, realtorId },
     include: adminListInclude,
-    orderBy: { publishedAt: "desc" },
+    orderBy: FEATURED_FIRST_ORDER,
     take,
   })
 }
@@ -395,7 +399,7 @@ export async function listLaunchProperties(
   return prisma.property.findMany({
     where: { ...PUBLIC_WHERE, isLaunch: true },
     include: adminListInclude,
-    orderBy: { publishedAt: "desc" },
+    orderBy: FEATURED_FIRST_ORDER,
     take,
   })
 }
@@ -411,7 +415,7 @@ export async function listSimilarProperties(
       OR: [{ cityId: input.cityId }, { typeId: input.typeId }],
     },
     include: adminListInclude,
-    orderBy: { publishedAt: "desc" },
+    orderBy: FEATURED_FIRST_ORDER,
     take,
   })
 }

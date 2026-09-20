@@ -470,6 +470,9 @@ export async function listPublicProperties(rawFilters: unknown) {
     where,
     skip: (filters.page - 1) * PAGE_SIZE,
     take: PAGE_SIZE,
+    // Destaque sempre na frente, independente do filtro/ordenação
+    // padrão — é o objetivo do próprio campo "featured".
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
   })
 }
 
