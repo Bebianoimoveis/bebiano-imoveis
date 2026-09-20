@@ -68,6 +68,13 @@ export async function PropertyListingPage({
     listPublicPropertyTypes(),
   ])
 
+  // Quando chega por um banner de categoria da home (Segmento), mostra
+  // qual categoria está sendo vista — sem isso a página fica igual à
+  // busca geral, sem deixar claro que o filtro já veio aplicado.
+  const activeType = filters.typeId
+    ? propertyTypes.find((type) => type.id === filters.typeId)
+    : undefined
+
   function buildHref(page: number) {
     const params = new URLSearchParams()
     for (const [key, value] of Object.entries(searchParams)) {
@@ -81,10 +88,15 @@ export async function PropertyListingPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <BackButton className="mb-4" />
-      <Reveal y={16}>
-        <h1 className="mb-8 font-heading text-2xl font-semibold tracking-tight">
+      <Reveal y={16} className="mb-8">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
           {titlePrefix} <AccentWord>{titleAccent}</AccentWord>
         </h1>
+        {activeType ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Categoria: <span className="font-medium text-foreground">{activeType.name}</span>
+          </p>
+        ) : null}
       </Reveal>
 
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
