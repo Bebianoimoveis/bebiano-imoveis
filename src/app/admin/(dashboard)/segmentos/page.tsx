@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PropertyTypeToggleList } from "@/components/admin/segments/property-type-toggle-list"
+import { PropertyTypeFormDialog } from "@/components/admin/taxonomy/property-type-form-dialog"
 import { SegmentFormDialog } from "@/components/admin/segments/segment-form-dialog"
 import { SegmentDeleteButton } from "@/components/admin/segments/segment-delete-button"
 import { SegmentActiveToggle } from "@/components/admin/segments/segment-active-toggle"
@@ -34,11 +35,21 @@ export default async function AdminSegmentsPage() {
       </div>
 
       <section className="space-y-3">
-        <div>
-          <h2 className="font-heading text-lg font-semibold tracking-tight">Tipos de imóvel</h2>
-          <p className="text-sm text-muted-foreground">
-            Desligar um tipo o esconde do site inteiro — busca, filtros, listagens e links diretos — imediatamente.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-heading text-lg font-semibold tracking-tight">Tipos de imóvel</h2>
+            <p className="text-sm text-muted-foreground">
+              Desligar um tipo o esconde do site inteiro — busca, filtros, listagens e links diretos — imediatamente.
+            </p>
+          </div>
+          <PropertyTypeFormDialog
+            trigger={
+              <Button>
+                <Plus className="size-4" />
+                Novo tipo
+              </Button>
+            }
+          />
         </div>
         {propertyTypes.length === 0 ? (
           <EmptyState title="Nenhum tipo de imóvel cadastrado" />
