@@ -199,8 +199,8 @@ export async function archiveProperty(id: string) {
 // financeiro vinculado — apagar isso junto perderia histórico real do
 // negócio. Nesses casos a saída é arquivar em vez de excluir.
 export async function deleteProperty(id: string) {
-  const existing = await propertyRepository.findPropertyById(id)
-  if (!existing) throw new PropertyServiceError("Imóvel não encontrado.")
+  const exists = await propertyRepository.propertyExists(id)
+  if (!exists) throw new PropertyServiceError("Imóvel não encontrado.")
 
   const dependents = await propertyRepository.countPropertyDependents(id)
   const total = Object.values(dependents).reduce((sum, n) => sum + n, 0)

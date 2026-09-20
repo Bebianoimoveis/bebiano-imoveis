@@ -271,6 +271,15 @@ export async function hardDeleteProperty(id: string) {
   return prisma.property.delete({ where: { id } })
 }
 
+// Existência simples, sem excluir arquivados (diferente de
+// findPropertyById) — excluir de vez só faz sentido justamente pra quem
+// já está arquivado, então o `deletedAt: null` de lá sempre acharia
+// "não encontrado" pra esse caso.
+export async function propertyExists(id: string) {
+  const property = await prisma.property.findUnique({ where: { id }, select: { id: true } })
+  return property !== null
+}
+
 export async function replacePropertyFeatures(
   propertyId: string,
   featureIds: string[]
