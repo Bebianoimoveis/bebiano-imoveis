@@ -7,7 +7,7 @@ import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
 import { isRateLimited } from "@/lib/rate-limit"
-import type { Prisma, AppointmentStatus } from "@/generated/prisma/client"
+import type { Prisma, AppointmentStatus, LeadStage } from "@/generated/prisma/client"
 import {
   appointmentFiltersSchema,
   appointmentInputSchema,
@@ -204,6 +204,23 @@ export async function createAppointment(input: unknown) {
     entityType: "Appointment",
     entityId: appointment.id,
   })
+
+  // Agendar uma visita move o lead sozinho pro estágio "Visita agendada"
+  // — só avança (nunca regride quem já está mais adiante no funil, ex:
+  // em Proposta/Negociação, nem mexe em quem já fechou/perdeu).
+  if (data.type === "VISIT" && data.leadId) {
+    const lead = await leadRepository.findLeadById(data.leadId)
+    const stagesBeforeVisit: LeadStage[] = ["NEW", "FIRST_CONTACT", "QUALIFIED"]
+    if (lead && stagesBeforeVisit.includes(lead.stage)) {
+      await leadRepository.updateLeadStage(data.leadId, "VISIT_SCHEDULED")
+      await logActivity({
+        userId: session.user.id,
+        action: "lead.stage.visit_scheduled",
+        entityType: "Lead",
+        entityId: data.leadId,
+      })
+    }
+  }
 
   revalidatePath("/admin/agenda")
   if (data.leadId) revalidatePath(`/admin/leads/${data.leadId}`)
