@@ -93,11 +93,9 @@ export async function PropertyListingPage({
           {titlePrefix} <AccentWord>{titleAccent}</AccentWord>
         </h1>
         {activeType ? (
-          <div className="mt-4 flex justify-center">
-            <span className="rounded-full bg-gold/15 px-4 py-1.5 text-sm font-semibold tracking-wide text-gold uppercase">
-              {activeType.name}
-            </span>
-          </div>
+          <span className="mt-3 inline-block rounded-full bg-gold/15 px-4 py-1.5 text-sm font-semibold tracking-wide text-gold uppercase">
+            {activeType.name}
+          </span>
         ) : null}
       </Reveal>
 
