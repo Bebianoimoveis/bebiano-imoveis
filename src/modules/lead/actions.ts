@@ -333,6 +333,25 @@ export async function addLeadInteraction(leadId: string, input: unknown) {
   revalidatePath(`/admin/leads/${leadId}`)
 }
 
+export async function updateLeadInteraction(leadId: string, interactionId: string, description: string) {
+  const session = await requireSession()
+  await assertCanManageLead(session, leadId)
+
+  if (!description.trim()) throw new Error("Descreva a interação.")
+  await leadRepository.updateLeadInteraction(interactionId, description)
+
+  revalidatePath(`/admin/leads/${leadId}`)
+}
+
+export async function deleteLeadInteraction(leadId: string, interactionId: string) {
+  const session = await requireSession()
+  await assertCanManageLead(session, leadId)
+
+  await leadRepository.deleteLeadInteraction(interactionId)
+
+  revalidatePath(`/admin/leads/${leadId}`)
+}
+
 export async function convertLeadToClient(leadId: string) {
   const session = await requireSession()
   await assertCanManageLead(session, leadId)

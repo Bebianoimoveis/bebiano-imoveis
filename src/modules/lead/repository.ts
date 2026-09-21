@@ -335,3 +335,11 @@ export async function createLeadInteraction(input: {
     }),
   ])
 }
+
+export async function updateLeadInteraction(id: string, description: string) {
+  return prisma.leadInteraction.update({ where: { id }, data: { description } })
+}
+
+export async function deleteLeadInteraction(id: string) {
+  return prisma.leadInteraction.delete({ where: { id } })
+}

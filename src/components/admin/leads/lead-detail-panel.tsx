@@ -248,7 +248,7 @@ export function LeadDetailPanel({
 
               <TabsContent value="historico" className="space-y-6">
                 <LeadInteractionForm leadId={lead.id} onSuccess={refetch} />
-                <LeadInteractionList interactions={lead.interactions} />
+                <LeadInteractionList leadId={lead.id} interactions={lead.interactions} onSuccess={refetch} />
               </TabsContent>
 
               <TabsContent value="agenda" className="space-y-4">

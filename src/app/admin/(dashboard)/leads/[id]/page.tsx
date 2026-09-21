@@ -62,7 +62,7 @@ export default async function AdminLeadDetailPage({
             </CardHeader>
             <CardContent className="space-y-6">
               <LeadInteractionForm leadId={lead.id} />
-              <LeadInteractionList interactions={lead.interactions} />
+              <LeadInteractionList leadId={lead.id} interactions={lead.interactions} />
             </CardContent>
           </Card>
         </div>
