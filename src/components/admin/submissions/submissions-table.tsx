@@ -4,7 +4,7 @@ import { useState } from "react"
 
 import { SubmissionStatusBadge } from "@/components/admin/submissions/submission-status-badge"
 import { SubmissionDetailPanel } from "@/components/admin/submissions/submission-detail-panel"
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatDateBR } from "@/lib/format"
 import type { SubmissionWithRefs } from "@/modules/submission/repository"
 
 type PropertyOption = { id: string; code: string; title: string }
@@ -53,7 +53,7 @@ export function SubmissionsTable({
                   <SubmissionStatusBadge status={submission.status} />
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {new Date(submission.createdAt).toLocaleDateString("pt-BR")}
+                  {formatDateBR(submission.createdAt)}
                 </td>
               </tr>
             ))}

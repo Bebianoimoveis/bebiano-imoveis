@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
+import { formatDateTimeBR } from "@/lib/format"
 import { appointmentTypeDot } from "@/components/admin/agenda/appointment-type-badge"
 import { updateAppointmentStatus } from "@/modules/appointment/actions"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
@@ -50,7 +51,7 @@ function KanbanCard({
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
-        {new Date(appointment.scheduledAt).toLocaleString("pt-BR", {
+        {formatDateTimeBR(appointment.scheduledAt, {
           day: "2-digit",
           month: "2-digit",
           hour: "2-digit",

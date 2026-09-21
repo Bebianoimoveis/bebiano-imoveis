@@ -2,13 +2,14 @@
 
 import { AppointmentStatusBadge } from "@/components/admin/agenda/appointment-status-badge"
 import { AppointmentTypeBadge } from "@/components/admin/agenda/appointment-type-badge"
+import { formatDateBR, formatTimeBR } from "@/lib/format"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
 
 function groupByDay(appointments: AppointmentListItem[]) {
   const groups = new Map<string, AppointmentListItem[]>()
 
   for (const appointment of appointments) {
-    const key = new Date(appointment.scheduledAt).toLocaleDateString("pt-BR", {
+    const key = formatDateBR(appointment.scheduledAt, {
       weekday: "long",
       day: "2-digit",
       month: "long",
@@ -45,10 +46,7 @@ export function AppointmentList({
               >
                 <div className="flex items-center gap-4">
                   <p className="w-14 shrink-0 text-sm font-medium tabular-nums">
-                    {new Date(appointment.scheduledAt).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatTimeBR(appointment.scheduledAt)}
                   </p>
                   <div className="space-y-1">
                     <p className="text-sm font-medium">

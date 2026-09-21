@@ -31,7 +31,7 @@ import {
   deleteFinancialEntry,
   markFinancialEntryStatus,
 } from "@/modules/financial/actions"
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
 
 type FinancialEntryDetail = NonNullable<Awaited<ReturnType<typeof getAdminFinancialEntry>>>
 
@@ -240,7 +240,7 @@ export function FinancialEntryDetailPanel({
                     {entry.paidAt ? (
                       <div className="rounded-xl border border-border/60 p-3">
                         <p className="text-xs text-muted-foreground">Pago em</p>
-                        <p className="font-medium">{new Date(entry.paidAt).toLocaleDateString("pt-BR")}</p>
+                        <p className="font-medium">{formatDateBR(entry.paidAt)}</p>
                       </div>
                     ) : null}
                     {entry.paymentMethod ? (
@@ -294,7 +294,7 @@ export function FinancialEntryDetailPanel({
                         <li key={interaction.id} className="rounded-xl border border-border/60 p-3 text-sm">
                           <p>{interaction.description}</p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {interaction.user.name} · {new Date(interaction.createdAt).toLocaleString("pt-BR")}
+                            {interaction.user.name} · {formatDateTimeBR(interaction.createdAt)}
                           </p>
                         </li>
                       ))

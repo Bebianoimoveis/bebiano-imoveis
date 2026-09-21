@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Contact, FileText, Wallet } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { formatDateBR, formatTimeBR, brazilHour } from "@/lib/format"
 import type { PermissionKey } from "@/lib/permissions"
 
 const SHORTCUTS: { label: string; href: string; icon: typeof Contact; permission: PermissionKey }[] = [
@@ -45,14 +46,11 @@ export function DashboardGreetingBar({
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          {now ? greetingForHour(now.getHours()) : "Olá"}, {firstName}
+          {now ? greetingForHour(brazilHour(now)) : "Olá"}, {firstName}
         </h1>
         <p className="text-sm text-muted-foreground">
           {now
-            ? `${now.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })} · ${now.toLocaleTimeString(
-                "pt-BR",
-                { hour: "2-digit", minute: "2-digit" }
-              )}`
+            ? `${formatDateBR(now, { weekday: "long", day: "2-digit", month: "long" })} · ${formatTimeBR(now)}`
             : "Aqui está o resumo geral da Bebiano Imóveis."}
         </p>
       </div>

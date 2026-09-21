@@ -55,7 +55,7 @@ import {
   duplicateProposal,
   markProposalSent,
 } from "@/modules/proposal/actions"
-import { formatCurrency, getDisplayAddress } from "@/lib/format"
+import { formatCurrency, getDisplayAddress, formatDateTimeBR } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 import type { AdminProposalDetail } from "@/modules/proposal/actions"
 import type { ProposalStatus } from "@/generated/prisma/client"
@@ -443,7 +443,7 @@ export function ProposalDetailPanel({
                         <li key={interaction.id} className="rounded-xl border border-border/60 p-3 text-sm">
                           <p>{interaction.description}</p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {interaction.user.name} · {new Date(interaction.createdAt).toLocaleString("pt-BR")}
+                            {interaction.user.name} · {formatDateTimeBR(interaction.createdAt)}
                           </p>
                         </li>
                       ))

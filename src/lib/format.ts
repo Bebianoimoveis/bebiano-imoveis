@@ -27,6 +27,14 @@ export function formatDateTimeBR(date: Date | string, options?: Intl.DateTimeFor
   return d.toLocaleString("pt-BR", { timeZone: BRAZIL_TIME_ZONE, ...options })
 }
 
+// Hora do dia em Brasília (0-23) — usado pra decidir "bom dia/boa
+// tarde/boa noite" independente do fuso do navegador de quem acessa.
+export function brazilHour(date: Date | string) {
+  const d = typeof date === "string" ? new Date(date) : date
+  const hourStr = d.toLocaleString("en-US", { hour: "2-digit", hour12: false, timeZone: BRAZIL_TIME_ZONE })
+  return Number(hourStr) % 24
+}
+
 // Usado no Kanban de leads pra "tempo no estágio"/"última interação" —
 // por extenso (sem abreviação) porque "1m" era ambíguo entre minuto e
 // mês.

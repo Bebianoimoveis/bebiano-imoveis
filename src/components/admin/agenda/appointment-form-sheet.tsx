@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { AlertTriangle, Search, X } from "lucide-react"
 
+import { formatDateBR, formatTimeBR, formatDateTimeBR } from "@/lib/format"
 import { Sheet } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,8 +49,8 @@ const WHATSAPP_TYPE_PHRASE: Record<AppointmentType, string> = {
 }
 
 function buildWhatsAppMessage(name: string, type: AppointmentType, scheduledAt: Date) {
-  const dateLabel = scheduledAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" })
-  const timeLabel = scheduledAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+  const dateLabel = formatDateBR(scheduledAt, { day: "2-digit", month: "long" })
+  const timeLabel = formatTimeBR(scheduledAt)
   return `Olá, ${name}! Agendamos ${WHATSAPP_TYPE_PHRASE[type]} para o dia ${dateLabel} às ${timeLabel}. Você pode confirmar sua presença?`
 }
 
@@ -218,7 +219,7 @@ export function AppointmentFormSheet({
           rows.map((row) => ({
             id: row.id,
             label: row.lead?.name ?? row.client?.name ?? "Compromisso",
-            time: new Date(row.scheduledAt).toLocaleString("pt-BR"),
+            time: formatDateTimeBR(row.scheduledAt),
           }))
         )
       )

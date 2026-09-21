@@ -6,6 +6,7 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { Pencil, Phone, Trash2 } from "lucide-react"
 
+import { formatDateTimeBR } from "@/lib/format"
 import { Sheet } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import {
@@ -99,7 +100,7 @@ export function AppointmentDetailPanel({
                     {appointment.lead?.name ?? appointment.client?.name ?? "Compromisso"}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(appointment.scheduledAt).toLocaleString("pt-BR", {
+                    {formatDateTimeBR(appointment.scheduledAt, {
                       weekday: "long",
                       day: "2-digit",
                       month: "long",

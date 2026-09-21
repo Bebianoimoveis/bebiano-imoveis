@@ -44,7 +44,7 @@ import { ProposalFormDialog } from "@/components/admin/proposals/proposal-form-d
 import { ProposalStatusBadge } from "@/components/admin/proposals/proposal-status-badge"
 import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
 import { getAdminLead, updateLeadStage, deleteLead, getLeadContract } from "@/modules/lead/actions"
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
 import type { LeadDetail } from "@/modules/lead/repository"
 import type { LeadStage } from "@/generated/prisma/client"
 
@@ -268,7 +268,7 @@ export function LeadDetailPanel({
                         key={appointment.id}
                         className="flex items-center justify-between rounded-xl border border-border/60 p-3 text-sm"
                       >
-                        <span>{new Date(appointment.scheduledAt).toLocaleString("pt-BR")}</span>
+                        <span>{formatDateTimeBR(appointment.scheduledAt)}</span>
                         <AppointmentStatusBadge status={appointment.status} />
                       </li>
                     ))}
@@ -318,7 +318,7 @@ export function LeadDetailPanel({
                     </div>
                     <p className="text-muted-foreground">
                       Assinado em{" "}
-                      {contract.signedAt ? new Date(contract.signedAt).toLocaleDateString("pt-BR") : "—"}
+                      {contract.signedAt ? formatDateBR(contract.signedAt) : "—"}
                     </p>
                   </div>
                 ) : (

@@ -40,7 +40,7 @@ import { ProposalStatusBadge } from "@/components/admin/proposals/proposal-statu
 import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
 import { ManualContractFormDialog } from "@/components/admin/contracts/manual-contract-form-dialog"
 import { getAdminClient, deleteClient } from "@/modules/client/actions"
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
 import type { ClientDetail } from "@/modules/client/repository"
 
 type RealtorOption = { id: string; user: { name: string } }
@@ -259,7 +259,7 @@ export function ClientDetailPanel({
                         key={appointment.id}
                         className="flex items-center justify-between rounded-xl border border-border/60 p-3 text-sm"
                       >
-                        <span>{new Date(appointment.scheduledAt).toLocaleString("pt-BR")}</span>
+                        <span>{formatDateTimeBR(appointment.scheduledAt)}</span>
                         <AppointmentStatusBadge status={appointment.status} />
                       </li>
                     ))}
@@ -320,7 +320,7 @@ export function ClientDetailPanel({
                         </div>
                         <p className="text-muted-foreground">
                           {formatCurrency(contract.value.toString())} · Assinado em{" "}
-                          {contract.signedAt ? new Date(contract.signedAt).toLocaleDateString("pt-BR") : "—"}
+                          {contract.signedAt ? formatDateBR(contract.signedAt) : "—"}
                         </p>
                       </li>
                     ))}

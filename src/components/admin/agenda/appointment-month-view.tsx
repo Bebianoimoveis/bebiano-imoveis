@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { formatTimeBR } from "@/lib/format"
 import { appointmentTypeDot } from "@/components/admin/agenda/appointment-type-badge"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
 
@@ -100,10 +101,7 @@ export function AppointmentMonthView({
                   >
                     <span className={cn("size-1.5 shrink-0 rounded-full", appointmentTypeDot(appointment.type))} />
                     <span className="truncate">
-                      {new Date(appointment.scheduledAt).toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
+                      {formatTimeBR(appointment.scheduledAt)}{" "}
                       {appointment.lead?.name ?? appointment.client?.name ?? "Compromisso"}
                     </span>
                   </div>

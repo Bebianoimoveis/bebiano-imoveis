@@ -4,6 +4,7 @@ import { useDraggable, useDroppable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
 
 import { cn } from "@/lib/utils"
+import { formatTimeBR } from "@/lib/format"
 import { appointmentTypeDot } from "@/components/admin/agenda/appointment-type-badge"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
 
@@ -62,7 +63,7 @@ function AppointmentBlock({
         </span>
       </div>
       <p className="truncate text-muted-foreground">
-        {start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · {appointment.realtor.user.name}
+        {formatTimeBR(start)} · {appointment.realtor.user.name}
       </p>
     </div>
   )
