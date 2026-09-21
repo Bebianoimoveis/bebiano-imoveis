@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
+import { ImageOff, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +27,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { createTestimonial, updateTestimonial } from "@/modules/testimonial/actions"
+import { createTestimonialPhotoUploadSignature } from "@/modules/upload/actions"
+import { uploadPropertyImage } from "@/modules/upload/client"
 
 type FormValues = {
   name: string
@@ -60,6 +64,7 @@ export function TestimonialFormDialog({
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -72,6 +77,22 @@ export function TestimonialFormDialog({
       order: String(defaultValues?.order ?? 0),
     },
   })
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploading(true)
+    try {
+      const signature = await createTestimonialPhotoUploadSignature()
+      const uploaded = await uploadPropertyImage(file, signature)
+      form.setValue("photoUrl", uploaded.url)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao enviar foto.")
+    } finally {
+      setIsUploading(false)
+      e.target.value = ""
+    }
+  }
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true)
@@ -153,8 +174,41 @@ export function TestimonialFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="photoUrl">URL da foto (opcional)</Label>
-            <Input id="photoUrl" {...form.register("photoUrl")} placeholder="https://..." />
+            <Label>Foto (opcional)</Label>
+            <Controller
+              control={form.control}
+              name="photoUrl"
+              render={({ field }) => (
+                <div className="flex items-center gap-3">
+                  <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
+                    {field.value ? (
+                      <Image src={field.value} alt="Foto do depoimento" fill className="object-cover" sizes="56px" />
+                    ) : (
+                      <ImageOff className="size-4" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handlePhotoChange}
+                      disabled={isUploading}
+                    />
+                    {isUploading ? (
+                      <p className="text-xs text-muted-foreground">Enviando...</p>
+                    ) : field.value ? (
+                      <button
+                        type="button"
+                        onClick={() => field.onChange("")}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3" /> Remover
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+            />
           </div>
 
           <div className="space-y-1.5">
