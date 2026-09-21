@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { useForm, Controller } from "react-hook-form"
 import { toast } from "sonner"
+import { ImageOff, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +28,8 @@ import {
 } from "@/components/ui/select"
 import { SEGMENT_ICON_NAMES, resolveSegmentIcon } from "@/lib/segment-icons"
 import { createSegment, updateSegment } from "@/modules/segment/actions"
+import { createSegmentImageUploadSignature } from "@/modules/upload/actions"
+import { uploadPropertyImage } from "@/modules/upload/client"
 import type { SegmentFormValues } from "@/modules/segment/schema"
 
 type PropertyTypeOption = { id: string; name: string }
@@ -61,6 +65,7 @@ export function SegmentFormDialog({
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   const form = useForm<SegmentFormValues>({
     defaultValues: {
@@ -76,6 +81,22 @@ export function SegmentFormDialog({
       minPrice: defaultValues?.minPrice ?? undefined,
     },
   })
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploading(true)
+    try {
+      const signature = await createSegmentImageUploadSignature()
+      const uploaded = await uploadPropertyImage(file, signature)
+      form.setValue("imageUrl", uploaded.url)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao enviar imagem.")
+    } finally {
+      setIsUploading(false)
+      e.target.value = ""
+    }
+  }
 
   async function onSubmit(values: SegmentFormValues) {
     setIsSubmitting(true)
@@ -213,11 +234,45 @@ export function SegmentFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="imageUrl">URL da imagem (opcional)</Label>
-            <Input id="imageUrl" {...form.register("imageUrl")} placeholder="https://..." />
-            <p className="text-xs text-muted-foreground">
-              Se vazio, usa automaticamente a foto de capa de um imóvel publicado que combine com este segmento.
-            </p>
+            <Label>Imagem do banner (opcional)</Label>
+            <Controller
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <div className="flex items-center gap-3">
+                  <div className="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-muted-foreground">
+                    {field.value ? (
+                      <Image src={field.value} alt="Imagem do banner" fill className="object-cover" sizes="112px" />
+                    ) : (
+                      <ImageOff className="size-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleImageChange}
+                      disabled={isUploading}
+                    />
+                    {isUploading ? (
+                      <p className="text-xs text-muted-foreground">Enviando...</p>
+                    ) : field.value ? (
+                      <button
+                        type="button"
+                        onClick={() => field.onChange("")}
+                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="size-3" /> Remover
+                      </button>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Sem imagem, usa a foto de capa de um imóvel publicado que combine com este segmento.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            />
           </div>
 
           <div className="flex flex-wrap gap-4">

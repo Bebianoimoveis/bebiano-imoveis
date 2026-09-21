@@ -176,6 +176,42 @@ export async function createSiteImageUploadSignature(): Promise<UploadSignature>
   }
 }
 
+// Mesmo esquema, pra imagem de banner de um Segmento (categoria da home
+// pública) — ver SegmentFormDialog.
+export async function createSegmentImageUploadSignature(): Promise<UploadSignature> {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error("Não autenticado.")
+  }
+  if (!(await can(session.user, "segment.manage"))) {
+    throw new Error("Sem permissão para gerenciar segmentos.")
+  }
+
+  const timestamp = Math.round(Date.now() / 1000)
+  const folder = "bebiano-imoveis/segmentos"
+
+  const paramsToSign = {
+    timestamp,
+    folder,
+    allowed_formats: ALLOWED_FORMATS,
+  }
+
+  const signature = cloudinary.utils.api_sign_request(
+    paramsToSign,
+    process.env.CLOUDINARY_API_SECRET as string
+  )
+
+  return {
+    timestamp,
+    signature,
+    apiKey: process.env.CLOUDINARY_API_KEY as string,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+    folder,
+    allowedFormats: ALLOWED_FORMATS,
+    maxFileSize: MAX_FILE_SIZE_BYTES,
+  }
+}
+
 const CONTRACT_ALLOWED_FORMATS = "pdf,jpg,jpeg,png"
 const CONTRACT_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
