@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 
 import { AdminSidebar, AdminMobileSidebar, type AdminSidebarUser } from "@/components/admin/admin-sidebar"
 import { AdminTopbar, type AdminTopbarUser } from "@/components/admin/admin-topbar"
+import { AutoRefresh } from "@/components/admin/auto-refresh"
 import { cn } from "@/lib/utils"
 
 type AdminTheme = "dark" | "light"
@@ -62,6 +63,7 @@ export function AdminShell({
         theme === "dark" ? "dark" : "admin-light"
       )}
     >
+      <AutoRefresh />
       <AdminSidebar user={user} permissions={permissions} />
       <AdminMobileSidebar
         user={user}
