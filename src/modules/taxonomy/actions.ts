@@ -121,3 +121,57 @@ export async function togglePropertyTypeActive(id: string, active: boolean) {
   revalidatePath("/comprar")
   revalidatePath("/alugar")
 }
+
+export async function updatePropertyType(id: string, input: unknown) {
+  const session = await auth()
+  if (!(await can(session?.user, "taxonomy.manage"))) {
+    throw new Error("Sem permissão para gerenciar tipos de imóvel.")
+  }
+
+  const data = createPropertyTypeSchema.parse(input)
+  const propertyType = await prisma.propertyType.update({ where: { id }, data })
+
+  revalidatePath("/admin/segmentos")
+  revalidatePath("/admin/imoveis/novo")
+  revalidatePath("/")
+  revalidatePath("/comprar")
+  revalidatePath("/alugar")
+  return propertyType
+}
+
+// Só permite excluir um tipo sem nenhum imóvel, segmento, preferência de
+// cliente ou captação vinculados — apagar isso junto perderia dado real
+// (ou violaria a constraint do banco, já que Property.typeId é
+// obrigatório). Com vínculo, a saída é desativar em vez de excluir.
+export async function deletePropertyType(id: string) {
+  const session = await auth()
+  if (!(await can(session?.user, "taxonomy.manage"))) {
+    throw new Error("Sem permissão para gerenciar tipos de imóvel.")
+  }
+
+  const [properties, segments, clientPreferences, submissions] = await Promise.all([
+    prisma.property.count({ where: { typeId: id } }),
+    prisma.segment.count({ where: { propertyTypeId: id } }),
+    prisma.clientPreference.count({ where: { propertyTypeId: id } }),
+    prisma.propertySubmission.count({ where: { typeId: id } }),
+  ])
+  const total = properties + segments + clientPreferences + submissions
+  if (total > 0) {
+    const parts: string[] = []
+    if (properties > 0) parts.push(`${properties} imóvel(is)`)
+    if (segments > 0) parts.push(`${segments} segmento(s)`)
+    if (clientPreferences > 0) parts.push(`${clientPreferences} preferência(s) de cliente`)
+    if (submissions > 0) parts.push(`${submissions} captação(ões)`)
+    throw new Error(
+      `Este tipo tem ${parts.join(", ")} vinculado(s) e não pode ser excluído — desative em vez de excluir.`
+    )
+  }
+
+  await prisma.propertyType.delete({ where: { id } })
+
+  revalidatePath("/admin/segmentos")
+  revalidatePath("/admin/imoveis/novo")
+  revalidatePath("/")
+  revalidatePath("/comprar")
+  revalidatePath("/alugar")
+}

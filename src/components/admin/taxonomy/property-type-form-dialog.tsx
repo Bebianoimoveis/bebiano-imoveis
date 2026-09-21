@@ -15,36 +15,59 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { createPropertyType } from "@/modules/taxonomy/actions"
+import { createPropertyType, updatePropertyType } from "@/modules/taxonomy/actions"
 
-export function PropertyTypeFormDialog({ trigger }: { trigger: React.ReactNode }) {
+type PropertyTypeFormDialogProps = {
+  trigger: React.ReactNode
+  mode?: "create" | "edit"
+  propertyTypeId?: string
+  defaultName?: string
+}
+
+export function PropertyTypeFormDialog({
+  trigger,
+  mode = "create",
+  propertyTypeId,
+  defaultName = "",
+}: PropertyTypeFormDialogProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
+  const [name, setName] = useState(defaultName)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      await createPropertyType({ name })
-      toast.success("Tipo de imóvel cadastrado.")
+      if (mode === "edit" && propertyTypeId) {
+        await updatePropertyType(propertyTypeId, { name })
+        toast.success("Tipo de imóvel atualizado.")
+      } else {
+        await createPropertyType({ name })
+        toast.success("Tipo de imóvel cadastrado.")
+        setName("")
+      }
       setOpen(false)
-      setName("")
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar tipo de imóvel.")
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar tipo de imóvel.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (next) setName(defaultName)
+      }}
+    >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Novo tipo de imóvel</DialogTitle>
+          <DialogTitle>{mode === "edit" ? "Editar tipo de imóvel" : "Novo tipo de imóvel"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
