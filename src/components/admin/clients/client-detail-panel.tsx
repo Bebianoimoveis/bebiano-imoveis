@@ -208,7 +208,10 @@ export function ClientDetailPanel({
           </div>
 
           <Tabs defaultValue="geral" className="flex min-h-0 flex-1 flex-col">
-            <TabsList className="mx-5 mt-3 w-auto max-w-[calc(100%-2.5rem)] justify-start overflow-x-auto">
+            <TabsList
+              variant="line"
+              className="mx-5 mt-3 w-auto max-w-[calc(100%-2.5rem)] justify-start overflow-x-auto border-b border-border/60"
+            >
               <TabsTrigger value="geral" className="shrink-0">Visão Geral</TabsTrigger>
               <TabsTrigger value="preferencias" className="shrink-0">Preferências</TabsTrigger>
               <TabsTrigger value="timeline" className="shrink-0">Timeline</TabsTrigger>
