@@ -215,3 +215,33 @@ export async function setRealtorActive(id: string, active: boolean) {
   revalidatePath("/sobre")
   revalidatePath("/")
 }
+
+// Exclusão é soft-delete (deletedAt), igual ao padrão já usado pra
+// filtrar corretor em toda leitura (listAdminRealtors, listRealtors,
+// listPublicRealtors etc.) — não apaga a linha de verdade, então leads,
+// propostas, contratos e imóveis já vinculados continuam intactos.
+// Não mexe na conta de usuário vinculada (login se gerencia à parte, em
+// Usuários).
+export async function deleteRealtor(id: string) {
+  const session = await requireRealtorManage()
+
+  const realtor = await prisma.realtor.findUnique({ where: { id }, select: { id: true, deletedAt: true } })
+  if (!realtor || realtor.deletedAt) throw new Error("Corretor não encontrado.")
+
+  await prisma.realtor.update({
+    where: { id },
+    data: { deletedAt: new Date(), active: false },
+  })
+
+  await logActivity({
+    userId: session.user.id,
+    action: "realtor.delete",
+    entityType: "Realtor",
+    entityId: id,
+  })
+
+  revalidatePath("/admin/corretores")
+  revalidatePath("/admin/corretores/links")
+  revalidatePath("/sobre")
+  revalidatePath("/")
+}

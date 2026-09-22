@@ -14,6 +14,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state"
 import { RealtorFormDialog } from "@/components/admin/realtors/realtor-form-dialog"
 import { RealtorActiveToggle } from "@/components/admin/realtors/realtor-active-toggle"
+import { RealtorDeleteButton } from "@/components/admin/realtors/realtor-delete-button"
 import { listAdminRealtors } from "@/modules/realtor/actions"
 
 export default async function AdminRealtorsPage() {
@@ -95,23 +96,26 @@ export default async function AdminRealtorsPage() {
                     <RealtorActiveToggle id={realtor.id} active={realtor.active} />
                   </TableCell>
                   <TableCell>
-                    <RealtorFormDialog
-                      mode="edit"
-                      realtorId={realtor.id}
-                      defaultValues={{
-                        name: realtor.user.name,
-                        email: realtor.user.email,
-                        phone: realtor.phone,
-                        creci: realtor.creci ?? "",
-                        bio: realtor.bio ?? "",
-                        photoUrl: realtor.photoUrl ?? "",
-                      }}
-                      trigger={
-                        <Button variant="ghost" size="sm">
-                          Editar
-                        </Button>
-                      }
-                    />
+                    <div className="flex items-center justify-end gap-1">
+                      <RealtorFormDialog
+                        mode="edit"
+                        realtorId={realtor.id}
+                        defaultValues={{
+                          name: realtor.user.name,
+                          email: realtor.user.email,
+                          phone: realtor.phone,
+                          creci: realtor.creci ?? "",
+                          bio: realtor.bio ?? "",
+                          photoUrl: realtor.photoUrl ?? "",
+                        }}
+                        trigger={
+                          <Button variant="ghost" size="sm">
+                            Editar
+                          </Button>
+                        }
+                      />
+                      <RealtorDeleteButton id={realtor.id} name={realtor.user.name} />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
