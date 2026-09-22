@@ -57,45 +57,18 @@ export async function getCurrentUserRealtorShareInfo() {
 // slug na hora (mesmo padrão já usado no painel "Links dos Corretores")
 // pra nunca deixar um corretor de fora só porque ainda não tem slug.
 export async function listPublicRealtors() {
-  try {
-    const realtors = await prisma.realtor.findMany({
-      where: { active: true, deletedAt: null },
-      include: { user: true },
-      orderBy: { user: { name: "asc" } },
-    })
+  const realtors = await prisma.realtor.findMany({
+    where: { active: true, deletedAt: null },
+    include: { user: true },
+    orderBy: { user: { name: "asc" } },
+  })
 
-    return await Promise.all(
-      realtors.map(async (realtor) => ({
-        ...realtor,
-        slug: realtor.slug ?? (await ensureRealtorSlug(realtor.id, realtor.user.name)),
-      }))
-    )
-  } catch (error) {
-    // DIAGNÓSTICO TEMPORÁRIO #2 — agora confirmado (via teste isolado
-    // e repetido 4x) que TODA criação de corretor bem-sucedida quebra
-    // com 500 mesmo com o registro sendo criado certinho — a única
-    // diferença pro caminho de erro (que já não quebra mais) é que o
-    // sucesso chama revalidatePath, o que obriga /sobre e / (que usam
-    // esta função) a serem regerados. Remover depois de achar a causa.
-    try {
-      await prisma.activityLog.create({
-        data: {
-          userId: "cmudax1uz00003wlq0olerw7k",
-          action: "debug.listPublicRealtors.error2",
-          entityType: "Debug",
-          entityId: "listPublicRealtors",
-          metadata: {
-            message: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? (error.stack ?? null) : null,
-            name: error instanceof Error ? error.name : null,
-          },
-        },
-      })
-    } catch {
-      // ignora falha do log de diagnóstico
-    }
-    throw error
-  }
+  return Promise.all(
+    realtors.map(async (realtor) => ({
+      ...realtor,
+      slug: realtor.slug ?? (await ensureRealtorSlug(realtor.id, realtor.user.name)),
+    }))
+  )
 }
 
 export async function getPublicRealtorBySlug(slug: string) {
