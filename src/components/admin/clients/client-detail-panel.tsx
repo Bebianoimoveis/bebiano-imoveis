@@ -218,7 +218,6 @@ export function ClientDetailPanel({
               <TabsTrigger value="agenda" className="shrink-0">Agenda</TabsTrigger>
               <TabsTrigger value="propostas" className="shrink-0">Propostas</TabsTrigger>
               <TabsTrigger value="contratos" className="shrink-0">Contratos</TabsTrigger>
-              <TabsTrigger value="leads" className="shrink-0">Leads</TabsTrigger>
               <TabsTrigger value="notas" className="shrink-0">Notas</TabsTrigger>
             </TabsList>
 
@@ -331,35 +330,13 @@ export function ClientDetailPanel({
                 )}
               </TabsContent>
 
-              <TabsContent value="leads">
-                {client.leads.length === 0 ? (
-                  <EmptyState
-                    icon={Users2}
-                    title="Nenhum lead vinculado"
-                    description="Leads convertidos para este cliente aparecem aqui."
-                  />
-                ) : (
-                  <ul className="space-y-2">
-                    {client.leads.map((lead) => (
-                      <li key={lead.id}>
-                        <Link
-                          href={`/admin/leads/${lead.id}`}
-                          className="flex items-center justify-between rounded-xl border border-border/60 p-3 text-sm transition-colors hover:border-primary/30 hover:bg-secondary/20"
-                        >
-                          <span>{lead.name}</span>
-                          <LeadStageBadge stage={lead.stage} />
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </TabsContent>
-
               <TabsContent value="notas" className="space-y-6">
                 <ClientInteractionForm clientId={client.id} onSuccess={refetch} />
                 <ClientInteractionList
+                  clientId={client.id}
                   interactions={client.interactions}
                   emptyMessage="Nenhuma anotação registrada ainda."
+                  onSuccess={refetch}
                 />
               </TabsContent>
             </div>

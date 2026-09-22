@@ -176,6 +176,14 @@ export async function createClientInteraction(input: {
   ])
 }
 
+export async function updateClientInteraction(id: string, description: string) {
+  return prisma.clientInteraction.update({ where: { id }, data: { description } })
+}
+
+export async function deleteClientInteraction(id: string) {
+  return prisma.clientInteraction.delete({ where: { id } })
+}
+
 export async function upsertClientPreference(
   clientId: string,
   data: Omit<Prisma.ClientPreferenceUncheckedCreateInput, "clientId">

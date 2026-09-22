@@ -258,6 +258,25 @@ export async function addClientInteraction(clientId: string, input: unknown) {
   revalidatePath("/admin/clientes")
 }
 
+export async function updateClientInteraction(clientId: string, interactionId: string, description: string) {
+  const session = await requireSession()
+  await assertCanManageClient(session, clientId)
+
+  if (!description.trim()) throw new Error("Descreva a interação.")
+  await clientRepository.updateClientInteraction(interactionId, description)
+
+  revalidatePath("/admin/clientes")
+}
+
+export async function deleteClientInteraction(clientId: string, interactionId: string) {
+  const session = await requireSession()
+  await assertCanManageClient(session, clientId)
+
+  await clientRepository.deleteClientInteraction(interactionId)
+
+  revalidatePath("/admin/clientes")
+}
+
 export async function saveClientPreference(clientId: string, input: unknown) {
   const session = await requireSession()
   await assertCanManageClient(session, clientId)
