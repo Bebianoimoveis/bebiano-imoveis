@@ -5,10 +5,11 @@ import { revalidatePath } from "next/cache"
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
+import { serializeDecimals } from "@/lib/serialize"
 import type { Prisma, ContractStatus } from "@/generated/prisma/client"
 import * as contractRepository from "@/modules/contract/repository"
 import * as proposalRepository from "@/modules/proposal/repository"
-import { manualContractInputSchema } from "@/modules/contract/schema"
+import { manualContractInputSchema, contractAttachmentInputSchema } from "@/modules/contract/schema"
 
 async function requireSession() {
   const session = await auth()
@@ -113,6 +114,54 @@ export async function updateContractStatus(id: string, status: ContractStatus) {
     action: `contract.status.${status.toLowerCase()}`,
     entityType: "Contract",
     entityId: id,
+  })
+
+  revalidatePath("/admin/contratos")
+}
+
+export async function getAdminContract(id: string) {
+  const session = await requireSession()
+  const canViewAll = await can(session.user, "contract.view.all")
+
+  const contract = await contractRepository.findContractById(id)
+  if (!contract) return null
+  if (!canViewAll && contract.realtorId !== session.user.realtorId) {
+    throw new Error("Sem permissão para visualizar este contrato.")
+  }
+
+  return serializeDecimals(contract)
+}
+
+export async function addContractAttachment(contractId: string, input: unknown) {
+  const session = await requireContractManage()
+  const data = contractAttachmentInputSchema.parse(input)
+
+  await contractRepository.addContractAttachment({
+    contractId,
+    url: data.url,
+    name: data.name,
+    uploadedById: session.user.id,
+  })
+
+  await logActivity({
+    userId: session.user.id,
+    action: "contract.attachment.add",
+    entityType: "Contract",
+    entityId: contractId,
+  })
+
+  revalidatePath("/admin/contratos")
+}
+
+export async function deleteContractAttachment(contractId: string, attachmentId: string) {
+  const session = await requireContractManage()
+  await contractRepository.deleteContractAttachment(attachmentId)
+
+  await logActivity({
+    userId: session.user.id,
+    action: "contract.attachment.delete",
+    entityType: "Contract",
+    entityId: contractId,
   })
 
   revalidatePath("/admin/contratos")

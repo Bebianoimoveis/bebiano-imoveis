@@ -1,20 +1,8 @@
 import { FileSignature } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { EmptyState } from "@/components/shared/empty-state"
-import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
-import { ContractRowActions } from "@/components/admin/contracts/contract-row-actions"
-import { FinancialEntryFormDialog } from "@/components/admin/financial/financial-entry-form-dialog"
+import { ContractDirectory } from "@/components/admin/contracts/contract-directory"
 import { listAdminContracts } from "@/modules/contract/actions"
-import { formatCurrency } from "@/lib/format"
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 
@@ -43,56 +31,7 @@ export default async function AdminContractsPage() {
           description="Contratos são gerados a partir de propostas com status aceito."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Imóvel</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Corretor</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contracts.map((contract) => (
-                <TableRow key={contract.id}>
-                  <TableCell className="max-w-xs truncate text-sm">
-                    {contract.property.code} · {contract.property.title}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {contract.client.name}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {contract.realtor.user.name}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {formatCurrency(contract.value.toString())}
-                  </TableCell>
-                  <TableCell>
-                    <ContractStatusBadge status={contract.status} />
-                  </TableCell>
-                  <TableCell className="flex items-center gap-1">
-                    <ContractRowActions contractId={contract.id} status={contract.status} />
-                    {canManageFinancial ? (
-                      <FinancialEntryFormDialog
-                        contracts={[]}
-                        fixedContractId={contract.id}
-                        fixedContractLabel={`${contract.property.code} · ${contract.client.name}`}
-                        trigger={
-                          <Button variant="ghost" size="sm">
-                            Lançamento
-                          </Button>
-                        }
-                      />
-                    ) : null}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <ContractDirectory contracts={contracts} canManageFinancial={canManageFinancial} />
       )}
     </div>
   )

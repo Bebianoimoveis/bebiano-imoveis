@@ -12,3 +12,8 @@ export const manualContractInputSchema = z.object({
 })
 
 export type ManualContractInput = z.infer<typeof manualContractInputSchema>
+
+export const contractAttachmentInputSchema = z.object({
+  url: z.string().url(),
+  name: z.string().min(1),
+})

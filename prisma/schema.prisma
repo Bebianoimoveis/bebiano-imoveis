@@ -29,6 +29,7 @@ model User {
   clientInteractions ClientInteraction[]
   proposalInteractions ProposalInteraction[]
   financialEntryInteractions FinancialEntryInteraction[]
+  contractAttachments ContractAttachment[]
   activityLogs ActivityLog[]
   notifications Notification[]
   createdAt    DateTime  @default(now())
@@ -679,8 +680,25 @@ model Contract {
   fileUrl    String? // contrato assinado, armazenado no Cloudinary (resource_type: raw)
   signedAt   DateTime?
   financialEntries FinancialEntry[]
+  attachments      ContractAttachment[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+}
+
+// Anexos do contrato (documentos assinados pelo cliente, aditivos etc.) —
+// separado de Contract.fileUrl (que é o arquivo único do cadastro manual)
+// porque um contrato pode acumular vários arquivos ao longo do processo.
+model ContractAttachment {
+  id           String   @id @default(cuid())
+  contractId   String
+  contract     Contract @relation(fields: [contractId], references: [id])
+  url          String
+  name         String
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([contractId])
 }
 
 // ---------------------------------------------------------------------------
