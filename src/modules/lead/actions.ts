@@ -129,7 +129,9 @@ export async function listAdminLeads(rawFilters: unknown) {
   const filters = leadFiltersSchema.parse(rawFilters ?? {})
   const where = await buildLeadScopeWhere(session, filters)
 
-  return leadRepository.listLeads(where)
+  // Lead convertido em cliente sai da aba de leads (Kanban/tabela) — o
+  // registro continua existindo pra histórico, só não aparece mais aqui.
+  return leadRepository.listLeads({ ...where, clientId: null })
 }
 
 // Sugestões instantâneas da busca — mesmo escopo de visibilidade da
