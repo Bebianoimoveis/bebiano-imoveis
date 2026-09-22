@@ -104,13 +104,19 @@ export function RealtorFormDialog({
 
     setIsSubmitting(true)
     try {
-      if (mode === "create") {
-        await createRealtor(values)
-        toast.success("Corretor criado.")
-      } else if (realtorId) {
-        await updateRealtor(realtorId, values)
-        toast.success("Corretor atualizado.")
+      const result =
+        mode === "create"
+          ? await createRealtor(values)
+          : realtorId
+            ? await updateRealtor(realtorId, values)
+            : null
+
+      if (result?.error) {
+        toast.error(result.error)
+        return
       }
+
+      toast.success(mode === "create" ? "Corretor criado." : "Corretor atualizado.")
       setOpen(false)
       if (mode === "create") form.reset()
       router.refresh()

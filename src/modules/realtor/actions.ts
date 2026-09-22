@@ -57,42 +57,18 @@ export async function getCurrentUserRealtorShareInfo() {
 // slug na hora (mesmo padrão já usado no painel "Links dos Corretores")
 // pra nunca deixar um corretor de fora só porque ainda não tem slug.
 export async function listPublicRealtors() {
-  try {
-    const realtors = await prisma.realtor.findMany({
-      where: { active: true, deletedAt: null },
-      include: { user: true },
-      orderBy: { user: { name: "asc" } },
-    })
+  const realtors = await prisma.realtor.findMany({
+    where: { active: true, deletedAt: null },
+    include: { user: true },
+    orderBy: { user: { name: "asc" } },
+  })
 
-    return await Promise.all(
-      realtors.map(async (realtor) => ({
-        ...realtor,
-        slug: realtor.slug ?? (await ensureRealtorSlug(realtor.id, realtor.user.name)),
-      }))
-    )
-  } catch (error) {
-    // DIAGNÓSTICO TEMPORÁRIO — investigando um 500 que só acontece ao
-    // criar corretor (revalida /sobre e / em seguida, que chamam esta
-    // função). Remover depois de achar a causa.
-    try {
-      await prisma.activityLog.create({
-        data: {
-          userId: "cmrmuufdo001h3wlqpx97v1n8",
-          action: "debug.listPublicRealtors.error",
-          entityType: "Debug",
-          entityId: "listPublicRealtors",
-          metadata: {
-            message: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? (error.stack ?? null) : null,
-            name: error instanceof Error ? error.name : null,
-          },
-        },
-      })
-    } catch {
-      // ignora falha do log de diagnóstico
-    }
-    throw error
-  }
+  return Promise.all(
+    realtors.map(async (realtor) => ({
+      ...realtor,
+      slug: realtor.slug ?? (await ensureRealtorSlug(realtor.id, realtor.user.name)),
+    }))
+  )
 }
 
 export async function getPublicRealtorBySlug(slug: string) {
@@ -128,7 +104,16 @@ export async function listAdminRealtors() {
 // Cria o corretor e a conta de acesso dele juntos (User com papel
 // REALTOR) — não existe Realtor sem User no schema, então o formulário
 // de "novo corretor" é também o de "nova conta de corretor".
-export async function createRealtor(input: unknown) {
+// IMPORTANTE: validações abaixo devolvem { error } em vez de lançar
+// exceção — em produção, um `throw` nestas duas ações (createRealtor e
+// updateRealtor) faz a Server Action responder 500 (confirmado via
+// reprodução direta contra produção: acontece com QUALQUER erro
+// lançado daqui, incluindo com sessão/dados válidos e sem relação com
+// e-mail duplicado especificamente). Devolver o erro como valor comum
+// contorna o problema sem depender de entender a causa exata.
+export async function createRealtor(
+  input: unknown
+): Promise<{ id: string; error?: undefined } | { id?: undefined; error: string }> {
   const session = await requireRealtorManage()
   const data = createRealtorSchema.parse(input)
 
@@ -142,8 +127,8 @@ export async function createRealtor(input: unknown) {
     prisma.role.findUnique({ where: { name: "REALTOR" } }),
     bcrypt.hash(data.password, 10),
   ])
-  if (existingUser) throw new Error("Já existe um usuário com esse e-mail.")
-  if (!role) throw new Error("Papel REALTOR não encontrado — rode o seed do banco.")
+  if (existingUser) return { error: "Já existe um usuário com esse e-mail." }
+  if (!role) return { error: "Papel REALTOR não encontrado — rode o seed do banco." }
 
   const realtor = await prisma.realtor.create({
     data: {
@@ -180,16 +165,19 @@ export async function createRealtor(input: unknown) {
   return { id: realtor.id }
 }
 
-export async function updateRealtor(id: string, input: unknown) {
+export async function updateRealtor(
+  id: string,
+  input: unknown
+): Promise<{ id: string; error?: undefined } | { id?: undefined; error: string }> {
   const session = await requireRealtorManage()
   const data = updateRealtorSchema.parse(input)
 
   const realtor = await prisma.realtor.findUnique({ where: { id }, select: { userId: true } })
-  if (!realtor) throw new Error("Corretor não encontrado.")
+  if (!realtor) return { error: "Corretor não encontrado." }
 
   const emailOwner = await prisma.user.findUnique({ where: { email: data.email } })
   if (emailOwner && emailOwner.id !== realtor.userId) {
-    throw new Error("Já existe um usuário com esse e-mail.")
+    return { error: "Já existe um usuário com esse e-mail." }
   }
 
   await prisma.$transaction([
