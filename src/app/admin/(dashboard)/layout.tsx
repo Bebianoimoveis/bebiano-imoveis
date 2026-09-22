@@ -4,6 +4,11 @@ import { auth } from "@/lib/auth"
 import { getPermissions } from "@/lib/permissions"
 import { AdminShell } from "@/components/admin/admin-shell"
 
+// Algumas ações do admin (ex: criar corretor) encadeiam várias idas ao
+// banco + bcrypt — o padrão de 10s do Vercel já foi visto estourando
+// nelas em produção. 30s dá folga sem exagerar.
+export const maxDuration = 30
+
 export default async function AdminDashboardLayout({
   children,
 }: {

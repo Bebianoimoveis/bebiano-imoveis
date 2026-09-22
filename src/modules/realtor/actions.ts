@@ -108,13 +108,18 @@ export async function createRealtor(input: unknown) {
   const session = await requireRealtorManage()
   const data = createRealtorSchema.parse(input)
 
-  const existingUser = await prisma.user.findUnique({ where: { email: data.email } })
+  // As 3 chamadas abaixo são independentes entre si — rodar em paralelo
+  // (em vez de sequencial) encurta bastante o tempo total da ação, que
+  // já soma várias idas ao banco depois disso (create + slug + log +
+  // revalidação). bcrypt custo 10 (em vez de 12): ainda seguro, só bem
+  // mais rápido — 12 chegava a levar segundos.
+  const [existingUser, role, passwordHash] = await Promise.all([
+    prisma.user.findUnique({ where: { email: data.email } }),
+    prisma.role.findUnique({ where: { name: "REALTOR" } }),
+    bcrypt.hash(data.password, 10),
+  ])
   if (existingUser) throw new Error("Já existe um usuário com esse e-mail.")
-
-  const role = await prisma.role.findUnique({ where: { name: "REALTOR" } })
   if (!role) throw new Error("Papel REALTOR não encontrado — rode o seed do banco.")
-
-  const passwordHash = await bcrypt.hash(data.password, 12)
 
   const realtor = await prisma.realtor.create({
     data: {
