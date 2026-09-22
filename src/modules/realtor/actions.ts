@@ -106,54 +106,82 @@ export async function listAdminRealtors() {
 // de "novo corretor" é também o de "nova conta de corretor".
 export async function createRealtor(input: unknown) {
   const session = await requireRealtorManage()
-  const data = createRealtorSchema.parse(input)
 
-  // As 3 chamadas abaixo são independentes entre si — rodar em paralelo
-  // (em vez de sequencial) encurta bastante o tempo total da ação, que
-  // já soma várias idas ao banco depois disso (create + slug + log +
-  // revalidação). bcrypt custo 10 (em vez de 12): ainda seguro, só bem
-  // mais rápido — 12 chegava a levar segundos.
-  const [existingUser, role, passwordHash] = await Promise.all([
-    prisma.user.findUnique({ where: { email: data.email } }),
-    prisma.role.findUnique({ where: { name: "REALTOR" } }),
-    bcrypt.hash(data.password, 10),
-  ])
-  if (existingUser) throw new Error("Já existe um usuário com esse e-mail.")
-  if (!role) throw new Error("Papel REALTOR não encontrado — rode o seed do banco.")
+  try {
+    const data = createRealtorSchema.parse(input)
 
-  const realtor = await prisma.realtor.create({
-    data: {
-      phone: data.phone,
-      creci: data.creci || null,
-      bio: data.bio || null,
-      photoUrl: data.photoUrl || null,
-      photoPositionY: data.photoPositionY ?? null,
-      user: {
-        create: {
-          name: data.name,
-          email: data.email,
-          passwordHash,
-          roleId: role.id,
+    // As 3 chamadas abaixo são independentes entre si — rodar em paralelo
+    // (em vez de sequencial) encurta bastante o tempo total da ação, que
+    // já soma várias idas ao banco depois disso (create + slug + log +
+    // revalidação). bcrypt custo 10 (em vez de 12): ainda seguro, só bem
+    // mais rápido — 12 chegava a levar segundos.
+    const [existingUser, role, passwordHash] = await Promise.all([
+      prisma.user.findUnique({ where: { email: data.email } }),
+      prisma.role.findUnique({ where: { name: "REALTOR" } }),
+      bcrypt.hash(data.password, 10),
+    ])
+    if (existingUser) throw new Error("Já existe um usuário com esse e-mail.")
+    if (!role) throw new Error("Papel REALTOR não encontrado — rode o seed do banco.")
+
+    const realtor = await prisma.realtor.create({
+      data: {
+        phone: data.phone,
+        creci: data.creci || null,
+        bio: data.bio || null,
+        photoUrl: data.photoUrl || null,
+        photoPositionY: data.photoPositionY ?? null,
+        user: {
+          create: {
+            name: data.name,
+            email: data.email,
+            passwordHash,
+            roleId: role.id,
+          },
         },
       },
-    },
-    include: { user: true },
-  })
+      include: { user: true },
+    })
 
-  await ensureRealtorSlug(realtor.id, realtor.user.name)
+    await ensureRealtorSlug(realtor.id, realtor.user.name)
 
-  await logActivity({
-    userId: session.user.id,
-    action: "realtor.create",
-    entityType: "Realtor",
-    entityId: realtor.id,
-  })
+    await logActivity({
+      userId: session.user.id,
+      action: "realtor.create",
+      entityType: "Realtor",
+      entityId: realtor.id,
+    })
 
-  revalidatePath("/admin/corretores")
-  revalidatePath("/admin/corretores/links")
-  revalidatePath("/sobre")
-  revalidatePath("/")
-  return { id: realtor.id }
+    revalidatePath("/admin/corretores")
+    revalidatePath("/admin/corretores/links")
+    revalidatePath("/sobre")
+    revalidatePath("/")
+    return { id: realtor.id }
+  } catch (error) {
+    // DIAGNÓSTICO TEMPORÁRIO — remover depois de identificar a causa do
+    // 500 que só acontece ao tentar criar com um e-mail já existente.
+    // Grava o erro real (mensagem + stack) porque em produção o Next.js
+    // redige o erro exibido ao cliente e não há acesso aos logs da
+    // função na Vercel a partir daqui.
+    try {
+      await prisma.activityLog.create({
+        data: {
+          userId: session.user.id,
+          action: "debug.createRealtor.error",
+          entityType: "Debug",
+          entityId: "createRealtor",
+          metadata: {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? (error.stack ?? null) : null,
+            name: error instanceof Error ? error.name : null,
+          },
+        },
+      })
+    } catch {
+      // se até o log de diagnóstico falhar, não faz nada — o erro
+      // original ainda é relançado abaixo
+    }
+    throw error
+  }
 }
 
 export async function updateRealtor(id: string, input: unknown) {
