@@ -210,16 +210,16 @@ export function ClientDetailPanel({
           <Tabs defaultValue="geral" className="flex min-h-0 flex-1 flex-col">
             <TabsList
               variant="line"
-              className="mx-5 mt-3 w-auto max-w-[calc(100%-2.5rem)] justify-start overflow-x-auto border-b border-border/60"
+              className="mx-5 mt-3 w-auto max-w-[calc(100%-2.5rem)] justify-start overflow-x-auto border-b border-border/60 [&_[data-slot=tabs-trigger]]:after:opacity-0! [&_[data-slot=tabs-trigger][data-active]]:font-semibold"
             >
-              <TabsTrigger value="geral" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Visão Geral</TabsTrigger>
-              <TabsTrigger value="preferencias" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Preferências</TabsTrigger>
-              <TabsTrigger value="timeline" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Timeline</TabsTrigger>
-              <TabsTrigger value="agenda" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Agenda</TabsTrigger>
-              <TabsTrigger value="propostas" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Propostas</TabsTrigger>
-              <TabsTrigger value="contratos" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Contratos</TabsTrigger>
-              <TabsTrigger value="leads" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Leads</TabsTrigger>
-              <TabsTrigger value="notas" className="shrink-0 data-active:font-semibold data-active:after:opacity-0">Notas</TabsTrigger>
+              <TabsTrigger value="geral" className="shrink-0">Visão Geral</TabsTrigger>
+              <TabsTrigger value="preferencias" className="shrink-0">Preferências</TabsTrigger>
+              <TabsTrigger value="timeline" className="shrink-0">Timeline</TabsTrigger>
+              <TabsTrigger value="agenda" className="shrink-0">Agenda</TabsTrigger>
+              <TabsTrigger value="propostas" className="shrink-0">Propostas</TabsTrigger>
+              <TabsTrigger value="contratos" className="shrink-0">Contratos</TabsTrigger>
+              <TabsTrigger value="leads" className="shrink-0">Leads</TabsTrigger>
+              <TabsTrigger value="notas" className="shrink-0">Notas</TabsTrigger>
             </TabsList>
 
             <div className="flex-1 overflow-y-auto p-5">
