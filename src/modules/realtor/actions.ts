@@ -236,19 +236,31 @@ export async function setRealtorActive(id: string, active: boolean) {
 // Exclusão é soft-delete (deletedAt), igual ao padrão já usado pra
 // filtrar corretor em toda leitura (listAdminRealtors, listRealtors,
 // listPublicRealtors etc.) — não apaga a linha de verdade, então leads,
-// propostas, contratos e imóveis já vinculados continuam intactos.
-// Não mexe na conta de usuário vinculada (login se gerencia à parte, em
-// Usuários).
+// propostas, contratos e imóveis já vinculados continuam intactos. O
+// e-mail da conta de usuário vinculada é liberado (renomeado) e o slug
+// é limpo, pra dar pra cadastrar um novo corretor com o mesmo e-mail
+// (ou o mesmo nome, sem ganhar um "-2") depois — slug tem constraint
+// de unicidade no banco, então só filtrar por deletedAt na checagem de
+// colisão não bastava: precisa liberar o valor de verdade.
 export async function deleteRealtor(id: string) {
   const session = await requireRealtorManage()
 
-  const realtor = await prisma.realtor.findUnique({ where: { id }, select: { id: true, deletedAt: true } })
+  const realtor = await prisma.realtor.findUnique({
+    where: { id },
+    select: { id: true, deletedAt: true, userId: true, user: { select: { email: true } } },
+  })
   if (!realtor || realtor.deletedAt) throw new Error("Corretor não encontrado.")
 
-  await prisma.realtor.update({
-    where: { id },
-    data: { deletedAt: new Date(), active: false },
-  })
+  await prisma.$transaction([
+    prisma.realtor.update({
+      where: { id },
+      data: { deletedAt: new Date(), active: false, slug: null },
+    }),
+    prisma.user.update({
+      where: { id: realtor.userId },
+      data: { email: `deleted-${realtor.userId}-${realtor.user.email}`, active: false },
+    }),
+  ])
 
   await logActivity({
     userId: session.user.id,

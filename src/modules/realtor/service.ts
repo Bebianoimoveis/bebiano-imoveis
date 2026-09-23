@@ -21,8 +21,11 @@ export async function ensureRealtorSlug(realtorId: string, name: string): Promis
   let attempt = 1
 
   while (true) {
-    const existing = await prisma.realtor.findUnique({
-      where: { slug: candidate },
+    // deletedAt: null — corretor excluído não deve "travar" o slug pra
+    // sempre; sem isso, recriar um corretor com o mesmo nome de um já
+    // excluído ganhava um "-2" sem necessidade.
+    const existing = await prisma.realtor.findFirst({
+      where: { slug: candidate, deletedAt: null },
       select: { id: true },
     })
     if (!existing || existing.id === realtorId) break
