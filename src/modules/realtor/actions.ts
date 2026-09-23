@@ -180,10 +180,12 @@ export async function updateRealtor(
     return { error: "Já existe um usuário com esse e-mail." }
   }
 
+  const passwordHash = data.password ? await bcrypt.hash(data.password, 10) : undefined
+
   await prisma.$transaction([
     prisma.user.update({
       where: { id: realtor.userId },
-      data: { name: data.name, email: data.email },
+      data: { name: data.name, email: data.email, passwordHash },
     }),
     prisma.realtor.update({
       where: { id },

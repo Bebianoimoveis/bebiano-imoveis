@@ -101,6 +101,10 @@ export function RealtorFormDialog({
       form.setError("password", { message: "A senha deve ter ao menos 8 caracteres." })
       return
     }
+    if (mode === "edit" && values.password && values.password.length < 8) {
+      form.setError("password", { message: "A senha deve ter ao menos 8 caracteres." })
+      return
+    }
 
     setIsSubmitting(true)
     try {
@@ -194,21 +198,28 @@ export function RealtorFormDialog({
             />
           </div>
 
-          {mode === "create" ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Senha de acesso</Label>
-              <PasswordInput
-                id="password"
-                autoComplete="new-password"
-                data-1p-ignore
-                data-lpignore="true"
-                {...form.register("password")}
-              />
-              {form.formState.errors.password ? (
-                <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
-              ) : null}
-            </div>
-          ) : null}
+          <div className="space-y-1.5">
+            <Label htmlFor="password">
+              {mode === "create" ? "Senha de acesso" : "Nova senha (opcional)"}
+            </Label>
+            <PasswordInput
+              id="password"
+              autoComplete="new-password"
+              placeholder={mode === "edit" ? "Deixe em branco pra manter a senha atual" : undefined}
+              data-1p-ignore
+              data-lpignore="true"
+              {...form.register("password")}
+            />
+            {mode === "edit" ? (
+              <p className="text-xs text-muted-foreground">
+                Preencha só se quiser trocar a senha desse corretor. Por segurança, a senha atual
+                não pode ser exibida — apenas redefinida.
+              </p>
+            ) : null}
+            {form.formState.errors.password ? (
+              <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
+            ) : null}
+          </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="creci">CRECI (opcional)</Label>

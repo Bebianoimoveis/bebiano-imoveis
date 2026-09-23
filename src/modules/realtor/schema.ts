@@ -24,6 +24,9 @@ export const updateRealtorSchema = z.object({
   bio: z.string().optional(),
   photoUrl: z.string().optional(),
   photoPositionY: z.number().min(0).max(100).optional(),
+  // Vazio = não mexe na senha atual; preenchido = troca (mesma regra de
+  // tamanho mínimo do cadastro).
+  password: z.union([z.string().min(8, "A senha deve ter ao menos 8 caracteres."), z.literal("")]).optional(),
 })
 
 export type UpdateRealtorInput = z.infer<typeof updateRealtorSchema>
