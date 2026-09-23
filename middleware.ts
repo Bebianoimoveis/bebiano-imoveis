@@ -91,7 +91,19 @@ function redirectToReferralCaptureIfNeeded(req: NextRequest) {
     "landing",
     req.nextUrl.pathname + req.nextUrl.search
   )
-  captureUrl.searchParams.set("dest", referral.isVanityPath ? "/" : req.nextUrl.pathname + req.nextUrl.search)
+
+  // O destino final não pode carregar ?ref=/?corretor= — sem isso, a
+  // própria página de chegada ainda tem o parâmetro, o middleware
+  // detecta de novo e manda pra captura outra vez: loop infinito
+  // (ERR_TOO_MANY_REDIRECTS), já que agora sempre encaminha pra
+  // captura mesmo com cookie existente.
+  const destUrl = new URL(req.nextUrl)
+  destUrl.searchParams.delete("ref")
+  destUrl.searchParams.delete("corretor")
+  const dest = referral.isVanityPath
+    ? "/"
+    : `${destUrl.pathname}${destUrl.search}`
+  captureUrl.searchParams.set("dest", dest)
 
   for (const utmKey of ["utm_source", "utm_medium", "utm_campaign"]) {
     const value = req.nextUrl.searchParams.get(utmKey)
