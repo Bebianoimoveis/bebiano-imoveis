@@ -154,15 +154,27 @@ export type CaptureReferralInput = {
   utmCampaign?: string | null
 }
 
-// Chamado pela proxy (não tem acesso à API `cookies()` de next/headers —
-// usa NextRequest/NextResponse diretamente), só cuida da parte de banco:
-// resolve o código pro corretor e grava a atribuição. Quem lê/escreve o
-// cookie de fato é a própria proxy.
+// Chamado pela Route Handler de captura (roda em runtime Node.js, então
+// pode ler o cookie existente via next/headers e checar o banco) — cuida
+// de resolver o código pro corretor e gravar a atribuição. Quem lê/
+// escreve o cookie de fato é a própria Route Handler.
 export async function captureReferral(
-  input: CaptureReferralInput
+  input: CaptureReferralInput,
+  existingVisitorId?: string
 ): Promise<{ visitorId: string; expiresAt: Date } | null> {
   const realtor = await attributionRepository.findRealtorByReferralCode(input.code)
   if (!realtor) return null
+
+  // "Primeiro corretor que captou o lead" só vale enquanto esse corretor
+  // continuar válido — se foi excluído/desativado depois que o cookie foi
+  // gravado, um novo link consegue capturar de novo em vez de ficar
+  // preso pra sempre num corretor invisível (só expira em 30 dias).
+  if (existingVisitorId) {
+    const existing = await attributionRepository.findAttributionByVisitorId(existingVisitorId)
+    if (existing && existing.realtor.active && !existing.realtor.deletedAt) {
+      return null
+    }
+  }
 
   const visitorId = randomUUID()
   const expiresAt = new Date(Date.now() + REFERRAL_COOKIE_MAX_AGE_SECONDS * 1000)

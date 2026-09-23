@@ -3,7 +3,6 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
 import { authConfig } from "@/lib/auth.config"
-import { REFERRAL_COOKIE_NAME } from "@/modules/attribution/constants"
 
 const { auth } = NextAuth(authConfig)
 
@@ -74,23 +73,17 @@ function redirectToReferralCaptureIfNeeded(req: NextRequest) {
   const referral = extractReferralCode(req)
 
   // Sem nenhuma referência na URL: segue direto sem tocar em nada —
-  // cobre a esmagadora maioria dos requests (visitante sem cookie e sem
-  // link, ou visitante já com cookie navegando normalmente).
+  // cobre a esmagadora maioria dos requests (navegação comum, sem link
+  // de corretor na URL).
   if (!referral) return NextResponse.next()
 
-  const hasExistingAttribution = req.cookies.has(REFERRAL_COOKIE_NAME)
-
-  // Regra de "primeiro corretor que captou o lead": um segundo link não
-  // sobrescreve a atribuição já existente. Só um admin troca isso depois.
-  if (hasExistingAttribution) {
-    return referral.isVanityPath
-      ? NextResponse.redirect(new URL("/", req.nextUrl))
-      : NextResponse.next()
-  }
-
-  // Primeiro toque: redireciona pra Route Handler (runtime Node.js) que
-  // resolve o corretor no banco e grava o cookie — só acontece uma vez
-  // por visitante, não em toda navegação.
+  // Sempre encaminha pra Route Handler (runtime Node.js, com acesso ao
+  // banco) quando há referência na URL, mesmo já existindo cookie — é
+  // ela quem decide se mantém a atribuição atual (regra de "primeiro
+  // corretor que captou o lead", enquanto esse corretor continuar
+  // válido) ou recaptura (corretor do cookie atual foi excluído depois
+  // que ele foi gravado). O middleware em si não tem Prisma pra checar
+  // isso sozinho.
   const captureUrl = new URL("/api/attribution/capture", req.nextUrl)
   captureUrl.searchParams.set("code", referral.code)
   captureUrl.searchParams.set("source", referral.source)
