@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { toast } from "sonner"
 import { FileSignature, Phone, Star, Trash2 } from "lucide-react"
 
@@ -45,11 +46,11 @@ import { ProposalStatusBadge } from "@/components/admin/proposals/proposal-statu
 import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
 import { getAdminLead, updateLeadStage, deleteLead, getLeadContract } from "@/modules/lead/actions"
 import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
-import type { LeadDetail } from "@/modules/lead/repository"
 import type { LeadStage } from "@/generated/prisma/client"
 
 type RealtorOption = { id: string; user: { name: string } }
 type ContractDetail = Awaited<ReturnType<typeof getLeadContract>>
+type LeadDetail = NonNullable<Awaited<ReturnType<typeof getAdminLead>>>
 
 export function LeadDetailPanel({
   leadId,
@@ -230,6 +231,29 @@ export function LeadDetailPanel({
                     <p className="text-muted-foreground">
                       {lead.property.code} · {formatCurrency(lead.property.price.toString())}
                     </p>
+                  </div>
+                ) : null}
+
+                {lead.otherPropertyInterests.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground">
+                      Também demonstrou interesse em:
+                    </p>
+                    <ul className="space-y-1.5">
+                      {lead.otherPropertyInterests.map((property) => (
+                        <li key={property.id}>
+                          <Link
+                            href={`/admin/imoveis/${property.id}`}
+                            className="block rounded-xl border border-border/60 p-3 text-sm transition-colors hover:border-primary/30 hover:bg-secondary/20"
+                          >
+                            <p className="font-medium">{property.title}</p>
+                            <p className="text-muted-foreground">
+                              {property.code} · {formatCurrency(property.price.toString())}
+                            </p>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ) : null}
 

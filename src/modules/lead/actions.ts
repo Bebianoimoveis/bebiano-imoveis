@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
 import { isRateLimited } from "@/lib/rate-limit"
+import { serializeDecimals } from "@/lib/serialize"
 import type { Prisma, LeadStage } from "@/generated/prisma/client"
 import {
   contactRequestSchema,
@@ -256,7 +257,16 @@ export async function getAdminLead(id: string) {
     throw new Error("Sem permissão para visualizar este lead.")
   }
 
-  return lead
+  const otherPropertyInterests = await leadRepository.listOtherPropertyInterests(
+    lead.phone,
+    lead.propertyId
+  )
+
+  // property.price, proposals[].value etc. são Decimal — não podem
+  // atravessar cru a fronteira Server Action → Client Component (ver
+  // src/lib/serialize.ts), e este action é chamado direto do client
+  // (LeadDetailPanel).
+  return serializeDecimals({ ...lead, otherPropertyInterests })
 }
 
 async function assertCanManageLead(

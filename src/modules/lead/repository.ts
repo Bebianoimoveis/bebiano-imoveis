@@ -140,6 +140,46 @@ export async function upsertLeadByPhone(
   return { lead, isNew: false }
 }
 
+// O Lead só guarda um propertyId (o do primeiro contato — ver
+// upsertLeadByPhone acima), mas a mesma pessoa pode mandar mensagem por
+// outros imóveis depois; cada envio fica registrado em ContactRequest
+// com o imóvel certo. Isso reconstrói a lista completa a partir de lá,
+// pra não perder o interesse nos imóveis seguintes.
+export async function listOtherPropertyInterests(phone: string, excludePropertyId: string | null) {
+  const digits = phone.replace(/\D/g, "")
+  if (!digits) return []
+
+  const requests = await prisma.contactRequest.findMany({
+    where: {
+      phone: { contains: digits },
+      propertyId: { not: null },
+      ...(excludePropertyId ? { propertyId: { not: excludePropertyId } } : {}),
+    },
+    select: { propertyId: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  })
+
+  const propertyIds = [...new Set(requests.map((r) => r.propertyId!))]
+  if (propertyIds.length === 0) return []
+
+  const properties = await prisma.property.findMany({
+    where: { id: { in: propertyIds } },
+    select: {
+      id: true,
+      title: true,
+      code: true,
+      slug: true,
+      price: true,
+      city: { select: { name: true } },
+    },
+  })
+
+  // Preserva a ordem "mais recente primeiro" da consulta de ContactRequest.
+  return propertyIds
+    .map((id) => properties.find((p) => p.id === id))
+    .filter((p): p is NonNullable<typeof p> => p !== undefined)
+}
+
 // Cria o registro bruto do formulário (auditoria/anti-spam) e o Lead
 // correspondente no CRM em uma única transação — o núcleo do fluxo
 // "visitante manda mensagem → vira lead automaticamente".

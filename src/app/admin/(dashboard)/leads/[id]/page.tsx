@@ -12,6 +12,7 @@ import { AppointmentFormDialog } from "@/components/admin/agenda/appointment-for
 import { ProposalFormDialog } from "@/components/admin/proposals/proposal-form-dialog"
 import { getAdminLead } from "@/modules/lead/actions"
 import { listRealtors } from "@/modules/realtor/actions"
+import { formatCurrency } from "@/lib/format"
 
 export default async function AdminLeadDetailPage({
   params,
@@ -101,6 +102,31 @@ export default async function AdminLeadDetailPage({
                   {lead.property.title}
                 </Link>
                 <p className="text-muted-foreground">{lead.property.code}</p>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {lead.otherPropertyInterests.length > 0 ? (
+            <Card className="border-border/60">
+              <CardHeader>
+                <CardTitle className="text-base font-medium">
+                  Também demonstrou interesse em
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {lead.otherPropertyInterests.map((property) => (
+                  <div key={property.id} className="space-y-0.5">
+                    <Link
+                      href={`/admin/imoveis/${property.id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {property.title}
+                    </Link>
+                    <p className="text-muted-foreground">
+                      {property.code} · {formatCurrency(property.price.toString())}
+                    </p>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           ) : null}
