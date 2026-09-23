@@ -56,9 +56,9 @@ export async function TeamSection() {
                   <p className="truncate font-medium transition-colors group-hover:text-gold-light">
                     {realtor.user.name}
                   </p>
-                  {realtor.creci ? (
-                    <p className="text-xs text-muted-foreground">CRECI {realtor.creci}</p>
-                  ) : null}
+                  <p className={`text-xs text-muted-foreground ${realtor.creci ? "" : "invisible"}`}>
+                    CRECI {realtor.creci ?? "0"}
+                  </p>
                 </div>
               </div>
             </StaggerItem>
