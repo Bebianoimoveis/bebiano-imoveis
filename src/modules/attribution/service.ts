@@ -44,6 +44,14 @@ async function getVisitorAttribution() {
   const attribution = await attributionRepository.findAttributionByVisitorId(visitorId)
   if (!attribution) return null
 
+  // Corretor da atribuição foi excluído/desativado depois que o cookie
+  // foi gravado: trata como "sem atribuição" em vez de continuar
+  // devolvendo um corretor que não existe mais pro visitante — sem
+  // isso, o cookie antigo "prendia" o lead num corretor invisível até
+  // expirar (30 dias), mesmo o visitante entrando de novo por um link
+  // de outro corretor.
+  if (!attribution.realtor.active || attribution.realtor.deletedAt) return null
+
   // Melhor esforço, não bloqueia a renderização por causa de uma métrica.
   void attributionRepository.touchLastVisit(visitorId).catch(() => {})
 
