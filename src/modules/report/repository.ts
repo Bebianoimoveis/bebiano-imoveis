@@ -178,3 +178,42 @@ export async function countNewLeadsAndClientsByRealtor(monthStart: Date, monthEn
     newClients: clientsByRealtor.get(realtor.id) ?? 0,
   }))
 }
+
+// Conversão de leads por corretor (total captado vs. fechado) — usado
+// na análise de IA da Inteligência de Negócios pra comparar quem
+// converte mais, não só quem capta mais.
+export async function getLeadConversionByRealtor() {
+  const realtors = await prisma.realtor.findMany({
+    where: { active: true, deletedAt: null },
+    select: { id: true, user: { select: { name: true } } },
+    orderBy: { user: { name: "asc" } },
+  })
+
+  const [totalCounts, closedCounts] = await Promise.all([
+    prisma.lead.groupBy({
+      by: ["realtorId"],
+      where: { realtorId: { not: null }, deletedAt: null },
+      _count: { _all: true },
+    }),
+    prisma.lead.groupBy({
+      by: ["realtorId"],
+      where: { realtorId: { not: null }, deletedAt: null, stage: "CLOSED" },
+      _count: { _all: true },
+    }),
+  ])
+
+  const totalByRealtor = new Map(totalCounts.map((row) => [row.realtorId, row._count._all]))
+  const closedByRealtor = new Map(closedCounts.map((row) => [row.realtorId, row._count._all]))
+
+  return realtors.map((realtor) => {
+    const totalLeads = totalByRealtor.get(realtor.id) ?? 0
+    const closedLeads = closedByRealtor.get(realtor.id) ?? 0
+    return {
+      realtorId: realtor.id,
+      realtorName: realtor.user.name,
+      totalLeads,
+      closedLeads,
+      conversionRate: totalLeads > 0 ? closedLeads / totalLeads : 0,
+    }
+  })
+}

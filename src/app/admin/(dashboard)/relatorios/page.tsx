@@ -6,6 +6,7 @@ import { LeadsByOriginChart } from "@/components/admin/reports/leads-by-origin-c
 import { LeadsByStageChart } from "@/components/admin/reports/leads-by-stage-chart"
 import { TopPropertiesPanel } from "@/components/admin/reports/top-properties-panel"
 import { RealtorBreakdownPanel } from "@/components/admin/reports/realtor-breakdown-panel"
+import { BusinessInsightsPanel } from "@/components/admin/reports/business-insights-panel"
 import { getBusinessReport, canViewRealtorBreakdown } from "@/modules/report/actions"
 
 const REPORT_MONTHS = 6
@@ -36,6 +37,8 @@ export default async function AdminReportsPage() {
         conversionRate={report.conversionRate}
         propertyStatus={report.propertyStatus}
       />
+
+      <BusinessInsightsPanel />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="border-border/60">

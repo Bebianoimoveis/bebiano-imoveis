@@ -179,7 +179,7 @@ async function getLeadsNeedingAttention(limit: number) {
 // real do mês até agora, extrapolado pros dias restantes, cruzado com a
 // média dos últimos 3 meses fechados como referência. O resultado inclui
 // o método usado, pra instrução de sistema sempre citar como estimativa.
-async function getFinancialForecast() {
+export async function getFinancialForecast() {
   const [timeline, monthlySeries] = await Promise.all([
     getFinancialCashFlowTimeline({}),
     getFinancialMonthlySeries({}),

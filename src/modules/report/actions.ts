@@ -3,10 +3,16 @@
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
+import { getGeminiClient, isGeminiConfigured, GEMINI_MODEL, withGeminiRetry } from "@/lib/gemini"
 import * as reportRepository from "@/modules/report/repository"
 import { listAdminAppointments } from "@/modules/appointment/actions"
 import { listAdminUpcomingBirthdays } from "@/modules/client/actions"
-import { getDashboardFinancialAlerts } from "@/modules/financial/actions"
+import {
+  getDashboardFinancialAlerts,
+  getFinancialMonthlySeries,
+  getFinancialCommissionsByRealtor,
+} from "@/modules/financial/actions"
+import { getFinancialForecast } from "@/modules/assistant/tools"
 import { listAdminProposalsExpiringSoon } from "@/modules/proposal/actions"
 
 async function requireSession() {
@@ -263,4 +269,76 @@ export async function exportBusinessReportCsv(months = 6) {
   const body = rows.map(([month, data]) => [month, data.count, data.total])
 
   return [header, ...body].map((row) => row.map(toCsvValue).join(",")).join("\n")
+}
+
+const INSIGHTS_SYSTEM_INSTRUCTION = `Você é a Bebiano IA, gerando uma análise de negócio pra Bebiano Imóveis a partir de dados reais do sistema, enviados em JSON na mensagem do usuário.
+
+FORMATO: texto simples, sem markdown nenhum (nada de **negrito**, #títulos, listas com * ou -). Organize a resposta em blocos: um título curto em maiúsculas seguido de dois-pontos (ex: "VISÃO GERAL:"), com frases normais embaixo, separados por uma linha em branco entre blocos. Valores em R$ 890.000,00, datas em 09/08/2026, percentuais em 42%.
+
+REGRAS: use só os números do JSON fornecido — nunca invente ou estime um valor que não esteja lá. Deixe sempre claro o que é dado real e o que é estimativa (o campo "forecast", quando presente, já vem calculado — cite o método dele, nunca calcule uma previsão nova por conta própria). Se um bloco de dado não vier no JSON (ex: sem "financial" ou sem "realtorPerformance"), simplesmente não fale sobre esse assunto — não invente o conteúdo nem peça desculpa pela ausência. Seja direto e específico, nunca genérico ou com frases de efeito.
+
+ESTRUTURA esperada (adapte / pule blocos conforme o que os dados permitirem):
+VISÃO GERAL: resumo do momento do negócio — portfólio, leads, conversão, vendas do período.
+FATURAMENTO MENSAL: leitura da série de receita/despesa mês a mês (campo financial.monthlySeries) — tendência, meses fortes/fracos.
+PREVISÃO: o que financial.forecast indica pro fechamento do mês atual, deixando explícito que é estimativa.
+COMPARATIVO POR CORRETOR: só se realtorPerformance vier no JSON — quem vendeu/rendeu mais (commissions), quem converte mais (conversion), alguma discrepância que mereça atenção.
+SUGESTÕES: de 3 a 5 ações concretas e priorizadas, cada uma amarrada a um dado específico citado acima — nunca conselho genérico de mercado.`
+
+// Painel "Análise com IA" da Inteligência de Negócios — gerado sob
+// demanda (custa tempo/tokens), nunca automático no load da página.
+// Financeiro e comparativo por corretor só entram no JSON enviado à IA
+// se a pessoa logada realmente tiver acesso a esses dados (mesmo gate
+// já usado no resto do painel) — nunca vazam por essa via alternativa.
+export async function generateBusinessInsights(): Promise<{ text: string } | { error: string }> {
+  const session = await requireSession()
+  await requireReportView(session)
+
+  if (!isGeminiConfigured()) {
+    return {
+      error:
+        "A IA ainda não foi configurada neste sistema. Peça para o administrador adicionar a chave GEMINI_API_KEY nas variáveis de ambiente do projeto.",
+    }
+  }
+
+  const [business, canSeeRealtors] = await Promise.all([getBusinessReport(12), canViewRealtorBreakdown()])
+
+  let financial: { monthlySeries: unknown; forecast: unknown } | null = null
+  try {
+    const [monthlySeries, forecast] = await Promise.all([getFinancialMonthlySeries({}), getFinancialForecast()])
+    financial = { monthlySeries, forecast }
+  } catch {
+    financial = null
+  }
+
+  let realtorPerformance: { conversion: unknown; commissions: unknown | null } | null = null
+  if (canSeeRealtors) {
+    const conversion = await reportRepository.getLeadConversionByRealtor()
+    let commissions: unknown | null = null
+    try {
+      commissions = await getFinancialCommissionsByRealtor()
+    } catch {
+      commissions = null
+    }
+    realtorPerformance = { conversion, commissions }
+  }
+
+  const payload = { business, financial, realtorPerformance }
+
+  try {
+    const ai = getGeminiClient()
+    const chat = ai.chats.create({
+      model: GEMINI_MODEL,
+      config: { systemInstruction: INSIGHTS_SYSTEM_INSTRUCTION },
+    })
+    // Round-trip por JSON garante que Decimal/Date (vindos das actions do
+    // Prisma) virem string simples antes de ir pro Gemini, mesmo padrão
+    // usado nas respostas de ferramenta do assistente de chat.
+    const response = await withGeminiRetry(() =>
+      chat.sendMessage({ message: JSON.stringify(JSON.parse(JSON.stringify(payload))) })
+    )
+    return { text: response.text || "Não consegui gerar a análise agora. Tente novamente." }
+  } catch (error) {
+    console.error("generateBusinessInsights failed", error)
+    return { error: "Ocorreu um erro ao consultar a IA. Tente novamente em instantes." }
+  }
 }
