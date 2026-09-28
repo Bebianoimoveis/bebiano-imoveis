@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { AppointmentStatus } from "@/generated/prisma/client"
 
-const LABELS: Record<AppointmentStatus, string> = {
+export const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   SCHEDULED: "Agendado",
   CONFIRMED: "Confirmado",
   DONE: "Realizado",
@@ -21,7 +21,7 @@ const STYLES: Record<AppointmentStatus, string> = {
 export function AppointmentStatusBadge({ status }: { status: AppointmentStatus }) {
   return (
     <Badge variant="outline" className={cn("border-transparent", STYLES[status])}>
-      {LABELS[status]}
+      {APPOINTMENT_STATUS_LABELS[status]}
     </Badge>
   )
 }

@@ -166,6 +166,7 @@ export function AppointmentFormSheet({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [realtorId, setRealtorId] = useState("")
   const [type, setType] = useState<AppointmentType>("VISIT")
+  const [typeLabel, setTypeLabel] = useState("")
   const [scheduledAt, setScheduledAt] = useState("")
   const [duration, setDuration] = useState(60)
   const [notes, setNotes] = useState("")
@@ -181,6 +182,7 @@ export function AppointmentFormSheet({
     if (appointment) {
       setRealtorId(appointment.realtorId)
       setType(appointment.type)
+      setTypeLabel(appointment.typeLabel ?? "")
       setScheduledAt(toDatetimeLocal(new Date(appointment.scheduledAt)))
       setDuration(appointment.durationMinutes)
       setNotes(appointment.notes ?? "")
@@ -194,6 +196,7 @@ export function AppointmentFormSheet({
     } else {
       setRealtorId(currentRealtorId ?? "")
       setType("VISIT")
+      setTypeLabel("")
       setScheduledAt(toDatetimeLocal(defaultScheduledAt ?? new Date()))
       setDuration(60)
       setNotes("")
@@ -255,6 +258,7 @@ export function AppointmentFormSheet({
       const payload = {
         realtorId,
         type,
+        typeLabel: type === "OTHER" ? typeLabel : undefined,
         scheduledAt: new Date(scheduledAt),
         durationMinutes: duration,
         notes,
@@ -371,6 +375,18 @@ export function AppointmentFormSheet({
             </Select>
           </div>
         </div>
+
+        {type === "OTHER" ? (
+          <div className="space-y-1.5">
+            <Label htmlFor="typeLabel">Qual é o tipo?</Label>
+            <Input
+              id="typeLabel"
+              placeholder="Ex: entrega de chaves, vistoria..."
+              value={typeLabel}
+              onChange={(e) => setTypeLabel(e.target.value)}
+            />
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-[3fr_2fr] gap-3">
           <div className="space-y-1.5">

@@ -15,6 +15,9 @@ export const appointmentInputSchema = z.object({
   scheduledAt: z.coerce.date(),
   durationMinutes: z.coerce.number().int().positive().default(60),
   type: z.enum(APPOINTMENT_TYPES).default("VISIT"),
+  // Só faz sentido (e só é exigido) quando type = "OTHER" — a validação
+  // condicional fica na action, não aqui, pra manter o schema simples.
+  typeLabel: z.string().max(120).optional(),
   notes: z.string().max(2000).optional(),
   leadId: z.string().optional(),
   clientId: z.string().optional(),

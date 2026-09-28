@@ -574,6 +574,10 @@ model Appointment {
   // detecção de conflito real (janela de sobreposição, não só "por perto").
   durationMinutes Int             @default(60)
   type            AppointmentType @default(VISIT)
+  // Preenchido só quando type = OTHER — descreve que tipo de compromisso é
+  // de verdade (o enum não cobre tudo, e forçar um valor fixo pra "outro"
+  // não ajudava a identificar o que era depois).
+  typeLabel   String?
   status      AppointmentStatus @default(SCHEDULED)
   notes       String?
   createdAt   DateTime          @default(now())

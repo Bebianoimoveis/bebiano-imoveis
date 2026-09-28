@@ -7,6 +7,7 @@ import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 import * as notificationRepository from "@/modules/notification/repository"
 import * as financialRepository from "@/modules/financial/repository"
 import { listAdminAppointments } from "@/modules/appointment/actions"
+import { APPOINTMENT_STATUS_LABELS } from "@/components/admin/agenda/appointment-status-badge"
 
 async function requireSession() {
   const session = await auth()
@@ -55,6 +56,35 @@ async function buildLiveReminders(
         id: `appointment:${appointment.id}`,
         title: "Compromisso hoje",
         message: `${time} · ${withWho}`,
+        read: false,
+        createdAt: new Date(appointment.scheduledAt),
+        kind: "reminder",
+      })
+    }
+
+    // Passou o dia do compromisso e ninguém marcou o que aconteceu
+    // (realizado/não compareceu/cancelado) — fica lembrando até alguém
+    // atualizar o status, mesma lógica do "vencimento atrasado" do
+    // financeiro. Janela de 30 dias pra não acumular lembrete de coisa
+    // muito antiga que provavelmente já foi tratada fora do sistema.
+    const overdueFrom = new Date(startOfDay)
+    overdueFrom.setDate(overdueFrom.getDate() - 30)
+    const overdueTo = new Date(startOfDay.getTime() - 1)
+    const pastAppointments = await listAdminAppointments({ from: overdueFrom, to: overdueTo })
+    for (const appointment of pastAppointments) {
+      if (appointment.status === "CANCELED" || appointment.status === "DONE" || appointment.status === "NO_SHOW") {
+        continue
+      }
+      const dateLabel = new Date(appointment.scheduledAt).toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+      })
+      const withWho = appointment.lead?.name ?? appointment.client?.name ?? "sem contato vinculado"
+      reminders.push({
+        id: `appointment-overdue:${appointment.id}`,
+        title: "Falta atualizar o status da visita",
+        message: `${dateLabel} · ${withWho} · ainda marcado como ${APPOINTMENT_STATUS_LABELS[appointment.status]}`,
         read: false,
         createdAt: new Date(appointment.scheduledAt),
         kind: "reminder",
