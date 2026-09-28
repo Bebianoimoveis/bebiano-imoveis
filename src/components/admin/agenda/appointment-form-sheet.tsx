@@ -204,7 +204,14 @@ export function AppointmentFormSheet({
     }
     setConflicts([])
     setPendingWhatsApp(null)
-  }, [open, appointment, defaultScheduledAt, realtors, currentRealtorId])
+    // Só reseta o formulário quando o Sheet abre (ou troca de compromisso
+    // sendo editado) — nunca em qualquer outro re-render. `realtors` e
+    // `currentRealtorId` viravam gatilho aqui porque são objetos/props
+    // recriados a cada `router.refresh()` (inclusive o auto-refresh de
+    // 30s do painel inteiro), o que limpava o campo de data/hora sozinho
+    // enquanto a pessoa ainda estava digitando.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, appointment?.id])
 
   useEffect(() => {
     if (!realtorId || !scheduledAt) return

@@ -143,7 +143,14 @@ export function FinancialEntryFormSheet({
         installments: 1,
       })
     }
-  }, [open, entry, defaultType, form])
+    // Só reseta quando o Sheet abre (ou troca de lançamento sendo
+    // editado) — `entry` é um objeto recriado a cada `router.refresh()`
+    // (inclusive o auto-refresh de 30s do painel), então usá-lo direto
+    // na lista de dependências limpava o formulário sozinho enquanto a
+    // pessoa ainda estava digitando. Mesmo ajuste feito em
+    // appointment-form-sheet.tsx.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, entry?.id])
 
   const type = form.watch("type")
   const status = form.watch("status")
