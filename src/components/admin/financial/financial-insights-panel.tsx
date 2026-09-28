@@ -48,7 +48,8 @@ export function FinancialInsightsPanel({
           <div>
             <h2 className="font-heading text-base font-semibold">Análise com IA</h2>
             <p className="text-sm text-muted-foreground">
-              Comparativo mês a mês, tendência, previsão e sugestões a partir dos dados financeiros reais.
+              Parecer completo, como uma consultora financeira: comparativo, tendência, previsão, desempenho
+              por corretor e sugestões.
             </p>
           </div>
         </div>

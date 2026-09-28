@@ -5,7 +5,7 @@ import { FinancialExpenseCategoryChart } from "@/components/admin/financial/fina
 import { FinancialCashFlowChart } from "@/components/admin/financial/financial-cash-flow-chart"
 import { FinancialIncomeByRealtorChart } from "@/components/admin/financial/financial-income-by-realtor-chart"
 import { FinancialIncomeByCityChart } from "@/components/admin/financial/financial-income-by-city-chart"
-import { FinancialProjectionCard } from "@/components/admin/financial/financial-projection-card"
+import { FinancialInsightsPanel } from "@/components/admin/financial/financial-insights-panel"
 import { DashboardSection } from "@/components/admin/dashboard/dashboard-section"
 import type {
   getKpiData,
@@ -29,6 +29,7 @@ export function FinancialOverviewTab({
   availableBalance,
   overdueCount,
   goalsHit,
+  insight,
 }: {
   kpis: Awaited<ReturnType<typeof getKpiData>>
   monthlySeries: Awaited<ReturnType<typeof getMonthlySeries>>
@@ -41,16 +42,21 @@ export function FinancialOverviewTab({
   availableBalance: number
   overdueCount: number
   goalsHit: number
+  insight: { text: string; generatedAt: Date } | null
 }) {
   const monthBalance = kpis.currentMonth.income - kpis.currentMonth.expense
 
   return (
     <div className="space-y-6">
       <DashboardSection index={0}>
-        <FinancialAlertsBanner overdueCount={overdueCount} monthBalance={monthBalance} goalsHit={goalsHit} />
+        <FinancialInsightsPanel initialText={insight?.text ?? null} initialGeneratedAt={insight?.generatedAt ?? null} />
       </DashboardSection>
 
       <DashboardSection index={1}>
+        <FinancialAlertsBanner overdueCount={overdueCount} monthBalance={monthBalance} goalsHit={goalsHit} />
+      </DashboardSection>
+
+      <DashboardSection index={2}>
         <FinancialKpis
           kpis={kpis}
           commissions={commissions}
@@ -59,7 +65,7 @@ export function FinancialOverviewTab({
         />
       </DashboardSection>
 
-      <DashboardSection index={2} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <DashboardSection index={3} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-[20px] border border-border/60 bg-card p-5">
           <p className="mb-4 font-heading text-sm font-semibold">Receita vs. Despesa por mês</p>
           <FinancialIncomeExpenseChart data={monthlySeries} />
@@ -70,7 +76,7 @@ export function FinancialOverviewTab({
         </div>
       </DashboardSection>
 
-      <DashboardSection index={3} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <DashboardSection index={4} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-[20px] border border-border/60 bg-card p-5">
           <p className="mb-4 font-heading text-sm font-semibold">Fluxo de caixa acumulado (mês)</p>
           <FinancialCashFlowChart data={cashFlow} />
@@ -81,12 +87,11 @@ export function FinancialOverviewTab({
         </div>
       </DashboardSection>
 
-      <DashboardSection index={4} className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <DashboardSection index={5}>
         <div className="rounded-[20px] border border-border/60 bg-card p-5">
           <p className="mb-4 font-heading text-sm font-semibold">Receita por cidade</p>
           <FinancialIncomeByCityChart data={incomeByCity} />
         </div>
-        <FinancialProjectionCard data={monthlySeries} />
       </DashboardSection>
     </div>
   )

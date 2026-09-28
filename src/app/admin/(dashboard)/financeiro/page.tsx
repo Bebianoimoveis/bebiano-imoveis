@@ -14,7 +14,6 @@ import { FinancialOverviewTab } from "@/components/admin/financial/financial-ove
 import { FinancialCommissionsPanel } from "@/components/admin/financial/financial-commissions-panel"
 import { GoalsPanel } from "@/components/admin/financial/goals-panel"
 import { FinancialReportsPanel } from "@/components/admin/financial/financial-reports-panel"
-import { FinancialInsightsPanel } from "@/components/admin/financial/financial-insights-panel"
 import { isEntryOverdue } from "@/components/admin/financial/financial-entry-status-badge"
 import {
   listAdminFinancialEntries,
@@ -194,6 +193,7 @@ export default async function AdminFinancialPage({
             availableBalance={availableBalance}
             overdueCount={overdueCount}
             goalsHit={goalsHit}
+            insight={insight}
           />
         </TabsContent>
 
@@ -222,10 +222,6 @@ export default async function AdminFinancialPage({
 
         <TabsContent value="relatorios">
           <DashboardSection index={2} className="space-y-6">
-            <FinancialInsightsPanel
-              initialText={insight?.text ?? null}
-              initialGeneratedAt={insight?.generatedAt ?? null}
-            />
             <FinancialReportsPanel
               incomeByRealtor={incomeByRealtor}
               incomeByCity={incomeByCity}

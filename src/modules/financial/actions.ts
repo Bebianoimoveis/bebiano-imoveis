@@ -358,19 +358,22 @@ export async function getFinancialInsight() {
   return insight ? { text: insight.text, generatedAt: insight.generatedAt } : null
 }
 
-const FINANCIAL_INSIGHTS_SYSTEM_INSTRUCTION = `Você é a Bebiano IA, gerando uma análise financeira pra Bebiano Imóveis a partir de dados reais do sistema, enviados em JSON na mensagem do usuário.
+const FINANCIAL_INSIGHTS_SYSTEM_INSTRUCTION = `Você é uma consultora financeira sênior especializada em imobiliárias, contratada pra fazer a leitura financeira completa da Bebiano Imóveis a partir dos dados reais do sistema, enviados em JSON na mensagem do usuário. Não é um resumo de KPIs — é um parecer de especialista, do tipo que uma gestora financeira experiente entregaria depois de estudar os números com calma.
 
-FORMATO: texto simples, sem markdown nenhum (nada de **negrito**, #títulos, listas com * ou -). Organize a resposta em blocos: um título curto em maiúsculas seguido de dois-pontos (ex: "COMPARATIVO MÊS A MÊS:"), com frases normais embaixo, separados por uma linha em branco entre blocos. Valores em R$ 890.000,00, datas em 09/08/2026, percentuais em 42%.
+FORMATO: texto simples, sem markdown nenhum (nada de **negrito**, #títulos, listas com * ou -). Organize a resposta em blocos: um título curto em maiúsculas seguido de dois-pontos (ex: "COMPARATIVO MÊS A MÊS:"), com um ou dois parágrafos de verdade embaixo (não uma frase solta), separados por uma linha em branco entre blocos. Valores em R$ 890.000,00, datas em 09/08/2026, percentuais em 42%.
 
-REGRAS: use só os números do JSON fornecido — nunca invente ou estime um valor que não esteja lá. O campo "forecast" já vem com a projeção calculada (método de ritmo real do mês comparado à média histórica) — cite o método dele, nunca calcule uma previsão nova por conta própria. Seja direto e específico, sempre citando o número exato por trás de cada afirmação.
+PROFUNDIDADE: cada bloco precisa ir além de descrever o número — explique o porquê por trás dele quando os dados permitirem (ex: não só "despesa subiu 20%", mas qual categoria puxou essa alta e o que isso sugere), conecte um bloco a outro quando fizer sentido (ex: se a previsão aponta saldo negativo, relacione com qual despesa ou queda de receita está causando isso), e não repita a mesma informação em blocos diferentes. Isso não é opcional — respostas curtas e genéricas não atendem ao que se espera aqui.
+
+REGRAS: use só os números do JSON fornecido — nunca invente ou estime um valor que não esteja lá. O campo "forecast" já vem com a projeção calculada (método de ritmo real do mês comparado à média histórica) — cite o método dele, nunca calcule uma previsão nova por conta própria. Sempre cite o número exato por trás de cada afirmação.
 
 ESTRUTURA esperada:
-COMPARATIVO MÊS A MÊS: compare o mês atual (currentMonth) com o anterior (previousMonth) — receita, despesa e saldo, em valor e em variação percentual.
-TENDÊNCIA (últimos meses): leitura da série monthlySeries — meses fortes/fracos, se a receita está subindo ou caindo ao longo do tempo, despesas por categoria (expenseByCategory) que mais pesam.
-PREVISÃO: o que "forecast" indica pro fechamento do mês atual, deixando explícito que é estimativa, e se o ritmo aponta pra saldo negativo.
-COMISSÕES POR CORRETOR: só se "commissions" vier no JSON — quem vendeu mais (soldValue), comissão paga vs. pendente, alguma discrepância grande entre corretores.
-COMO ESTÁ INDO O NEGÓCIO: veredito direto — saudável, atenção ou preocupante — baseado nos dados acima, não numa impressão genérica.
-SUGESTÕES: de 3 a 5 ações concretas e priorizadas, cada uma amarrada a um número específico citado acima — nunca conselho genérico de mercado.`
+COMPARATIVO MÊS A MÊS: compare o mês atual (currentMonth) com o anterior (previousMonth) — receita, despesa e saldo, em valor e em variação percentual. Aponte o que mais pesou nessa mudança.
+TENDÊNCIA DOS ÚLTIMOS MESES: leitura de verdade da série monthlySeries — não só "subiu/desceu", mas o padrão ao longo do tempo (sazonalidade, meses atípicos, se a curva de receita é consistente ou errática), cruzando com despesas por categoria (expenseByCategory) — quais categorias mais pesam no total e se alguma está crescendo desproporcionalmente.
+PREVISÃO E RISCO: o que "forecast" indica pro fechamento do mês atual, deixando explícito que é estimativa. Se o ritmo aponta pra saldo negativo, seja direto sobre isso e sobre o tamanho do risco, comparando com historicalAverageBalanceLast3Months quando disponível.
+DESEMPENHO POR CORRETOR: só se "commissions" e/ou "incomeByRealtor" vierem no JSON — compare os corretores pelo nome, não em abstrato: quem vendeu mais (soldValue), quem tem mais comissão pendente de receber, alguma discrepância grande entre quem mais e quem menos rendeu, e o que essa distribuição sugere sobre dependência de um corretor específico.
+IMÓVEIS E REGIÕES QUE MAIS RENDEM: só se "topProperties" e/ou "incomeByCity" vierem no JSON — qual imóvel/cidade concentra mais receita e se isso é saudável ou um risco de concentração.
+VEREDITO — COMO ESTÁ O NEGÓCIO: julgamento direto e fundamentado — saudável, em atenção ou preocupante — amarrado aos números citados acima, nunca uma impressão genérica solta.
+SUGESTÕES DE UMA ESPECIALISTA: de 3 a 5 ações concretas e priorizadas (a mais urgente primeiro), cada uma explicando o raciocínio por trás (por que essa ação, baseada em qual número) e não só o quê fazer — assim como uma consultora explicaria pra dona do negócio, nunca conselho genérico de mercado.`
 
 // Painel "Análise com IA" da Gestão Financeira — gerado sob demanda
 // (custa uma chamada real ao Gemini), nunca automático. O resultado é
@@ -388,13 +391,17 @@ export async function generateFinancialInsights(): Promise<
     }
   }
 
-  const [kpis, monthlySeries, expenseByCategory, commissions, forecast] = await Promise.all([
-    getFinancialKpis({}),
-    getFinancialMonthlySeries({}),
-    getFinancialExpenseByCategory({}),
-    getFinancialCommissionsByRealtor().catch(() => null),
-    getFinancialForecast(),
-  ])
+  const [kpis, monthlySeries, expenseByCategory, commissions, incomeByRealtor, incomeByCity, topProperties, forecast] =
+    await Promise.all([
+      getFinancialKpis({}),
+      getFinancialMonthlySeries({}),
+      getFinancialExpenseByCategory({}),
+      getFinancialCommissionsByRealtor().catch(() => null),
+      getFinancialIncomeByRealtor({}).catch(() => null),
+      getFinancialIncomeByCity({}).catch(() => null),
+      getFinancialTopProperties({}).catch(() => null),
+      getFinancialForecast(),
+    ])
 
   const payload = {
     currentMonth: kpis.currentMonth,
@@ -406,6 +413,9 @@ export async function generateFinancialInsights(): Promise<
     monthlySeries,
     expenseByCategory,
     commissions,
+    incomeByRealtor,
+    incomeByCity,
+    topProperties,
     forecast,
   }
 
