@@ -64,6 +64,43 @@ export async function createCity(input: unknown) {
   return city
 }
 
+// Mesmo padrão de deletePropertyType: só exclui se nada estiver
+// vinculado (bairro, imóvel, cliente, preferência, meta, captação) —
+// excluir junto perderia dado real ou violaria a constraint do banco
+// (Property.cityId é obrigatório). Com vínculo, é preciso desvincular
+// antes (ex: excluir os bairros da cidade primeiro).
+export async function deleteCity(id: string) {
+  const session = await auth()
+  if (!(await can(session?.user, "taxonomy.manage"))) {
+    throw new Error("Sem permissão para gerenciar cidades.")
+  }
+
+  const [neighborhoods, properties, clients, clientPreferences, goals, submissions] = await Promise.all([
+    prisma.neighborhood.count({ where: { cityId: id } }),
+    prisma.property.count({ where: { cityId: id } }),
+    prisma.client.count({ where: { cityId: id } }),
+    prisma.clientPreference.count({ where: { cityId: id } }),
+    prisma.goal.count({ where: { cityId: id } }),
+    prisma.propertySubmission.count({ where: { cityId: id } }),
+  ])
+  const total = neighborhoods + properties + clients + clientPreferences + goals + submissions
+  if (total > 0) {
+    const parts: string[] = []
+    if (neighborhoods > 0) parts.push(`${neighborhoods} bairro(s)`)
+    if (properties > 0) parts.push(`${properties} imóvel(is)`)
+    if (clients > 0) parts.push(`${clients} cliente(s)`)
+    if (clientPreferences > 0) parts.push(`${clientPreferences} preferência(s) de cliente`)
+    if (goals > 0) parts.push(`${goals} meta(s)`)
+    if (submissions > 0) parts.push(`${submissions} captação(ões)`)
+    throw new Error(`Esta cidade tem ${parts.join(", ")} vinculado(s) e não pode ser excluída.`)
+  }
+
+  await prisma.city.delete({ where: { id } })
+
+  revalidatePath("/admin/taxonomias")
+  revalidatePath("/admin/imoveis/novo")
+}
+
 export async function createNeighborhood(input: unknown) {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
@@ -73,8 +110,35 @@ export async function createNeighborhood(input: unknown) {
   const data = createNeighborhoodSchema.parse(input)
   const neighborhood = await prisma.neighborhood.create({ data })
 
+  revalidatePath("/admin/taxonomias")
   revalidatePath("/admin/imoveis/novo")
   return neighborhood
+}
+
+// Mesmo padrão de deleteCity: só exclui se nenhum imóvel ou preferência
+// de cliente estiver vinculado a esse bairro.
+export async function deleteNeighborhood(id: string) {
+  const session = await auth()
+  if (!(await can(session?.user, "taxonomy.manage"))) {
+    throw new Error("Sem permissão para gerenciar bairros.")
+  }
+
+  const [properties, clientPreferences] = await Promise.all([
+    prisma.property.count({ where: { neighborhoodId: id } }),
+    prisma.clientPreference.count({ where: { neighborhoodId: id } }),
+  ])
+  const total = properties + clientPreferences
+  if (total > 0) {
+    const parts: string[] = []
+    if (properties > 0) parts.push(`${properties} imóvel(is)`)
+    if (clientPreferences > 0) parts.push(`${clientPreferences} preferência(s) de cliente`)
+    throw new Error(`Este bairro tem ${parts.join(", ")} vinculado(s) e não pode ser excluído.`)
+  }
+
+  await prisma.neighborhood.delete({ where: { id } })
+
+  revalidatePath("/admin/taxonomias")
+  revalidatePath("/admin/imoveis/novo")
 }
 
 export async function createPropertyType(input: unknown) {

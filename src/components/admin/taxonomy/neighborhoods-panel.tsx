@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Plus } from "lucide-react"
+import { useEffect, useState, useTransition } from "react"
+import { Plus, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,9 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { EmptyState } from "@/components/shared/empty-state"
 import { NeighborhoodFormDialog } from "@/components/admin/taxonomy/neighborhood-form-dialog"
-import { listNeighborhoods } from "@/modules/taxonomy/actions"
+import { listNeighborhoods, deleteNeighborhood } from "@/modules/taxonomy/actions"
 
 type CityOption = { id: string; name: string; state: string }
 type NeighborhoodItem = { id: string; name: string }
@@ -22,6 +34,7 @@ export function NeighborhoodsPanel({ cities }: { cities: CityOption[] }) {
   const [cityId, setCityId] = useState(cities[0]?.id ?? "")
   const [neighborhoods, setNeighborhoods] = useState<NeighborhoodItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   function refetch(id: string) {
     if (!id) {
@@ -38,6 +51,18 @@ export function NeighborhoodsPanel({ cities }: { cities: CityOption[] }) {
     refetch(cityId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityId])
+
+  function handleDelete(id: string) {
+    startTransition(async () => {
+      try {
+        await deleteNeighborhood(id)
+        toast.success("Bairro excluído.")
+        refetch(cityId)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao excluir bairro.")
+      }
+    })
+  }
 
   if (cities.length === 0) {
     return (
@@ -84,9 +109,34 @@ export function NeighborhoodsPanel({ cities }: { cities: CityOption[] }) {
           {neighborhoods.map((neighborhood) => (
             <span
               key={neighborhood.id}
-              className="rounded-full border border-border/60 bg-secondary/40 px-3 py-1.5 text-sm"
+              className="flex items-center gap-1.5 rounded-full border border-border/60 bg-secondary/40 py-1.5 pl-3 pr-1.5 text-sm"
             >
               {neighborhood.name}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    aria-label={`Excluir bairro ${neighborhood.name}`}
+                    className="flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/15 hover:text-destructive disabled:opacity-60"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir o bairro &ldquo;{neighborhood.name}&rdquo;?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Essa ação não pode ser desfeita. Só é possível excluir um bairro sem imóvel ou preferência
+                      de cliente vinculados.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel />
+                    <AlertDialogAction onClick={() => handleDelete(neighborhood.id)}>Excluir</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </span>
           ))}
         </div>

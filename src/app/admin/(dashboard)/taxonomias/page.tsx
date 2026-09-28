@@ -1,17 +1,10 @@
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PropertyTypeToggleList } from "@/components/admin/segments/property-type-toggle-list"
 import { CityFormDialog } from "@/components/admin/taxonomy/city-form-dialog"
+import { CityTable } from "@/components/admin/taxonomy/city-table"
 import { PropertyTypeFormDialog } from "@/components/admin/taxonomy/property-type-form-dialog"
 import { PropertyFeatureFormDialog } from "@/components/admin/taxonomy/property-feature-form-dialog"
 import { NeighborhoodsPanel } from "@/components/admin/taxonomy/neighborhoods-panel"
@@ -51,24 +44,7 @@ export default async function AdminTaxonomiasPage() {
         {cities.length === 0 ? (
           <EmptyState title="Nenhuma cidade cadastrada" />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cities.map((city) => (
-                  <TableRow key={city.id}>
-                    <TableCell className="font-medium">{city.name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{city.state}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <CityTable cities={cities} />
         )}
       </section>
 
