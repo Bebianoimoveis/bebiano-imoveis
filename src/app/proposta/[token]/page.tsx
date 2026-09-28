@@ -5,7 +5,7 @@ import { Check, Download, ImageOff, MapPin } from "lucide-react"
 
 import { findProposalByShareToken, markProposalViewed } from "@/modules/proposal/repository"
 import { PROPOSAL_STATUS_LABELS } from "@/components/admin/proposals/proposal-status-badge"
-import { formatCurrency, formatDateBR, getDisplayAddress } from "@/lib/format"
+import { formatCurrency, formatDateOnlyBR, getDisplayAddress } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 
 // Sem isso, o link compartilhado (WhatsApp, iMessage etc.) não tinha
@@ -53,7 +53,6 @@ export default async function PublicProposalPage({
   }
 
   const cover = proposal.property.images.find((image) => image.isCover)?.url ?? proposal.property.images[0]?.url
-  const gallery = proposal.property.images.slice(0, 5)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -82,15 +81,6 @@ export default async function PublicProposalPage({
               </div>
             )}
           </div>
-          {gallery.length > 1 ? (
-            <div className="grid grid-cols-5 gap-1 p-1">
-              {gallery.map((image) => (
-                <div key={image.id} className="relative aspect-square overflow-hidden rounded-lg bg-secondary">
-                  <NextImage src={image.url} alt="" fill className="object-cover" sizes="150px" />
-                </div>
-              ))}
-            </div>
-          ) : null}
           <div className="space-y-2 p-5">
             <h2 className="font-heading text-xl font-semibold">{proposal.property.title}</h2>
             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -153,7 +143,7 @@ export default async function PublicProposalPage({
           ) : null}
           {proposal.validUntil ? (
             <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Check className="size-4" /> Válida até {formatDateBR(proposal.validUntil)}
+              <Check className="size-4" /> Válida até {formatDateOnlyBR(proposal.validUntil)}
             </p>
           ) : null}
           {proposal.notes ? <p className="text-sm text-muted-foreground">{proposal.notes}</p> : null}

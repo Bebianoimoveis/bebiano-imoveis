@@ -1,6 +1,6 @@
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer"
 
-import { formatCurrency, getDisplayAddress } from "@/lib/format"
+import { formatCurrency, formatDateOnlyBR, getDisplayAddress } from "@/lib/format"
 import { PROPOSAL_STATUS_LABELS } from "@/components/admin/proposals/proposal-status-badge"
 import type { ProposalDetail } from "@/modules/proposal/repository"
 
@@ -102,7 +102,7 @@ export function ProposalPdfDocument({
         <View style={styles.row}>
           <Text style={styles.label}>Válida até</Text>
           <Text style={styles.value}>
-            {proposal.validUntil ? new Date(proposal.validUntil).toLocaleDateString("pt-BR") : "—"}
+            {proposal.validUntil ? formatDateOnlyBR(proposal.validUntil) : "—"}
           </Text>
         </View>
         <View style={styles.row}>

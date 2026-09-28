@@ -6,7 +6,7 @@ import { ImageOff } from "lucide-react"
 import { ProposalStatusBadge } from "@/components/admin/proposals/proposal-status-badge"
 import { ProposalRowActions } from "@/components/admin/proposals/proposal-row-actions"
 import { ClientAvatar } from "@/components/admin/clients/client-avatar"
-import { formatCurrency, formatRelativeTime } from "@/lib/format"
+import { formatCurrency, formatDateOnlyBR, formatRelativeTime } from "@/lib/format"
 import type { ProposalListItem } from "@/modules/proposal/repository"
 
 function coverUrl(proposal: ProposalListItem) {
@@ -85,7 +85,7 @@ export function ProposalTableView({
                   <ProposalStatusBadge status={proposal.status} />
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {proposal.validUntil ? new Date(proposal.validUntil).toLocaleDateString("pt-BR") : "—"}
+                  {proposal.validUntil ? formatDateOnlyBR(proposal.validUntil) : "—"}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{formatRelativeTime(proposal.updatedAt)}</td>
                 <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>

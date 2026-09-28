@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { formatCurrency } from "@/lib/format"
+import { formatCurrency, formatDateOnlyBR } from "@/lib/format"
 import { createProposalWizard } from "@/modules/proposal/actions"
 import { suggestClients, createClientManually } from "@/modules/client/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
@@ -489,7 +489,7 @@ export function ProposalWizardSheet({
                 <div className="flex justify-between"><span className="text-muted-foreground">Pagamento</span><span className="font-medium">{paymentMethod}</span></div>
               ) : null}
               {validUntil ? (
-                <div className="flex justify-between"><span className="text-muted-foreground">Válida até</span><span className="font-medium">{new Date(validUntil).toLocaleDateString("pt-BR")}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Válida até</span><span className="font-medium">{formatDateOnlyBR(validUntil)}</span></div>
               ) : null}
             </div>
             {notes ? <p className="text-sm text-muted-foreground">{notes}</p> : null}

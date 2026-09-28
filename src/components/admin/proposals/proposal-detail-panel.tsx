@@ -55,7 +55,7 @@ import {
   duplicateProposal,
   markProposalSent,
 } from "@/modules/proposal/actions"
-import { formatCurrency, getDisplayAddress, formatDateTimeBR } from "@/lib/format"
+import { formatCurrency, getDisplayAddress, formatDateTimeBR, formatDateOnlyBR } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 import type { AdminProposalDetail } from "@/modules/proposal/actions"
 import type { ProposalStatus } from "@/generated/prisma/client"
@@ -368,7 +368,7 @@ export function ProposalDetailPanel({
                   {proposal.validUntil ? (
                     <div className="space-y-1 text-sm">
                       <p className="text-muted-foreground">Válida até</p>
-                      <p className="font-medium">{new Date(proposal.validUntil).toLocaleDateString("pt-BR")}</p>
+                      <p className="font-medium">{formatDateOnlyBR(proposal.validUntil)}</p>
                     </div>
                   ) : null}
 
