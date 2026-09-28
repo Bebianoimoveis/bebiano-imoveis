@@ -372,11 +372,12 @@ export function AppointmentFormSheet({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-[3fr_2fr] gap-3">
           <div className="space-y-1.5">
             <Label>Data e hora</Label>
             <Input
               type="datetime-local"
+              className="min-w-0"
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
             />
