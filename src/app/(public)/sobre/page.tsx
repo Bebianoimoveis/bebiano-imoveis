@@ -15,7 +15,7 @@ import { AboutLocation } from "@/components/public/about-location"
 import { AboutFinalCta } from "@/components/public/about-final-cta"
 import {
   getPublicAboutText,
-  getPublicHeroImage,
+  getPublicAboutHeroImage,
   getPublicAboutStoryImage,
   getPublicAboutSections,
 } from "@/modules/settings/actions"
@@ -40,10 +40,10 @@ export const metadata: Metadata = {
 const FALLBACK_STORY_IMAGE = "/images/hero-bg.png"
 
 export default async function AboutPage() {
-  const [aboutText, realtors, heroImageUrl, aboutStoryImageUrl, sections] = await Promise.all([
+  const [aboutText, realtors, aboutHeroImageUrl, aboutStoryImageUrl, sections] = await Promise.all([
     getPublicAboutText(),
     listPublicRealtors(),
-    getPublicHeroImage(),
+    getPublicAboutHeroImage(),
     getPublicAboutStoryImage(),
     getPublicAboutSections(),
   ])
@@ -56,7 +56,7 @@ export default async function AboutPage() {
   return (
     <div>
       {/* 1. Hero */}
-      <AboutHero heroImageUrl={heroImageUrl} />
+      <AboutHero heroImageUrl={aboutHeroImageUrl} />
 
       {/* 2. Nossa História */}
       <AboutStory aboutText={aboutText} imageUrl={storyImage} />

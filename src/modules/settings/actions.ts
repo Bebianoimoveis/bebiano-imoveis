@@ -55,11 +55,24 @@ export async function getPublicContactInfo() {
   }
 }
 
-// Leitura pública — imagem de fundo do Hero (home e "/sobre"), editável
-// em Configurações. Null = componente usa o fallback embutido.
+// Leitura pública — imagem de fundo do Hero da home, editável em
+// Configurações. Null = componente usa o fallback embutido. Campo
+// independente do Hero da "/sobre" (ver getPublicAboutHeroImage).
 export async function getPublicHeroImage() {
   const settings = await settingsRepository.getSettings()
   return settings?.heroImageUrl ?? null
+}
+
+// Leitura pública — imagem de fundo do Hero de "/sobre". Antes usava a
+// mesma settings.heroImageUrl da home; separado a pedido da cliente pra
+// poder trocar uma sem mexer na outra. Enquanto a pessoa não customiza
+// esse campo novo, cai pra heroImageUrl (o que já estava no ar até
+// aqui) em vez de pular direto pro asset padrão — sem isso o deploy
+// dessa mudança trocaria a foto da Sobre sozinho, sem ninguém mexer em
+// nada.
+export async function getPublicAboutHeroImage() {
+  const settings = await settingsRepository.getSettings()
+  return settings?.aboutHeroImageUrl ?? settings?.heroImageUrl ?? null
 }
 
 // Leitura pública — imagem da seção "Nossa História" em "/sobre".
@@ -99,6 +112,7 @@ export async function updateSettings(input: unknown) {
     businessHours: data.businessHours || null,
     rentalEnabled: data.rentalEnabled,
     heroImageUrl: data.heroImageUrl || null,
+    aboutHeroImageUrl: data.aboutHeroImageUrl || null,
     aboutStoryImageUrl: data.aboutStoryImageUrl || null,
     aboutStats: data.aboutStats,
     aboutMissionValues: data.aboutMissionValues,

@@ -44,6 +44,7 @@ export const siteSettingsInputSchema = z.object({
   facebook: z.string().optional(),
   rentalEnabled: z.boolean(),
   heroImageUrl: z.string().optional(),
+  aboutHeroImageUrl: z.string().optional(),
   aboutStoryImageUrl: z.string().optional(),
   // Conteúdo editável das seções fixas de "/sobre" — ver comentário no
   // schema.prisma (model SiteSettings). Opcionais pra não quebrar caso

@@ -984,7 +984,11 @@ model SiteSettings {
   // vez de arquivo fixo no código — não inclui fotos de corretor/imóvel,
   // que já têm seu próprio cadastro. Nula = usa o fallback padrão
   // embutido no componente (asset em public/images).
+  // heroImageUrl = topo da home. aboutHeroImageUrl = topo da "/sobre" —
+  // campos independentes (antes era o mesmo heroImageUrl nas duas
+  // páginas; separado a pedido da cliente).
   heroImageUrl       String?
+  aboutHeroImageUrl  String?
   aboutStoryImageUrl String?
 
   // Hoje a imobiliária só trabalha com venda — desligado por padrão.

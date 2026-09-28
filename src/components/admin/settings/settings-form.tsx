@@ -33,7 +33,9 @@ import { siteSettingsInputSchema, type SiteSettingsInput } from "@/modules/setti
 export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInput }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadingField, setUploadingField] = useState<"heroImageUrl" | "aboutStoryImageUrl" | null>(null)
+  const [uploadingField, setUploadingField] = useState<
+    "heroImageUrl" | "aboutHeroImageUrl" | "aboutStoryImageUrl" | null
+  >(null)
 
   const form = useForm<SiteSettingsInput>({
     resolver: zodResolver(siteSettingsInputSchema),
@@ -41,7 +43,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
   })
 
   async function handleImageChange(
-    field: "heroImageUrl" | "aboutStoryImageUrl",
+    field: "heroImageUrl" | "aboutHeroImageUrl" | "aboutStoryImageUrl",
     e: React.ChangeEvent<HTMLInputElement>
   ) {
     const file = e.target.files?.[0]
@@ -167,18 +169,18 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
                 name="heroImageUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Imagem de fundo do Hero</FormLabel>
+                    <FormLabel>Imagem de fundo do Hero — Página inicial</FormLabel>
                     <p className="text-xs text-muted-foreground">
-                      Aparece em duas páginas: no topo da página inicial (a foto grande atrás da barra de
-                      busca) e no topo da página &ldquo;Sobre Nós&rdquo;. Formato paisagem funciona melhor
-                      (mais larga que alta).
+                      Aparece só na página inicial, a foto grande atrás da barra de busca. Independente da
+                      imagem da Sobre Nós logo abaixo — trocar uma não muda a outra. Formato paisagem
+                      funciona melhor (mais larga que alta).
                     </p>
                     <div className="flex items-center gap-3">
                       <div className="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-muted-foreground">
                         {field.value ? (
                           <Image
                             src={field.value}
-                            alt="Imagem do Hero"
+                            alt="Imagem do Hero da página inicial"
                             fill
                             className="object-cover"
                             sizes="112px"
@@ -208,6 +210,61 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
                           </button>
                         ) : (
                           <p className="text-xs text-muted-foreground">Nenhuma — usando a imagem padrão.</p>
+                        )}
+                      </div>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="aboutHeroImageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Imagem de fundo do Hero — Página Sobre Nós</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Aparece só no topo da página &ldquo;Sobre Nós&rdquo;. Independente da imagem da página
+                      inicial acima. Formato paisagem funciona melhor (mais larga que alta).
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-muted-foreground">
+                        {field.value ? (
+                          <Image
+                            src={field.value}
+                            alt="Imagem do Hero da página Sobre Nós"
+                            fill
+                            className="object-cover"
+                            sizes="112px"
+                          />
+                        ) : (
+                          <ImageOff className="size-5" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => handleImageChange("aboutHeroImageUrl", e)}
+                            disabled={uploadingField === "aboutHeroImageUrl"}
+                          />
+                        </FormControl>
+                        {uploadingField === "aboutHeroImageUrl" ? (
+                          <p className="text-xs text-muted-foreground">Enviando...</p>
+                        ) : field.value ? (
+                          <button
+                            type="button"
+                            onClick={() => form.setValue("aboutHeroImageUrl", "")}
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="size-3" /> Remover (volta pra imagem padrão)
+                          </button>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            Nenhuma — usando a mesma imagem da página inicial.
+                          </p>
                         )}
                       </div>
                     </div>

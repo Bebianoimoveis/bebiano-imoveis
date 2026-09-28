@@ -29,6 +29,11 @@ export default async function AdminSettingsPage() {
     facebook: socialLinks.facebook ?? "",
     rentalEnabled: settings?.rentalEnabled ?? false,
     heroImageUrl: settings?.heroImageUrl ?? "",
+    // Mesmo raciocínio do getPublicAboutHeroImage: se a pessoa nunca
+    // customizou o Hero da Sobre separadamente, o formulário mostra a
+    // imagem da home (que é o que está no ar hoje ali), não um campo
+    // vazio.
+    aboutHeroImageUrl: settings?.aboutHeroImageUrl ?? settings?.heroImageUrl ?? "",
     aboutStoryImageUrl: settings?.aboutStoryImageUrl ?? "",
     // Mesma lógica do aboutText acima: cada seção da página Sobre já
     // abre com o conteúdo padrão (o que já está no ar) pronto pra
