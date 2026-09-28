@@ -1,5 +1,6 @@
 import { SettingsForm } from "@/components/admin/settings/settings-form"
 import { getAdminSettings } from "@/modules/settings/actions"
+import { DEFAULT_STORY_TEXT } from "@/components/public/about-story"
 import type { SiteSettingsInput } from "@/modules/settings/schema"
 
 export default async function AdminSettingsPage() {
@@ -11,7 +12,11 @@ export default async function AdminSettingsPage() {
     whatsapp: settings?.whatsapp ?? "",
     email: settings?.email ?? "",
     address: settings?.address ?? "",
-    aboutText: settings?.aboutText ?? "",
+    // Enquanto ninguém preenche esse campo, o site público mostra um
+    // texto padrão embutido no código (ver about-story.tsx) — pra não
+    // mostrar um campo vazio escondendo o texto que está de verdade no
+    // ar, o formulário já abre com esse texto padrão pronto pra editar.
+    aboutText: settings?.aboutText ?? DEFAULT_STORY_TEXT,
     businessHours: settings?.businessHours ?? "",
     instagram: socialLinks.instagram ?? "",
     facebook: socialLinks.facebook ?? "",

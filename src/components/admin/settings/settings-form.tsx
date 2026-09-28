@@ -132,6 +132,11 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
           render={({ field }) => (
             <FormItem>
               <FormLabel>Texto institucional (Quem somos)</FormLabel>
+              <p className="text-xs text-muted-foreground">
+                Aparece na página &ldquo;Sobre Nós&rdquo; do site, na seção &ldquo;Nossa História&rdquo;, ao lado
+                da foto redonda logo no início da página. Esse é o texto que já está no ar agora — pode editar
+                direto aqui.
+              </p>
               <FormControl>
                 <Textarea rows={5} {...field} />
               </FormControl>
@@ -158,8 +163,8 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
           <div>
             <p className="text-sm font-medium">Imagens do site</p>
             <p className="text-xs text-muted-foreground">
-              Usadas no Hero (home e Sobre Nós) e na seção "Nossa História". Não inclui fotos de
-              corretor, que ficam em Corretores.
+              Cada campo abaixo mostra exatamente em qual página e qual parte do site ela aparece. Não inclui
+              fotos de corretor, que ficam em Corretores.
             </p>
           </div>
 
@@ -169,6 +174,11 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Imagem de fundo do Hero</FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  Aparece em duas páginas: no topo da página inicial (a foto grande atrás da barra de busca) e
+                  no topo da página &ldquo;Sobre Nós&rdquo;. Formato paisagem funciona melhor (mais larga que
+                  alta).
+                </p>
                 <div className="flex items-center gap-3">
                   <div className="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-muted-foreground">
                     {field.value ? (
@@ -212,6 +222,11 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Imagem da seção "Nossa História"</FormLabel>
+                <p className="text-xs text-muted-foreground">
+                  Aparece só na página &ldquo;Sobre Nós&rdquo;, na foto redonda ao lado do texto institucional
+                  (o campo &ldquo;Quem somos&rdquo; acima). Formato quadrado funciona melhor, já que a foto é
+                  cortada em círculo.
+                </p>
                 <div className="flex items-center gap-3">
                   <div className="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary text-muted-foreground">
                     {field.value ? (

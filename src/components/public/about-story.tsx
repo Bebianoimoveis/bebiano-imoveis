@@ -3,7 +3,11 @@ import Image from "next/image"
 import { Reveal } from "@/components/motion/reveal"
 import { AccentWord } from "@/components/public/accent-word"
 
-const DEFAULT_STORY_TEXT =
+// Exportado pra Configurações usar como valor inicial do campo "Quem
+// somos" — sem isso, a pessoa via um campo vazio no admin enquanto o
+// site público mostrava esse texto padrão, sem saber que era esse o
+// texto "real" que precisava editar.
+export const DEFAULT_STORY_TEXT =
   "A Bebiano Imóveis nasceu com um propósito simples: transformar o processo de compra, venda e locação em uma experiência transparente, segura e humana. Mais do que negociar imóveis, construímos relacionamentos duradouros. Cada cliente possui uma necessidade única, e nosso compromisso é oferecer atendimento personalizado em todas as etapas."
 
 export function AboutStory({
