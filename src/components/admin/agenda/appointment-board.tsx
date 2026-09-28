@@ -23,6 +23,18 @@ import type { AppointmentView } from "@/components/admin/agenda/appointment-view
 
 type RealtorOption = { id: string; user: { name: string } }
 
+// `anchor` chega como identidade de dia em meia-noite UTC (ver page.tsx).
+// A visão Semana nunca mostra isso cru — sempre passa por getDate()/
+// setDate() (hora local) dentro de buildWeekDays, o que já corrige a
+// leitura. A visão Dia mostrava o anchor cru direto pro grid, cujo
+// cabeçalho de coluna usa hora local implícita — convertendo meia-noite
+// UTC pra hora local (Brasil, UTC-3) ela cai no dia anterior às 21h,
+// exibindo "dom., 27" em vez de "seg., 28". Reconstrói o mesmo dia como
+// data local antes de passar adiante, igual ao que buildWeekDays produz.
+function toLocalDayIdentity(anchor: Date) {
+  return new Date(anchor.getUTCFullYear(), anchor.getUTCMonth(), anchor.getUTCDate())
+}
+
 function buildWeekDays(anchor: Date) {
   const start = new Date(anchor)
   start.setDate(start.getDate() - start.getDay())
@@ -146,7 +158,7 @@ export function AppointmentBoard({
         <>
           <div className="hidden md:block">
             <DndContext sensors={sensors} autoScroll={false} measuring={measuring} onDragEnd={handleDragEnd}>
-              <AppointmentTimeGrid days={[anchor]} appointments={appointments} onOpenAppointment={setOpenId} />
+              <AppointmentTimeGrid days={[toLocalDayIdentity(anchor)]} appointments={appointments} onOpenAppointment={setOpenId} />
             </DndContext>
           </div>
           <div className="md:hidden">
