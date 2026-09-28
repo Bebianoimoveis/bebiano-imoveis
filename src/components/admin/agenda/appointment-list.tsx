@@ -61,7 +61,7 @@ export function AppointmentList({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <AppointmentTypeBadge type={appointment.type} />
+                  <AppointmentTypeBadge type={appointment.type} label={appointment.typeLabel} />
                   <AppointmentStatusBadge status={appointment.status} />
                 </div>
               </button>

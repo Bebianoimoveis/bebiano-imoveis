@@ -25,7 +25,10 @@ export function appointmentTypeDot(type: AppointmentType) {
   return META[type].dot
 }
 
-export function AppointmentTypeBadge({ type }: { type: AppointmentType }) {
+// `label` é o texto livre digitado quando type = "OTHER"
+// (Appointment.typeLabel) — quando presente, substitui o "Outro"
+// genérico pelo que a pessoa realmente escreveu.
+export function AppointmentTypeBadge({ type, label }: { type: AppointmentType; label?: string | null }) {
   const { icon: Icon, className } = META[type]
   return (
     <span
@@ -35,7 +38,7 @@ export function AppointmentTypeBadge({ type }: { type: AppointmentType }) {
       )}
     >
       <Icon className="size-3" />
-      {APPOINTMENT_TYPE_LABELS[type]}
+      {label || APPOINTMENT_TYPE_LABELS[type]}
     </span>
   )
 }

@@ -122,11 +122,8 @@ export function AppointmentDetailPanel({
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                <AppointmentTypeBadge type={appointment.type} />
+                <AppointmentTypeBadge type={appointment.type} label={appointment.typeLabel} />
                 <AppointmentStatusBadge status={appointment.status} />
-                {appointment.type === "OTHER" && appointment.typeLabel ? (
-                  <span className="text-xs text-muted-foreground">{appointment.typeLabel}</span>
-                ) : null}
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
