@@ -8,16 +8,20 @@ import { DEFAULT_DIFFERENTIATORS } from "@/components/public/about-differentiato
 import { DEFAULT_HOW_WE_WORK } from "@/components/public/about-how-we-work"
 import { DEFAULT_VALUES } from "@/components/public/about-values-showcase"
 import { DEFAULT_WHY_CHOOSE } from "@/components/public/about-why-choose"
+import { siteConfig } from "@/config/site"
 import type { SiteSettingsInput } from "@/modules/settings/schema"
 
 export default async function AdminSettingsPage() {
   const settings = await getAdminSettings()
-  const socialLinks = (settings?.socialLinks as { instagram?: string; facebook?: string } | null) ?? {}
+  const socialLinks = (settings?.socialLinks as { instagram?: string } | null) ?? {}
 
   const defaultValues: SiteSettingsInput = {
     phone: settings?.phone ?? "",
     whatsapp: settings?.whatsapp ?? "",
-    email: settings?.email ?? "",
+    // Mesmo raciocínio do aboutText abaixo: cai pro e-mail que já está
+    // fixo no código (config/site.ts) em vez de campo vazio, já que é
+    // o que o site público usa até alguém salvar um valor próprio aqui.
+    email: settings?.email || siteConfig.email,
     address: settings?.address ?? "",
     // Enquanto ninguém preenche esse campo, o site público mostra um
     // texto padrão embutido no código (ver about-story.tsx) — pra não
@@ -25,8 +29,7 @@ export default async function AdminSettingsPage() {
     // ar, o formulário já abre com esse texto padrão pronto pra editar.
     aboutText: settings?.aboutText ?? DEFAULT_STORY_TEXT,
     businessHours: settings?.businessHours ?? "",
-    instagram: socialLinks.instagram ?? "",
-    facebook: socialLinks.facebook ?? "",
+    instagram: socialLinks.instagram || siteConfig.instagram,
     rentalEnabled: settings?.rentalEnabled ?? false,
     heroImageUrl: settings?.heroImageUrl ?? "",
     // Mesmo raciocínio do getPublicAboutHeroImage: se a pessoa nunca

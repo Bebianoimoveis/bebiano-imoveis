@@ -14,6 +14,7 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { getPublicRealtorBySlug } from "@/modules/realtor/actions"
 import { listPublicPropertiesByRealtor } from "@/modules/property/actions"
+import { getPublicContactInfo } from "@/modules/settings/actions"
 import { siteConfig } from "@/config/site"
 
 export async function generateMetadata({
@@ -40,7 +41,10 @@ export default async function RealtorProfilePage({
   const realtor = await getPublicRealtorBySlug(slug)
   if (!realtor) notFound()
 
-  const properties = await listPublicPropertiesByRealtor(realtor.id, 12)
+  const [properties, contactInfo] = await Promise.all([
+    listPublicPropertiesByRealtor(realtor.id, 12),
+    getPublicContactInfo(),
+  ])
 
   const whatsappHref = `https://wa.me/${realtor.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
     `Olá ${realtor.user.name}! Vim pelo site da Bebiano Imóveis e gostaria de mais informações.`
@@ -102,9 +106,9 @@ export default async function RealtorProfilePage({
                 Falar no WhatsApp
               </a>
             </Button>
-            {siteConfig.instagram ? (
+            {contactInfo.instagram ? (
               <a
-                href={siteConfig.instagram}
+                href={contactInfo.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram da Bebiano Imóveis"

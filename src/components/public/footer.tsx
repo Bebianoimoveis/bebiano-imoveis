@@ -9,7 +9,15 @@ import { siteConfig } from "@/config/site"
 const SOCIAL_LINK_CLASS =
   "flex size-12 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition-all duration-200 hover:scale-105 hover:border-primary hover:bg-primary hover:text-primary-foreground"
 
-export async function Footer({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
+export async function Footer({
+  rentalEnabled = false,
+  email = siteConfig.email,
+  instagram = siteConfig.instagram,
+}: {
+  rentalEnabled?: boolean
+  email?: string
+  instagram?: string
+}) {
   const year = new Date().getFullYear()
 
   return (
@@ -56,14 +64,14 @@ export async function Footer({ rentalEnabled = false }: { rentalEnabled?: boolea
           <div className="flex items-center gap-3">
             <FooterWhatsappLink className={SOCIAL_LINK_CLASS} />
             <a
-              href={`mailto:${siteConfig.email}`}
+              href={`mailto:${email}`}
               aria-label="Enviar e-mail"
               className={SOCIAL_LINK_CLASS}
             >
               <Mail className="size-5" />
             </a>
             <a
-              href={siteConfig.instagram}
+              href={instagram}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram da Bebiano Imóveis"

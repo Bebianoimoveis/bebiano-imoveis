@@ -41,7 +41,6 @@ export const siteSettingsInputSchema = z.object({
   aboutText: z.string().max(4000).optional(),
   businessHours: z.string().max(200).optional(),
   instagram: z.string().optional(),
-  facebook: z.string().optional(),
   rentalEnabled: z.boolean(),
   heroImageUrl: z.string().optional(),
   aboutHeroImageUrl: z.string().optional(),

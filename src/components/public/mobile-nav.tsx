@@ -43,10 +43,12 @@ const TAIL_NAV_ITEMS = [
   { href: "/sobre", label: "Sobre Nós", icon: Info },
 ]
 
-const CONTACT_ITEMS = [
-  { href: siteConfig.instagram, label: "Instagram", icon: InstagramIcon, external: true },
-  { href: `mailto:${siteConfig.email}`, label: "E-mail", icon: Mail, external: false },
-]
+function buildContactItems(email: string, instagram: string) {
+  return [
+    { href: instagram, label: "Instagram", icon: InstagramIcon, external: true },
+    { href: `mailto:${email}`, label: "E-mail", icon: Mail, external: false },
+  ]
+}
 
 // Mesma "assinatura de movimento" usada no Hero — cascata de entrada em
 // vez de tudo aparecendo de uma vez.
@@ -71,10 +73,14 @@ export function MobileNav({
   open,
   onClose,
   rentalEnabled = false,
+  email = siteConfig.email,
+  instagram = siteConfig.instagram,
 }: {
   open: boolean
   onClose: () => void
   rentalEnabled?: boolean
+  email?: string
+  instagram?: string
 }) {
   const [mounted, setMounted] = useState(false)
   const [count, setCount] = useState<number | null>(null)
@@ -84,6 +90,7 @@ export function MobileNav({
   const navItems = rentalEnabled
     ? [...BASE_NAV_ITEMS, RENT_NAV_ITEM, ...TAIL_NAV_ITEMS]
     : [...BASE_NAV_ITEMS, ...TAIL_NAV_ITEMS]
+  const contactItems = buildContactItems(email, instagram)
 
   useEffect(() => {
     setMounted(true)
@@ -173,6 +180,8 @@ export function MobileNav({
               {/* Card principal — abre o menu de canais de contato */}
               <motion.div variants={item} className="mt-5 px-6">
                 <ContactSheet
+                  email={email}
+                  instagram={instagram}
                   trigger={({ onClick }) => (
                     <motion.button
                       type="button"
@@ -240,7 +249,7 @@ export function MobileNav({
                   Contato
                 </p>
                 <div className="space-y-1">
-                  {CONTACT_ITEMS.map((contactItem) => {
+                  {contactItems.map((contactItem) => {
                     const Icon = contactItem.icon
                     return (
                       <motion.div key={contactItem.label} whileTap={{ scale: 0.98 }}>

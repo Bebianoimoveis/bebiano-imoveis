@@ -19,7 +19,7 @@ const TABS = [
 // Fixa embaixo só no mobile — no desktop a navegação já vive no header.
 // z-40 fica abaixo do MobileNav (z-[100]) e do header (z-50) de propósito,
 // já que o menu hambúrguer, quando aberto, deve cobrir esta barra também.
-export function MobileTabBar() {
+export function MobileTabBar({ email, instagram }: { email?: string; instagram?: string }) {
   const pathname = usePathname()
   const { favoriteIds } = useFavorites()
 
@@ -64,6 +64,8 @@ export function MobileTabBar() {
         )
       })}
       <ContactSheet
+        email={email}
+        instagram={instagram}
         trigger={({ onClick }) => (
           <button
             type="button"

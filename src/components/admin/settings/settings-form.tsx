@@ -354,34 +354,22 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="instagram"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instagram (URL)</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="facebook"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Facebook (URL)</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="instagram"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Instagram (URL)</FormLabel>
+                  <p className="text-xs text-muted-foreground">
+                    Aparece no rodapé do site, no menu do celular e no card &ldquo;Fale com a gente&rdquo;.
+                  </p>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </TabsContent>
 
           <TabsContent value="sobre" className="space-y-4 pt-4">

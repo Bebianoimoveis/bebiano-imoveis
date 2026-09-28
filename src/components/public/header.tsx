@@ -21,7 +21,15 @@ const BASE_NAV_LINKS = [
 
 const RENT_LINK = { href: "/alugar", label: "Alugar" }
 
-export function Header({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
+export function Header({
+  rentalEnabled = false,
+  email,
+  instagram,
+}: {
+  rentalEnabled?: boolean
+  email?: string
+  instagram?: string
+}) {
   const [isOpen, setIsOpen] = useState(false)
   const navLinks = rentalEnabled ? [...BASE_NAV_LINKS, RENT_LINK] : BASE_NAV_LINKS
   const [scrolled, setScrolled] = useState(false)
@@ -119,7 +127,13 @@ export function Header({ rentalEnabled = false }: { rentalEnabled?: boolean }) {
         </button>
       </div>
 
-      <MobileNav open={isOpen} onClose={() => setIsOpen(false)} rentalEnabled={rentalEnabled} />
+      <MobileNav
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        rentalEnabled={rentalEnabled}
+        email={email}
+        instagram={instagram}
+      />
     </header>
   )
 }

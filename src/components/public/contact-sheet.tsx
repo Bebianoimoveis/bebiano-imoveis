@@ -13,10 +13,16 @@ import { cn } from "@/lib/utils"
 
 // Mesmo padrão do MobileFiltersSheet/MobileNav: portal pro body evita que
 // um backdrop-filter de algum ancestral vire containing block do `fixed`.
+// email/instagram vêm do banco (editável em Configurações) — caem pro
+// valor fixo de config/site.ts só se quem chamar não passar nada.
 export function ContactSheet({
   trigger,
+  email = siteConfig.email,
+  instagram = siteConfig.instagram,
 }: {
   trigger: (props: { onClick: () => void }) => React.ReactNode
+  email?: string
+  instagram?: string
 }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -45,14 +51,14 @@ export function ContactSheet({
         }
       : null,
     {
-      href: `mailto:${siteConfig.email}`,
+      href: `mailto:${email}`,
       label: "E-mail",
-      description: siteConfig.email,
+      description: email,
       icon: Mail,
       external: false,
     },
     {
-      href: siteConfig.instagram,
+      href: instagram,
       label: "Instagram",
       description: "@bebianoimoveis",
       icon: InstagramIcon,

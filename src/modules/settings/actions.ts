@@ -7,6 +7,7 @@ import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
 import { siteSettingsInputSchema } from "@/modules/settings/schema"
 import * as settingsRepository from "@/modules/settings/repository"
+import { siteConfig } from "@/config/site"
 
 async function requireSettingsManage() {
   const session = await auth()
@@ -44,14 +45,22 @@ export async function getPublicAboutText() {
   return settings?.aboutText ?? null
 }
 
-// Leitura pública — usada pela seção de Localização da página "/sobre".
+// Leitura pública — usada pela seção de Localização da página "/sobre"
+// e pelos ícones de contato (rodapé, menu mobile, sheet "Fale com a
+// gente"). email/instagram caem pro valor fixo em config/site.ts
+// enquanto ninguém salva um valor próprio em Configurações — antes
+// esses dois nem liam do banco, o botão "Salvar" em Configurações não
+// tinha efeito nenhum neles em lugar nenhum do site.
 export async function getPublicContactInfo() {
   const settings = await settingsRepository.getSettings()
+  const socialLinks = (settings?.socialLinks as { instagram?: string } | null) ?? {}
   return {
     phone: settings?.phone ?? null,
     whatsapp: settings?.whatsapp ?? null,
     address: settings?.address ?? null,
     businessHours: settings?.businessHours ?? null,
+    email: settings?.email || siteConfig.email,
+    instagram: socialLinks.instagram || siteConfig.instagram,
   }
 }
 
@@ -123,7 +132,6 @@ export async function updateSettings(input: unknown) {
     aboutWhyChoose: data.aboutWhyChoose,
     socialLinks: {
       instagram: data.instagram || undefined,
-      facebook: data.facebook || undefined,
     },
   })
 
