@@ -24,13 +24,13 @@ export function UserDeleteButton({ userId }: { userId: string }) {
 
   function handleDelete() {
     startTransition(async () => {
-      try {
-        await deleteUser(userId)
-        toast.success("Usuário excluído.")
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir.")
+      const result = await deleteUser(userId)
+      if (result?.error) {
+        toast.error(result.error)
+        return
       }
+      toast.success("Usuário excluído.")
+      router.refresh()
     })
   }
 

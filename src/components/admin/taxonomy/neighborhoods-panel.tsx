@@ -54,13 +54,13 @@ export function NeighborhoodsPanel({ cities }: { cities: CityOption[] }) {
 
   function handleDelete(id: string) {
     startTransition(async () => {
-      try {
-        await deleteNeighborhood(id)
-        toast.success("Bairro excluído.")
-        refetch(cityId)
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir bairro.")
+      const result = await deleteNeighborhood(id)
+      if (result?.error) {
+        toast.error(result.error)
+        return
       }
+      toast.success("Bairro excluído.")
+      refetch(cityId)
     })
   }
 

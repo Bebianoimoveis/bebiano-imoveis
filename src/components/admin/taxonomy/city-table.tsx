@@ -34,13 +34,13 @@ export function CityTable({ cities }: { cities: CityItem[] }) {
 
   function handleDelete(id: string) {
     startTransition(async () => {
-      try {
-        await deleteCity(id)
-        toast.success("Cidade excluída.")
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir cidade.")
+      const result = await deleteCity(id)
+      if (result?.error) {
+        toast.error(result.error)
+        return
       }
+      toast.success("Cidade excluída.")
+      router.refresh()
     })
   }
 

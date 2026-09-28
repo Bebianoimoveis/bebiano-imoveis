@@ -90,18 +90,23 @@ export async function updateUser(id: string, input: unknown) {
 // pra reuso. Se a conta é de um corretor, o Realtor vinculado é excluído
 // junto (mesma lógica de deleteRealtor) — sem isso, excluir só o User
 // deixava um Realtor "ativo" órfão, ainda ocupando o slug/e-mail.
-export async function deleteUser(id: string) {
+//
+// Os erros esperados (self-delete, não encontrado) voltam como valor em
+// vez de `throw`: nessa versão do Next, uma Server Action que lança erro
+// tem a mensagem mascarada em produção ("Minified React error #441" sem
+// detalhe nenhum) — só bug de verdade deve usar `throw`.
+export async function deleteUser(id: string): Promise<{ error: string } | undefined> {
   const session = await requireUserManage()
 
   if (session.user.id === id) {
-    throw new Error("Você não pode excluir sua própria conta.")
+    return { error: "Você não pode excluir sua própria conta." }
   }
 
   const user = await prisma.user.findUnique({
     where: { id },
     select: { id: true, email: true, deletedAt: true, realtor: { select: { id: true, deletedAt: true } } },
   })
-  if (!user || user.deletedAt) throw new Error("Usuário não encontrado.")
+  if (!user || user.deletedAt) return { error: "Usuário não encontrado." }
 
   await prisma.$transaction([
     prisma.user.update({

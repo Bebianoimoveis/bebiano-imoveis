@@ -48,13 +48,13 @@ export function PropertyTypeToggleList({ types }: { types: PropertyTypeItem[] })
 
   function handleDelete(id: string) {
     startTransition(async () => {
-      try {
-        await deletePropertyType(id)
-        toast.success("Tipo de imóvel excluído.")
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir tipo de imóvel.")
+      const result = await deletePropertyType(id)
+      if (result?.error) {
+        toast.error(result.error)
+        return
       }
+      toast.success("Tipo de imóvel excluído.")
+      router.refresh()
     })
   }
 

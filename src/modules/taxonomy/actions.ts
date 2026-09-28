@@ -69,10 +69,17 @@ export async function createCity(input: unknown) {
 // excluir junto perderia dado real ou violaria a constraint do banco
 // (Property.cityId é obrigatório). Com vínculo, é preciso desvincular
 // antes (ex: excluir os bairros da cidade primeiro).
-export async function deleteCity(id: string) {
+//
+// Devolve o erro como valor (em vez de `throw`) de propósito: uma Server
+// Action que lança erro nessa versão do Next tem a mensagem MASCARADA em
+// produção (vira "Minified React error #441" sem detalhe nenhum) — só
+// `throw` é reservado pra bug de verdade, erro esperado (ex: "ainda tem
+// bairro vinculado") precisa voltar como valor pra chegar legível no
+// cliente. Ver node_modules/next/dist/docs/01-app/01-getting-started/10-error-handling.md.
+export async function deleteCity(id: string): Promise<{ error: string } | undefined> {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar cidades.")
+    return { error: "Sem permissão para gerenciar cidades." }
   }
 
   const [neighborhoods, properties, clients, clientPreferences, goals, submissions] = await Promise.all([
@@ -92,7 +99,7 @@ export async function deleteCity(id: string) {
     if (clientPreferences > 0) parts.push(`${clientPreferences} preferência(s) de cliente`)
     if (goals > 0) parts.push(`${goals} meta(s)`)
     if (submissions > 0) parts.push(`${submissions} captação(ões)`)
-    throw new Error(`Esta cidade tem ${parts.join(", ")} vinculado(s) e não pode ser excluída.`)
+    return { error: `Esta cidade tem ${parts.join(", ")} vinculado(s) e não pode ser excluída.` }
   }
 
   await prisma.city.delete({ where: { id } })
@@ -116,11 +123,12 @@ export async function createNeighborhood(input: unknown) {
 }
 
 // Mesmo padrão de deleteCity: só exclui se nenhum imóvel ou preferência
-// de cliente estiver vinculado a esse bairro.
-export async function deleteNeighborhood(id: string) {
+// de cliente estiver vinculado a esse bairro. Erro esperado volta como
+// valor pelo mesmo motivo (ver comentário em deleteCity).
+export async function deleteNeighborhood(id: string): Promise<{ error: string } | undefined> {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar bairros.")
+    return { error: "Sem permissão para gerenciar bairros." }
   }
 
   const [properties, clientPreferences] = await Promise.all([
@@ -132,7 +140,7 @@ export async function deleteNeighborhood(id: string) {
     const parts: string[] = []
     if (properties > 0) parts.push(`${properties} imóvel(is)`)
     if (clientPreferences > 0) parts.push(`${clientPreferences} preferência(s) de cliente`)
-    throw new Error(`Este bairro tem ${parts.join(", ")} vinculado(s) e não pode ser excluído.`)
+    return { error: `Este bairro tem ${parts.join(", ")} vinculado(s) e não pode ser excluído.` }
   }
 
   await prisma.neighborhood.delete({ where: { id } })
@@ -207,10 +215,13 @@ export async function updatePropertyType(id: string, input: unknown) {
 // cliente ou captação vinculados — apagar isso junto perderia dado real
 // (ou violaria a constraint do banco, já que Property.typeId é
 // obrigatório). Com vínculo, a saída é desativar em vez de excluir.
-export async function deletePropertyType(id: string) {
+// Erro esperado volta como valor pelo mesmo motivo (ver comentário em
+// deleteCity): `throw` aqui vira "Minified React error #441" sem
+// detalhe nenhum pro usuário em produção.
+export async function deletePropertyType(id: string): Promise<{ error: string } | undefined> {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar tipos de imóvel.")
+    return { error: "Sem permissão para gerenciar tipos de imóvel." }
   }
 
   const [properties, segments, clientPreferences, submissions] = await Promise.all([
@@ -226,9 +237,9 @@ export async function deletePropertyType(id: string) {
     if (segments > 0) parts.push(`${segments} segmento(s)`)
     if (clientPreferences > 0) parts.push(`${clientPreferences} preferência(s) de cliente`)
     if (submissions > 0) parts.push(`${submissions} captação(ões)`)
-    throw new Error(
-      `Este tipo tem ${parts.join(", ")} vinculado(s) e não pode ser excluído — desative em vez de excluir.`
-    )
+    return {
+      error: `Este tipo tem ${parts.join(", ")} vinculado(s) e não pode ser excluído — desative em vez de excluir.`,
+    }
   }
 
   await prisma.propertyType.delete({ where: { id } })
