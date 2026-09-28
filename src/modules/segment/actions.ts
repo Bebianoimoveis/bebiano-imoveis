@@ -142,17 +142,26 @@ export async function toggleSegmentActive(id: string, active: boolean) {
   revalidatePath("/")
 }
 
-export async function deleteSegment(id: string) {
-  const session = await requireSegmentManage()
-  await segmentRepository.deleteSegment(id)
+// Erro devolvido como valor (em vez de `throw`) de propósito: nessa
+// versão do Next, uma Server Action que lança erro tem a mensagem
+// mascarada em produção ("Minified React error #441" sem detalhe
+// nenhum) — captura qualquer erro real (ex: erro do Prisma) e devolve
+// a mensagem pra aparecer legível no toast.
+export async function deleteSegment(id: string): Promise<{ error: string } | undefined> {
+  try {
+    const session = await requireSegmentManage()
+    await segmentRepository.deleteSegment(id)
 
-  await logActivity({
-    userId: session.user.id,
-    action: "segment.delete",
-    entityType: "Segment",
-    entityId: id,
-  })
+    await logActivity({
+      userId: session.user.id,
+      action: "segment.delete",
+      entityType: "Segment",
+      entityId: id,
+    })
 
-  revalidatePath("/admin/segmentos")
-  revalidatePath("/")
+    revalidatePath("/admin/segmentos")
+    revalidatePath("/")
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Erro ao excluir segmento." }
+  }
 }

@@ -25,13 +25,13 @@ export function SegmentDeleteButton({ id }: { id: string }) {
 
   function handleDelete() {
     startTransition(async () => {
-      try {
-        await deleteSegment(id)
-        toast.success("Segmento excluído.")
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir.")
+      const result = await deleteSegment(id)
+      if (result?.error) {
+        toast.error(result.error)
+        return
       }
+      toast.success("Segmento excluído.")
+      router.refresh()
     })
   }
 
