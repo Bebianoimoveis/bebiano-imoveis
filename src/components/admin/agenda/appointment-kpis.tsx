@@ -9,6 +9,7 @@ type Stats = {
   pending: number
   attendanceRate: number | null
   canceled: number
+  overdueUnconfirmed: number
 }
 
 export function AppointmentKpis({ stats }: { stats: Stats }) {
@@ -35,8 +36,9 @@ export function AppointmentKpis({ stats }: { stats: Stats }) {
       <StatCard
         icon={<CalendarClock className="size-5" />}
         label="Pendentes"
-        value={String(stats.pending)}
-        description="Aguardando confirmação"
+        value={String(stats.overdueUnconfirmed)}
+        description="Já passou e não foi atualizado"
+        href={stats.overdueUnconfirmed > 0 ? "/admin/agenda?overdue=1" : undefined}
       />
       <StatCard
         icon={<Percent className="size-5" />}

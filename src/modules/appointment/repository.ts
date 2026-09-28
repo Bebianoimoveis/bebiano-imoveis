@@ -162,7 +162,7 @@ export async function getAppointmentStats(where: Prisma.AppointmentWhereInput) {
     new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000)
   )
 
-  const [today, week, confirmed, scheduled, done, noShow, canceled] = await Promise.all([
+  const [today, week, confirmed, scheduled, done, noShow, canceled, overdueUnconfirmed] = await Promise.all([
     prisma.appointment.count({ where: { ...where, scheduledAt: { gte: todayStart, lte: todayEnd } } }),
     prisma.appointment.count({ where: { ...where, scheduledAt: { gte: weekStart, lte: weekEnd } } }),
     prisma.appointment.count({ where: { ...where, status: "CONFIRMED" } }),
@@ -170,10 +170,21 @@ export async function getAppointmentStats(where: Prisma.AppointmentWhereInput) {
     prisma.appointment.count({ where: { ...where, status: "DONE" } }),
     prisma.appointment.count({ where: { ...where, status: "NO_SHOW" } }),
     prisma.appointment.count({ where: { ...where, status: "CANCELED" } }),
+    // Ignora o período da view atual de propósito (igual "today"/"week"
+    // acima) — passou a data e ninguém marcou o que aconteceu, então
+    // esse número precisa aparecer sempre, não só quando a pessoa
+    // calhar de estar olhando pro período certo.
+    prisma.appointment.count({
+      where: {
+        realtorId: where.realtorId,
+        scheduledAt: { lt: todayStart },
+        status: { in: ["SCHEDULED", "CONFIRMED"] },
+      },
+    }),
   ])
 
   const attendanceBase = done + noShow
   const attendanceRate = attendanceBase > 0 ? Math.round((done / attendanceBase) * 100) : null
 
-  return { today, week, confirmed, pending: scheduled, attendanceRate, canceled }
+  return { today, week, confirmed, pending: scheduled, attendanceRate, canceled, overdueUnconfirmed }
 }

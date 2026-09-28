@@ -46,9 +46,10 @@ export default async function AdminAgendaPage({
   searchParams: Promise<SearchParams>
 }) {
   const params = await searchParams
+  const overdue = paramString(params, "overdue") === "1"
   const view = (paramString(params, "view") as AppointmentView) ?? "list"
   const validViews: AppointmentView[] = ["list", "kanban", "month", "week", "day"]
-  const activeView = validViews.includes(view) ? view : "list"
+  const activeView = overdue ? "list" : validViews.includes(view) ? view : "list"
 
   const anchorParam = paramString(params, "date")
   // `anchor` é uma identidade de dia (meia-noite UTC), não um instante
@@ -60,7 +61,13 @@ export default async function AdminAgendaPage({
   const mine = paramString(params, "mine") === "true"
 
   let range: { from: Date; to: Date }
-  if (activeView === "month") range = monthGridRange(anchor)
+  if (overdue) {
+    // Sem limite de "há quantos dias" — precisa pegar todo compromisso
+    // vencido sem status final, não só os últimos X dias.
+    const from = new Date(0)
+    const to = new Date(startOfDayBrazil(new Date()).getTime() - 1)
+    range = { from, to }
+  } else if (activeView === "month") range = monthGridRange(anchor)
   else if (activeView === "week") range = weekRange(anchor)
   else if (activeView === "day") range = brazilDayWindow(anchor)
   else if (activeView === "kanban") {
@@ -82,13 +89,19 @@ export default async function AdminAgendaPage({
     mine,
   }
 
-  const [session, appointments, stats, realtors] = await Promise.all([
+  const [session, fetchedAppointments, stats, realtors] = await Promise.all([
     auth(),
     listAdminAppointments(filters),
     getAppointmentStats(filters),
     listRealtors(),
   ])
   const currentRealtorId = session?.user?.realtorId ?? null
+
+  // Modo "Pendentes" do KPI: só interessa quem ainda não teve o status
+  // atualizado (Realizado/Cancelado/Não compareceu já resolveram o caso).
+  const appointments = overdue
+    ? fetchedAppointments.filter((a) => a.status === "SCHEDULED" || a.status === "CONFIRMED")
+    : fetchedAppointments
 
   function buildHref(overrides: { view?: AppointmentView; date?: string; mine?: boolean }) {
     const search = new URLSearchParams()
@@ -120,7 +133,9 @@ export default async function AdminAgendaPage({
           </div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">Agenda</h1>
           <p className="text-sm text-muted-foreground">
-            Visitas, ligações e compromissos organizados numa agenda inteligente.
+            {overdue
+              ? "Compromissos com data vencida que ainda não tiveram o status atualizado."
+              : "Visitas, ligações e compromissos organizados numa agenda inteligente."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -134,34 +149,49 @@ export default async function AdminAgendaPage({
       </DashboardSection>
 
       <DashboardSection index={2} className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {showDateNav ? (
-            <AppointmentDateNav
-              anchor={anchor}
-              view={activeView as "month" | "week" | "day"}
-              buildHref={(date) => buildHref({ date: date.toISOString().slice(0, 10) })}
-            />
-          ) : null}
+        {overdue ? (
           <Link
-            href={buildHref({ mine: !mine })}
-            className={cn(
-              "flex h-8 items-center gap-1.5 rounded-lg border border-border/60 px-2.5 text-xs font-medium transition-colors",
-              mine ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-            )}
+            href="/admin/agenda"
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-border/60 px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <User className="size-3.5" />
-            Meu Dia
+            ← Voltar para a agenda
           </Link>
-        </div>
-        <AppointmentViewToggle view={activeView} buildHref={(v) => buildHref({ view: v })} />
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-3">
+              {showDateNav ? (
+                <AppointmentDateNav
+                  anchor={anchor}
+                  view={activeView as "month" | "week" | "day"}
+                  buildHref={(date) => buildHref({ date: date.toISOString().slice(0, 10) })}
+                />
+              ) : null}
+              <Link
+                href={buildHref({ mine: !mine })}
+                className={cn(
+                  "flex h-8 items-center gap-1.5 rounded-lg border border-border/60 px-2.5 text-xs font-medium transition-colors",
+                  mine ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <User className="size-3.5" />
+                Meu Dia
+              </Link>
+            </div>
+            <AppointmentViewToggle view={activeView} buildHref={(v) => buildHref({ view: v })} />
+          </>
+        )}
       </DashboardSection>
 
       <DashboardSection index={3}>
         {appointments.length === 0 ? (
           <EmptyState
             icon={CalendarDays}
-            title="Nenhum compromisso neste período"
-            description="Visitas, ligações e retornos aparecem aqui assim que forem agendados."
+            title={overdue ? "Nenhum compromisso pendente" : "Nenhum compromisso neste período"}
+            description={
+              overdue
+                ? "Todos os compromissos vencidos já tiveram o status atualizado."
+                : "Visitas, ligações e retornos aparecem aqui assim que forem agendados."
+            }
             action={<AppointmentCreateButton realtors={realtors} currentRealtorId={currentRealtorId} />}
           />
         ) : (
