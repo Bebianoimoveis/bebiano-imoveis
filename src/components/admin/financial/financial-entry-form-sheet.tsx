@@ -65,7 +65,6 @@ export type EditableFinancialEntry = {
 
 const PAYMENT_METHOD_OPTIONS = [
   { value: "PIX", label: "PIX" },
-  { value: "TED", label: "TED" },
   { value: "CARD", label: "Cartão" },
   { value: "CASH", label: "Dinheiro" },
   { value: "BOLETO", label: "Boleto" },

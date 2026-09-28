@@ -13,6 +13,7 @@ import {
   proposalInteractionSchema,
 } from "@/modules/proposal/schema"
 import * as proposalRepository from "@/modules/proposal/repository"
+import * as contractRepository from "@/modules/contract/repository"
 
 async function requireSession() {
   const session = await auth()
@@ -226,6 +227,29 @@ export async function updateProposalStatus(id: string, status: ProposalStatus) {
   await assertCanManageProposal(session, id)
 
   await proposalRepository.updateProposalStatus(id, status)
+
+  // Sem isso, dava pra mover a proposta direto pra "Assinando"/"Concluída"
+  // pelo seletor de status sem nunca clicar em "Gerar contrato" (que só
+  // aparecia com status "Aceita") — o negócio fechava mas ficava invisível
+  // em Contratos. Gera sozinho se ainda não existir um contrato pra essa
+  // proposta.
+  if (status === "SIGNING" || status === "COMPLETED") {
+    const existingContract = await contractRepository.findContractByProposalId(id)
+    if (!existingContract) {
+      const proposal = await proposalRepository.findProposalById(id)
+      if (proposal) {
+        await contractRepository.createContract({
+          value: proposal.value,
+          status: status === "COMPLETED" ? "COMPLETED" : "DRAFT",
+          proposal: { connect: { id: proposal.id } },
+          property: { connect: { id: proposal.property.id } },
+          client: { connect: { id: proposal.client.id } },
+          realtor: { connect: { id: proposal.realtor.id } },
+        })
+        revalidatePath("/admin/contratos")
+      }
+    }
+  }
 
   await logActivity({
     userId: session.user.id,

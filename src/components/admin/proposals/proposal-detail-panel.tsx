@@ -417,7 +417,7 @@ export function ProposalDetailPanel({
                         </Button>
                       ) : null}
                     </div>
-                  ) : proposal.status === "ACCEPTED" ? (
+                  ) : ["ACCEPTED", "SIGNING", "COMPLETED"].includes(proposal.status) ? (
                     <Button className="w-full" onClick={handleGenerateContract} disabled={isPending}>
                       Gerar contrato
                     </Button>

@@ -41,7 +41,6 @@ type PropertyOption = { id: string; code: string; title: string }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   PIX: "PIX",
-  TED: "TED",
   CARD: "Cartão",
   CASH: "Dinheiro",
   BOLETO: "Boleto",

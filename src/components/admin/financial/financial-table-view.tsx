@@ -10,7 +10,6 @@ import type { FinancialEntryListItem } from "@/modules/financial/repository"
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   PIX: "PIX",
-  TED: "TED",
   CARD: "Cartão",
   CASH: "Dinheiro",
   BOLETO: "Boleto",

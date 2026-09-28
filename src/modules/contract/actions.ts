@@ -39,15 +39,16 @@ export async function listAdminContracts(status?: ContractStatus) {
   return contractRepository.listContracts(where)
 }
 
-// Um contrato só pode nascer de uma proposta aceita — é a proposta que
-// carrega o valor negociado e as partes envolvidas.
+// Um contrato só pode nascer de uma proposta aceita (ou já mais adiante
+// no funil — Assinando/Concluída também valem, pra permitir gerar
+// retroativamente uma proposta que pulou essa etapa sem contrato).
 export async function generateContractFromProposal(proposalId: string) {
   const session = await requireContractManage()
 
   const proposal = await proposalRepository.findProposalById(proposalId)
   if (!proposal) throw new Error("Proposta não encontrada.")
-  if (proposal.status !== "ACCEPTED") {
-    throw new Error("Só é possível gerar contrato para propostas aceitas.")
+  if (!["ACCEPTED", "SIGNING", "COMPLETED"].includes(proposal.status)) {
+    throw new Error("Só é possível gerar contrato para propostas aceitas, assinando ou concluídas.")
   }
 
   const existing = await contractRepository.findContractByProposalId(proposalId)
@@ -55,7 +56,7 @@ export async function generateContractFromProposal(proposalId: string) {
 
   const contract = await contractRepository.createContract({
     value: proposal.value,
-    status: "DRAFT",
+    status: proposal.status === "COMPLETED" ? "COMPLETED" : "DRAFT",
     proposal: { connect: { id: proposal.id } },
     property: { connect: { id: proposal.property.id } },
     client: { connect: { id: proposal.client.id } },
