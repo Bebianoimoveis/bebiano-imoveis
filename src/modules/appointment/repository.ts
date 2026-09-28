@@ -167,8 +167,12 @@ export async function getAppointmentStats(where: Prisma.AppointmentWhereInput) {
     prisma.appointment.count({ where: { ...where, scheduledAt: { gte: weekStart, lte: weekEnd } } }),
     prisma.appointment.count({ where: { ...where, status: "CONFIRMED" } }),
     prisma.appointment.count({ where: { ...where, status: "SCHEDULED" } }),
-    prisma.appointment.count({ where: { ...where, status: "DONE" } }),
-    prisma.appointment.count({ where: { ...where, status: "NO_SHOW" } }),
+    // "Comparecimento" ignora o período da view de propósito — um
+    // "não compareceu" marcado num compromisso que já passou (fora do
+    // período que a view atual mostra, ex: Lista só olha pra frente)
+    // some da conta e faz a taxa parecer 100% mesmo tendo falta.
+    prisma.appointment.count({ where: { ...where, scheduledAt: undefined, status: "DONE" } }),
+    prisma.appointment.count({ where: { ...where, scheduledAt: undefined, status: "NO_SHOW" } }),
     prisma.appointment.count({ where: { ...where, status: "CANCELED" } }),
     // Ignora o período da view atual de propósito (igual "today"/"week"
     // acima) — passou a data e ninguém marcou o que aconteceu, então

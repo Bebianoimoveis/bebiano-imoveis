@@ -44,7 +44,7 @@ export function AppointmentKpis({ stats }: { stats: Stats }) {
         icon={<Percent className="size-5" />}
         label="Comparecimento"
         value={stats.attendanceRate !== null ? `${stats.attendanceRate}%` : "—"}
-        description="Realizados / (realizados + faltas)"
+        description="Realizados / (realizados + faltas) — geral"
       />
       <StatCard
         icon={<CalendarX className="size-5" />}
