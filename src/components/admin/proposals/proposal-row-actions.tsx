@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 import { duplicateProposal, deleteProposal, updateProposalStatus } from "@/modules/proposal/actions"
+import { formatCurrency } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 import type { ProposalListItem } from "@/modules/proposal/repository"
 
@@ -53,6 +54,7 @@ export function ProposalRowActions({
 
   const shareUrl = proposal.shareToken ? `${siteConfig.url}/proposta/${proposal.shareToken}` : null
   const phone = proposal.client.phone
+  const whatsappMessage = `Olá, ${proposal.client.name}! Segue a proposta para o imóvel ${proposal.property.title} (${proposal.property.code}).\n\nValor ofertado: ${formatCurrency(proposal.value.toString())}\n\nVeja todos os detalhes aqui: ${shareUrl}`
 
   return (
     <AlertDialog>
@@ -72,7 +74,11 @@ export function ProposalRowActions({
             <Copy /> Duplicar
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <a href={`https://wa.me/${phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer">
+            <a
+              href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMessage)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <WhatsAppIcon /> Enviar por WhatsApp
             </a>
           </DropdownMenuItem>

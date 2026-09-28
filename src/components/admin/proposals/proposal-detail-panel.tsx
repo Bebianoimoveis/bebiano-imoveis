@@ -164,6 +164,9 @@ export function ProposalDetailPanel({
 
   const shareUrl = proposal?.shareToken ? `${siteConfig.url}/proposta/${proposal.shareToken}` : null
   const cover = proposal?.property.images.find((i) => i.isCover)?.url ?? proposal?.property.images[0]?.url
+  const whatsappMessage = proposal
+    ? `Olá, ${proposal.client.name}! Segue a proposta para o imóvel ${proposal.property.title} (${proposal.property.code}).\n\nValor ofertado: ${formatCurrency(proposal.value.toString())}\n\nVeja todos os detalhes aqui: ${shareUrl}`
+    : ""
 
   return (
     <>
@@ -218,7 +221,7 @@ export function ProposalDetailPanel({
                 </Button>
                 <Button asChild size="sm" variant="outline" className="gap-1.5">
                   <a
-                    href={`https://wa.me/${proposal.client.phone.replace(/\D/g, "")}`}
+                    href={`https://wa.me/${proposal.client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMessage)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
