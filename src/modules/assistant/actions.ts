@@ -33,6 +33,22 @@ ESCOPO: você só responde perguntas sobre o sistema (imóveis, leads, clientes,
 
 const MAX_TOOL_ITERATIONS = 5
 
+// O Gemini às vezes devolve 503 "modelo com alta demanda" — um pico
+// passageiro do lado do Google, não um erro nosso. Duas tentativas com
+// backoff curto resolvem a maioria dos casos sem a pessoa precisar
+// clicar em "tentar novamente" ela mesma.
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      const status = (error as { status?: number })?.status
+      if (status !== 503 || attempt >= attempts) throw error
+      await new Promise((resolve) => setTimeout(resolve, attempt * 800))
+    }
+  }
+}
+
 async function requireAssistantAccess() {
   const session = await auth()
   if (!session?.user) throw new Error("Não autenticado.")
@@ -87,7 +103,7 @@ export async function askAssistant(input: unknown): Promise<{ role: "model"; con
       },
     })
 
-    let response = await chat.sendMessage({ message: lastMessage.content })
+    let response = await withRetry(() => chat.sendMessage({ message: lastMessage.content }))
     let iterations = 0
 
     while (response.functionCalls && response.functionCalls.length > 0 && iterations < MAX_TOOL_ITERATIONS) {
@@ -105,7 +121,7 @@ export async function askAssistant(input: unknown): Promise<{ role: "model"; con
           }
         })
       )
-      response = await chat.sendMessage({ message: responseParts })
+      response = await withRetry(() => chat.sendMessage({ message: responseParts }))
       iterations++
     }
 
