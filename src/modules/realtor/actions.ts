@@ -260,7 +260,7 @@ export async function deleteRealtor(id: string) {
     }),
     prisma.user.update({
       where: { id: realtor.userId },
-      data: { email: `deleted-${realtor.userId}-${realtor.user.email}`, active: false },
+      data: { email: `deleted-${realtor.userId}-${realtor.user.email}`, active: false, deletedAt: new Date() },
     }),
   ])
 
@@ -273,6 +273,7 @@ export async function deleteRealtor(id: string) {
 
   revalidatePath("/admin/corretores")
   revalidatePath("/admin/corretores/links")
+  revalidatePath("/admin/usuarios")
   revalidatePath("/sobre")
   revalidatePath("/")
 }

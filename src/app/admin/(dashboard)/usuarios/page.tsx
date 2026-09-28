@@ -13,6 +13,7 @@ import {
 import { EmptyState } from "@/components/shared/empty-state"
 import { UserFormDialog } from "@/components/admin/users/user-form-dialog"
 import { UserActiveToggle } from "@/components/admin/users/user-active-toggle"
+import { UserDeleteButton } from "@/components/admin/users/user-delete-button"
 import { listAdminUsers, listRoles } from "@/modules/user/actions"
 import { roleLabel } from "@/modules/user/role-labels"
 
@@ -60,7 +61,7 @@ export default async function AdminUsersPage() {
                 <TableHead>E-mail</TableHead>
                 <TableHead>Papel</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-40" />
+                <TableHead className="w-56" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -109,6 +110,7 @@ export default async function AdminUsersPage() {
                       }
                     />
                     <UserActiveToggle userId={user.id} active={user.active} />
+                    <UserDeleteButton userId={user.id} />
                   </TableCell>
                 </TableRow>
               ))}

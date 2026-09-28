@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 import { logActivity } from "@/lib/activity-log"
 import { invalidatePermissionsCache } from "@/lib/permissions"
 import { createUserSchema, updateUserSchema } from "@/modules/user/schema"
@@ -81,6 +82,52 @@ export async function updateUser(id: string, input: unknown) {
 
   revalidatePath("/admin/usuarios")
   return user
+}
+
+// Mesmo padrão de "excluir" usado em Lead/Client/Property/Realtor: nunca
+// remove a linha de verdade (evita quebrar FK de activity log, interações,
+// etc.), só marca deletedAt + desativa + bagunça o e-mail pra liberar ele
+// pra reuso. Se a conta é de um corretor, o Realtor vinculado é excluído
+// junto (mesma lógica de deleteRealtor) — sem isso, excluir só o User
+// deixava um Realtor "ativo" órfão, ainda ocupando o slug/e-mail.
+export async function deleteUser(id: string) {
+  const session = await requireUserManage()
+
+  if (session.user.id === id) {
+    throw new Error("Você não pode excluir sua própria conta.")
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, email: true, deletedAt: true, realtor: { select: { id: true, deletedAt: true } } },
+  })
+  if (!user || user.deletedAt) throw new Error("Usuário não encontrado.")
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id },
+      data: { email: `deleted-${id}-${user.email}`, active: false, deletedAt: new Date() },
+    }),
+    ...(user.realtor && !user.realtor.deletedAt
+      ? [
+          prisma.realtor.update({
+            where: { id: user.realtor.id },
+            data: { deletedAt: new Date(), active: false, slug: null },
+          }),
+        ]
+      : []),
+  ])
+
+  await logActivity({
+    userId: session.user.id,
+    action: "user.delete",
+    entityType: "User",
+    entityId: id,
+  })
+
+  revalidatePath("/admin/usuarios")
+  revalidatePath("/admin/corretores")
+  revalidatePath("/admin/corretores/links")
 }
 
 export async function setUserActive(id: string, active: boolean) {
