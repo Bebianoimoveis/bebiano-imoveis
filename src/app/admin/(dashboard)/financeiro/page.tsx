@@ -14,6 +14,7 @@ import { FinancialOverviewTab } from "@/components/admin/financial/financial-ove
 import { FinancialCommissionsPanel } from "@/components/admin/financial/financial-commissions-panel"
 import { GoalsPanel } from "@/components/admin/financial/goals-panel"
 import { FinancialReportsPanel } from "@/components/admin/financial/financial-reports-panel"
+import { FinancialInsightsPanel } from "@/components/admin/financial/financial-insights-panel"
 import { isEntryOverdue } from "@/components/admin/financial/financial-entry-status-badge"
 import {
   listAdminFinancialEntries,
@@ -25,6 +26,7 @@ import {
   getFinancialTopProperties,
   getFinancialCashFlowTimeline,
   getFinancialCommissionsByRealtor,
+  getFinancialInsight,
 } from "@/modules/financial/actions"
 import { listAdminGoals } from "@/modules/goal/actions"
 import { listAdminProposals } from "@/modules/proposal/actions"
@@ -82,6 +84,7 @@ export default async function AdminFinancialPage({
     clients,
     properties,
     canManageFinancial,
+    insight,
   ] = await Promise.all([
     listAdminFinancialEntries(filters),
     listAdminFinancialEntries({}),
@@ -100,6 +103,7 @@ export default async function AdminFinancialPage({
     listAdminClients({}),
     listAdminProperties({ pageSize: 100 }),
     can(session?.user, "financial.manage"),
+    getFinancialInsight(),
   ])
 
   const clientOptions = clients.map((c) => ({ id: c.id, name: c.name }))
@@ -217,7 +221,11 @@ export default async function AdminFinancialPage({
         </TabsContent>
 
         <TabsContent value="relatorios">
-          <DashboardSection index={2}>
+          <DashboardSection index={2} className="space-y-6">
+            <FinancialInsightsPanel
+              initialText={insight?.text ?? null}
+              initialGeneratedAt={insight?.generatedAt ?? null}
+            />
             <FinancialReportsPanel
               incomeByRealtor={incomeByRealtor}
               incomeByCity={incomeByCity}

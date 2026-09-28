@@ -785,6 +785,18 @@ model FinancialEntryInteraction {
   @@index([entryId])
 }
 
+// Cache da última análise financeira gerada pela IA (painel "Análise
+// com IA" da Gestão Financeira) — singleton, mesmo padrão do
+// SiteSettings (sempre 1 linha, id fixo por posição). Gerar essa
+// análise custa uma chamada real à API do Gemini (tokens); guardar o
+// resultado aqui deixa a última análise sempre visível na hora sem
+// gastar nada, e só gera de novo quando a pessoa pede explicitamente.
+model FinancialInsight {
+  id          String   @id @default(cuid())
+  text        String   @db.Text
+  generatedAt DateTime @default(now())
+}
+
 enum GoalScope {
   COMPANY
   REALTOR

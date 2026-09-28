@@ -403,3 +403,18 @@ export async function getCommissionsByRealtor() {
     commissionPending: pendingByRealtor.get(realtor.id) ?? 0,
   }))
 }
+
+// Singleton (sempre 1 linha) — cache da última análise financeira
+// gerada pela IA. Mesmo padrão do SiteSettings: lê a primeira linha
+// que existir, cria na primeira vez, atualiza depois.
+export async function getLatestFinancialInsight() {
+  return prisma.financialInsight.findFirst({ orderBy: { generatedAt: "desc" } })
+}
+
+export async function saveFinancialInsight(text: string) {
+  const existing = await prisma.financialInsight.findFirst({ select: { id: true } })
+  if (existing) {
+    return prisma.financialInsight.update({ where: { id: existing.id }, data: { text, generatedAt: new Date() } })
+  }
+  return prisma.financialInsight.create({ data: { text } })
+}

@@ -6,6 +6,8 @@ import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
 import { serializeDecimals } from "@/lib/serialize"
+import { getGeminiClient, isGeminiConfigured, GEMINI_MODEL, withGeminiRetry } from "@/lib/gemini"
+import { getFinancialForecast } from "@/modules/assistant/tools"
 import type { Prisma } from "@/generated/prisma/client"
 import {
   financialEntryInputSchema,
@@ -345,4 +347,82 @@ export async function addFinancialEntryInteraction(entryId: string, input: unkno
   })
 
   revalidatePath("/admin/financeiro")
+}
+
+// Cache da última análise — mostrado assim que a página abre, sem
+// gastar nenhum token. Só quando a pessoa clica em "Gerar análise" é
+// que a IA é consultada de verdade (ver generateFinancialInsights).
+export async function getFinancialInsight() {
+  await requireFinancialView()
+  const insight = await financialRepository.getLatestFinancialInsight()
+  return insight ? { text: insight.text, generatedAt: insight.generatedAt } : null
+}
+
+const FINANCIAL_INSIGHTS_SYSTEM_INSTRUCTION = `Você é a Bebiano IA, gerando uma análise financeira pra Bebiano Imóveis a partir de dados reais do sistema, enviados em JSON na mensagem do usuário.
+
+FORMATO: texto simples, sem markdown nenhum (nada de **negrito**, #títulos, listas com * ou -). Organize a resposta em blocos: um título curto em maiúsculas seguido de dois-pontos (ex: "COMPARATIVO MÊS A MÊS:"), com frases normais embaixo, separados por uma linha em branco entre blocos. Valores em R$ 890.000,00, datas em 09/08/2026, percentuais em 42%.
+
+REGRAS: use só os números do JSON fornecido — nunca invente ou estime um valor que não esteja lá. O campo "forecast" já vem com a projeção calculada (método de ritmo real do mês comparado à média histórica) — cite o método dele, nunca calcule uma previsão nova por conta própria. Seja direto e específico, sempre citando o número exato por trás de cada afirmação.
+
+ESTRUTURA esperada:
+COMPARATIVO MÊS A MÊS: compare o mês atual (currentMonth) com o anterior (previousMonth) — receita, despesa e saldo, em valor e em variação percentual.
+TENDÊNCIA (últimos meses): leitura da série monthlySeries — meses fortes/fracos, se a receita está subindo ou caindo ao longo do tempo, despesas por categoria (expenseByCategory) que mais pesam.
+PREVISÃO: o que "forecast" indica pro fechamento do mês atual, deixando explícito que é estimativa, e se o ritmo aponta pra saldo negativo.
+COMISSÕES POR CORRETOR: só se "commissions" vier no JSON — quem vendeu mais (soldValue), comissão paga vs. pendente, alguma discrepância grande entre corretores.
+COMO ESTÁ INDO O NEGÓCIO: veredito direto — saudável, atenção ou preocupante — baseado nos dados acima, não numa impressão genérica.
+SUGESTÕES: de 3 a 5 ações concretas e priorizadas, cada uma amarrada a um número específico citado acima — nunca conselho genérico de mercado.`
+
+// Painel "Análise com IA" da Gestão Financeira — gerado sob demanda
+// (custa uma chamada real ao Gemini), nunca automático. O resultado é
+// salvo em FinancialInsight pra ficar disponível de graça (sem gastar
+// token de novo) até a próxima vez que alguém pedir uma atualização.
+export async function generateFinancialInsights(): Promise<
+  { text: string; generatedAt: Date } | { error: string }
+> {
+  await requireFinancialView()
+
+  if (!isGeminiConfigured()) {
+    return {
+      error:
+        "A IA ainda não foi configurada neste sistema. Peça para o administrador adicionar a chave GEMINI_API_KEY nas variáveis de ambiente do projeto.",
+    }
+  }
+
+  const [kpis, monthlySeries, expenseByCategory, commissions, forecast] = await Promise.all([
+    getFinancialKpis({}),
+    getFinancialMonthlySeries({}),
+    getFinancialExpenseByCategory({}),
+    getFinancialCommissionsByRealtor().catch(() => null),
+    getFinancialForecast(),
+  ])
+
+  const payload = {
+    currentMonth: kpis.currentMonth,
+    previousMonth: kpis.previousMonth,
+    year: kpis.year,
+    pendingIncome: kpis.pendingIncome,
+    pendingExpense: kpis.pendingExpense,
+    averageTicket: kpis.averageTicket,
+    monthlySeries,
+    expenseByCategory,
+    commissions,
+    forecast,
+  }
+
+  try {
+    const ai = getGeminiClient()
+    const chat = ai.chats.create({
+      model: GEMINI_MODEL,
+      config: { systemInstruction: FINANCIAL_INSIGHTS_SYSTEM_INSTRUCTION },
+    })
+    const response = await withGeminiRetry(() =>
+      chat.sendMessage({ message: JSON.stringify(JSON.parse(JSON.stringify(payload))) })
+    )
+    const text = response.text || "Não consegui gerar a análise agora. Tente novamente."
+    const saved = await financialRepository.saveFinancialInsight(text)
+    return { text: saved.text, generatedAt: saved.generatedAt }
+  } catch (error) {
+    console.error("generateFinancialInsights failed", error)
+    return { error: "Ocorreu um erro ao consultar a IA. Tente novamente em instantes." }
+  }
 }

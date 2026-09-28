@@ -5,23 +5,34 @@ import { Sparkles } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { generateBusinessInsights } from "@/modules/report/actions"
+import { generateFinancialInsights } from "@/modules/financial/actions"
 import { parseAiReportBlocks } from "@/lib/parse-ai-report-blocks"
 
-export function BusinessInsightsPanel() {
+// `initialText`/`initialGeneratedAt` vêm do cache salvo no banco
+// (FinancialInsight) — a última análise aparece na hora, sem gastar
+// nenhum token; só "Gerar de novo" chama a IA de verdade. Evita
+// reprocessar (e regastar tokens) toda vez que alguém só quer ver o
+// que já foi levantado antes.
+export function FinancialInsightsPanel({
+  initialText,
+  initialGeneratedAt,
+}: {
+  initialText: string | null
+  initialGeneratedAt: Date | null
+}) {
   const [isPending, startTransition] = useTransition()
-  const [text, setText] = useState<string | null>(null)
-  const [generatedAt, setGeneratedAt] = useState<Date | null>(null)
+  const [text, setText] = useState<string | null>(initialText)
+  const [generatedAt, setGeneratedAt] = useState<Date | null>(initialGeneratedAt)
 
   function handleGenerate() {
     startTransition(async () => {
-      const result = await generateBusinessInsights()
+      const result = await generateFinancialInsights()
       if ("error" in result) {
         toast.error(result.error)
         return
       }
       setText(result.text)
-      setGeneratedAt(new Date())
+      setGeneratedAt(new Date(result.generatedAt))
     })
   }
 
@@ -37,7 +48,7 @@ export function BusinessInsightsPanel() {
           <div>
             <h2 className="font-heading text-base font-semibold">Análise com IA</h2>
             <p className="text-sm text-muted-foreground">
-              Previsão, comparativos e sugestões geradas a partir dos dados reais do negócio.
+              Comparativo mês a mês, tendência, previsão e sugestões a partir dos dados financeiros reais.
             </p>
           </div>
         </div>
@@ -51,9 +62,9 @@ export function BusinessInsightsPanel() {
         <div className="space-y-4 border-t border-border/60 pt-4">
           {generatedAt ? (
             <p className="text-xs text-muted-foreground">
-              Gerado às{" "}
-              {generatedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} — os números podem
-              mudar em gerações futuras conforme o negócio avança.
+              Gerado em {generatedAt.toLocaleDateString("pt-BR")} às{" "}
+              {generatedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} — clique em
+              &ldquo;Gerar de novo&rdquo; pra atualizar com os lançamentos mais recentes.
             </p>
           ) : null}
           {blocks.map((block, index) => (
@@ -67,8 +78,9 @@ export function BusinessInsightsPanel() {
         </div>
       ) : !isPending ? (
         <p className="border-t border-border/60 pt-4 text-sm text-muted-foreground">
-          Clique em &ldquo;Gerar análise&rdquo; pra ter uma leitura completa do negócio: visão geral, faturamento
-          mensal, previsão de fechamento do mês e, se você tiver acesso, comparativo entre corretores.
+          Clique em &ldquo;Gerar análise&rdquo; pra ter uma leitura completa do financeiro: comparativo com o
+          mês passado, tendência dos últimos meses, previsão de fechamento, comissões por corretor e
+          sugestões.
         </p>
       ) : null}
     </div>
