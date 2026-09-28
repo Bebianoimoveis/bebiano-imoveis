@@ -992,6 +992,23 @@ model SiteSettings {
   // de deploy quando a imobiliária passar a atender locação.
   rentalEnabled Boolean @default(false)
 
+  // Conteúdo editável das seções fixas da página "/sobre" (Números,
+  // Missão/Visão/Valores/Propósito, Nascemos de uma Palavra,
+  // Diferencial, Como Trabalhamos, Nossos Valores, Por que Escolher).
+  // Cada campo guarda a mesma estrutura do array/objeto padrão definido
+  // no componente React correspondente — nulo usa esse padrão (que é o
+  // que já está no ar), editável em Configurações sem precisar de
+  // deploy. Formato solto (Json) em vez de tabelas próprias porque é
+  // conteúdo de vitrine institucional, sempre em quantidade fixa,
+  // nunca listado/filtrado em lugar nenhum do sistema.
+  aboutStats           Json?
+  aboutMissionValues   Json?
+  aboutFoundations     Json?
+  aboutDifferentiators Json?
+  aboutHowWeWork       Json?
+  aboutValues          Json?
+  aboutWhyChoose       Json?
+
   // Corretor responsável por visitantes sem nenhuma referência de link,
   // quando leadDistributionMode = FIXED.
   defaultRealtorId String?

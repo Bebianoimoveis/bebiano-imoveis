@@ -4,35 +4,57 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 
-const PRIORIDADES = [
-  { order: "1º lugar", label: "Deus" },
-  { order: "2º lugar", label: "Família" },
-  { order: "3º lugar", label: "Trabalho" },
-]
-
-const PROPOSITO = [
-  {
-    icon: Flag,
-    title: "Obedecer o Chamado",
-    text: "Empreendendo para iluminar, cumprindo o “Ide” de Jesus, guiando e ajudando pessoas através de um trabalho honesto, confiável, leve e profissional.",
-  },
-  {
-    icon: Sun,
-    title: "Sendo Luz",
-    text: "Iluminando o mercado imobiliário, sendo a diferença, trabalhando com verdade e transparência, para que todos ao nosso redor glorifiquem a Deus através do nosso trabalho.",
-  },
-  {
-    icon: Users,
-    title: "Influenciando a Todos",
-    text: "Agindo como Jesus agiria, valorizando, reconhecendo e alcançando pessoas que precisam de ajuda, abençoando e guiando o caminho delas até Ele.",
-  },
-]
+const PURPOSE_ICONS = [Flag, Sun, Users]
 
 // Conteúdo institucional/de fé passado pela cliente (versículo-base,
 // regra de vida, "placa invisível", prioridades, propósito) — tudo
 // literal, sem parafrasear o sentido, só ajustado pro tom de texto de
-// site (maiúsculas/pontuação do material original).
-export function AboutFoundations() {
+// site (maiúsculas/pontuação do material original). Editável inteiro em
+// Configurações — os ícones dos 3 cards de propósito ficam fixos
+// (PURPOSE_ICONS acima), o resto é texto livre.
+export const DEFAULT_FOUNDATIONS = {
+  verseRef: "Mateus 5:14-16",
+  verseText:
+    "“Vocês são a luz do mundo. Não se pode esconder uma cidade construída sobre um monte. Ninguém acende uma lamparina para colocá-la debaixo de um cesto. Pelo contrário, ela é colocada no lugar próprio para que ilumine todos os que estão na casa. Assim também a luz de vocês deve brilhar para que os outros vejam as coisas boas que vocês fazem e louvem o Pai de vocês, que está no céu.”",
+  ruleText:
+    "“Façam aos outros o que querem que eles façam a vocês, e não façam aos outros o que não querem que eles façam a vocês.”",
+  ruleRef: "Mateus 7:12",
+  badgeText:
+    "“Imagine uma placa invisível ao redor do pescoço de cada pessoa dizendo: 'Faça-me sentir importante!'”",
+  badgeAuthor: "Mary Kay Ash",
+  priorities: ["Deus", "Família", "Trabalho"],
+  purpose: [
+    {
+      title: "Obedecer o Chamado",
+      text: "Empreendendo para iluminar, cumprindo o “Ide” de Jesus, guiando e ajudando pessoas através de um trabalho honesto, confiável, leve e profissional.",
+    },
+    {
+      title: "Sendo Luz",
+      text: "Iluminando o mercado imobiliário, sendo a diferença, trabalhando com verdade e transparência, para que todos ao nosso redor glorifiquem a Deus através do nosso trabalho.",
+    },
+    {
+      title: "Influenciando a Todos",
+      text: "Agindo como Jesus agiria, valorizando, reconhecendo e alcançando pessoas que precisam de ajuda, abençoando e guiando o caminho delas até Ele.",
+    },
+  ],
+}
+
+export type AboutFoundationsContent = typeof DEFAULT_FOUNDATIONS
+
+export function AboutFoundations({
+  content = DEFAULT_FOUNDATIONS,
+}: {
+  content?: AboutFoundationsContent
+}) {
+  const PRIORIDADES = content.priorities.map((label, index) => ({
+    order: `${index + 1}º lugar`,
+    label,
+  }))
+  const PROPOSITO = content.purpose.map((item, index) => ({
+    ...item,
+    icon: PURPOSE_ICONS[index] ?? PURPOSE_ICONS[0],
+  }))
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <Reveal className="mb-10 text-center sm:mb-12">
@@ -46,13 +68,9 @@ export function AboutFoundations() {
 
       <Reveal className="mx-auto mb-10 max-w-3xl rounded-[20px] border border-border/60 bg-card p-6 text-center sm:p-8">
         <Quote className="mx-auto mb-3 size-6 text-gold" strokeWidth={1.5} />
-        <p className="font-heading text-sm font-semibold text-gold-dark">Mateus 5:14-16</p>
+        <p className="font-heading text-sm font-semibold text-gold-dark">{content.verseRef}</p>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground italic sm:text-base">
-          &ldquo;Vocês são a luz do mundo. Não se pode esconder uma cidade construída sobre um
-          monte. Ninguém acende uma lamparina para colocá-la debaixo de um cesto. Pelo contrário,
-          ela é colocada no lugar próprio para que ilumine todos os que estão na casa. Assim
-          também a luz de vocês deve brilhar para que os outros vejam as coisas boas que vocês
-          fazem e louvem o Pai de vocês, que está no céu.&rdquo;
+          {content.verseText}
         </p>
       </Reveal>
 
@@ -61,21 +79,15 @@ export function AboutFoundations() {
           <p className="font-heading font-semibold">
             Temos uma Regra de <AccentWord>Vida</AccentWord>
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">
-            &ldquo;Façam aos outros o que querem que eles façam a vocês, e não façam aos outros o
-            que não querem que eles façam a vocês.&rdquo;
-          </p>
-          <p className="mt-2 text-xs font-medium text-gold-dark">Mateus 7:12</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">{content.ruleText}</p>
+          <p className="mt-2 text-xs font-medium text-gold-dark">{content.ruleRef}</p>
         </Reveal>
         <Reveal delay={0.1} className="rounded-[20px] border border-border/60 bg-card p-6">
           <p className="font-heading font-semibold">
             A Placa <AccentWord>Invisível</AccentWord>
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">
-            &ldquo;Imagine uma placa invisível ao redor do pescoço de cada pessoa dizendo:
-            'Faça-me sentir importante!'&rdquo;
-          </p>
-          <p className="mt-2 text-xs font-medium text-gold-dark">Mary Kay Ash</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">{content.badgeText}</p>
+          <p className="mt-2 text-xs font-medium text-gold-dark">{content.badgeAuthor}</p>
         </Reveal>
       </div>
 

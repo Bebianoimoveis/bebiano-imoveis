@@ -4,30 +4,33 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 
-const CARDS = [
-  {
-    icon: Target,
-    title: "Missão",
-    text: "Transformar vidas por meio do mercado imobiliário, desenvolvendo corretores de imóveis de excelência, profissionais autônomos comprometidos em realizar sonhos, servindo com propósito cada pessoa que Deus colocar em seus caminhos.",
-  },
-  {
-    icon: Eye,
-    title: "Visão",
-    text: "Ser a imobiliária de referência da região do Alto Tietê, reconhecida pela excelência, credibilidade, profissionalismo e, acima de tudo, pela confiança que construímos em cada relacionamento com nossos parceiros e clientes.",
-  },
-  {
-    icon: Heart,
-    title: "Valores",
-    text: "Ser uma empresa que acredita, valoriza, reconhece e investe em pessoas, ajudando e somando no propósito individual de cada cliente e cada corretor, formando profissionais com fundamentos, valores e princípios bíblicos e cristãos.",
-  },
-  {
-    icon: Compass,
-    title: "Propósito",
-    text: "Acreditamos em pessoas, investimos em talentos e fortalecemos propósitos. Ajudamos cada cliente e cada corretor a avançar em seu propósito, formando profissionais firmados em valores, princípios e fundamentos cristãos, para transformar vidas e glorificar a Deus em tudo o que fazemos.",
-  },
-]
+// Só o texto de cada card é editável em Configurações — título e ícone
+// ficam fixos (são a identidade da seção, não conteúdo institucional).
+export const DEFAULT_MISSION_VALUES = {
+  missao:
+    "Transformar vidas por meio do mercado imobiliário, desenvolvendo corretores de imóveis de excelência, profissionais autônomos comprometidos em realizar sonhos, servindo com propósito cada pessoa que Deus colocar em seus caminhos.",
+  visao:
+    "Ser a imobiliária de referência da região do Alto Tietê, reconhecida pela excelência, credibilidade, profissionalismo e, acima de tudo, pela confiança que construímos em cada relacionamento com nossos parceiros e clientes.",
+  valores:
+    "Ser uma empresa que acredita, valoriza, reconhece e investe em pessoas, ajudando e somando no propósito individual de cada cliente e cada corretor, formando profissionais com fundamentos, valores e princípios bíblicos e cristãos.",
+  proposito:
+    "Acreditamos em pessoas, investimos em talentos e fortalecemos propósitos. Ajudamos cada cliente e cada corretor a avançar em seu propósito, formando profissionais firmados em valores, princípios e fundamentos cristãos, para transformar vidas e glorificar a Deus em tudo o que fazemos.",
+}
 
-export function AboutMissionValues() {
+export type AboutMissionValuesContent = typeof DEFAULT_MISSION_VALUES
+
+export function AboutMissionValues({
+  content = DEFAULT_MISSION_VALUES,
+}: {
+  content?: AboutMissionValuesContent
+}) {
+  const CARDS = [
+    { icon: Target, title: "Missão", text: content.missao },
+    { icon: Eye, title: "Visão", text: content.visao },
+    { icon: Heart, title: "Valores", text: content.valores },
+    { icon: Compass, title: "Propósito", text: content.proposito },
+  ]
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <Reveal className="mb-10 text-center sm:mb-12">

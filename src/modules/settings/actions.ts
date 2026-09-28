@@ -68,6 +68,24 @@ export async function getPublicAboutStoryImage() {
   return settings?.aboutStoryImageUrl ?? null
 }
 
+// Leitura pública — todo o conteúdo editável das seções fixas de
+// "/sobre" (ver comentário no schema.prisma). Cada campo é null até
+// alguém salvar algo em Configurações; os componentes React já sabem
+// cair pro próprio texto padrão quando recebem null/undefined, então
+// devolve exatamente o que está no banco, sem resolver o fallback aqui.
+export async function getPublicAboutSections() {
+  const settings = await settingsRepository.getSettings()
+  return {
+    stats: (settings?.aboutStats as unknown[] | null) ?? null,
+    missionValues: (settings?.aboutMissionValues as Record<string, string> | null) ?? null,
+    foundations: (settings?.aboutFoundations as Record<string, unknown> | null) ?? null,
+    differentiators: (settings?.aboutDifferentiators as unknown[] | null) ?? null,
+    howWeWork: (settings?.aboutHowWeWork as unknown[] | null) ?? null,
+    values: (settings?.aboutValues as unknown[] | null) ?? null,
+    whyChoose: (settings?.aboutWhyChoose as unknown[] | null) ?? null,
+  }
+}
+
 export async function updateSettings(input: unknown) {
   const session = await requireSettingsManage()
   const data = siteSettingsInputSchema.parse(input)
@@ -82,6 +100,13 @@ export async function updateSettings(input: unknown) {
     rentalEnabled: data.rentalEnabled,
     heroImageUrl: data.heroImageUrl || null,
     aboutStoryImageUrl: data.aboutStoryImageUrl || null,
+    aboutStats: data.aboutStats,
+    aboutMissionValues: data.aboutMissionValues,
+    aboutFoundations: data.aboutFoundations,
+    aboutDifferentiators: data.aboutDifferentiators,
+    aboutHowWeWork: data.aboutHowWeWork,
+    aboutValues: data.aboutValues,
+    aboutWhyChoose: data.aboutWhyChoose,
     socialLinks: {
       instagram: data.instagram || undefined,
       facebook: data.facebook || undefined,

@@ -17,7 +17,15 @@ import {
   getPublicAboutText,
   getPublicHeroImage,
   getPublicAboutStoryImage,
+  getPublicAboutSections,
 } from "@/modules/settings/actions"
+import type { AboutStat } from "@/components/public/about-stats"
+import type { AboutMissionValuesContent } from "@/components/public/about-mission-values"
+import type { AboutFoundationsContent } from "@/components/public/about-foundations"
+import type { AboutDifferentiatorItem } from "@/components/public/about-differentiators"
+import type { AboutHowWeWorkStep } from "@/components/public/about-how-we-work"
+import type { AboutValueItem } from "@/components/public/about-values-showcase"
+import type { AboutWhyChooseReason } from "@/components/public/about-why-choose"
 import { listPublicRealtors } from "@/modules/realtor/actions"
 import { siteConfig } from "@/config/site"
 
@@ -32,11 +40,12 @@ export const metadata: Metadata = {
 const FALLBACK_STORY_IMAGE = "/images/hero-bg.png"
 
 export default async function AboutPage() {
-  const [aboutText, realtors, heroImageUrl, aboutStoryImageUrl] = await Promise.all([
+  const [aboutText, realtors, heroImageUrl, aboutStoryImageUrl, sections] = await Promise.all([
     getPublicAboutText(),
     listPublicRealtors(),
     getPublicHeroImage(),
     getPublicAboutStoryImage(),
+    getPublicAboutSections(),
   ])
 
   const storyImage =
@@ -53,29 +62,29 @@ export default async function AboutPage() {
       <AboutStory aboutText={aboutText} imageUrl={storyImage} />
 
       {/* 3. Números */}
-      <AboutStats />
+      <AboutStats stats={(sections.stats as AboutStat[] | null) ?? undefined} />
 
       {/* 4. Missão / Visão / Propósito */}
-      <AboutMissionValues />
+      <AboutMissionValues content={(sections.missionValues as AboutMissionValuesContent | null) ?? undefined} />
 
       {/* 4b. Guiados por uma palavra — versículo-base, regra de vida,
           placa invisível, prioridades e propósito detalhado */}
-      <AboutFoundations />
+      <AboutFoundations content={(sections.foundations as AboutFoundationsContent | null) ?? undefined} />
 
       {/* 5. Nosso Diferencial */}
-      <AboutDifferentiators />
+      <AboutDifferentiators items={(sections.differentiators as AboutDifferentiatorItem[] | null) ?? undefined} />
 
       {/* 6. Nossa Equipe (componente reutilizado, já lida com estado vazio) */}
       <TeamSection />
 
       {/* 7. Como Trabalhamos */}
-      <AboutHowWeWork />
+      <AboutHowWeWork steps={(sections.howWeWork as AboutHowWeWorkStep[] | null) ?? undefined} />
 
       {/* 8. Nossos Valores (showcase maior, distinto do bloco 4) */}
-      <AboutValuesShowcase />
+      <AboutValuesShowcase values={(sections.values as AboutValueItem[] | null) ?? undefined} />
 
       {/* 9. Por Que Escolher a Bebiano */}
-      <AboutWhyChoose />
+      <AboutWhyChoose reasons={(sections.whyChoose as AboutWhyChooseReason[] | null) ?? undefined} />
 
       {/* 10. Depoimentos (scroll horizontal) */}
       <AboutTestimonials />

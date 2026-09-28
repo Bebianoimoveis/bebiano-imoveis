@@ -4,35 +4,41 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 
-const STEPS = [
+const STEP_ICONS = [Search, SearchCheck, CalendarCheck, Handshake, KeyRound]
+
+// Só título/texto são editáveis em Configurações — ícone e ordem ficam
+// fixos no código.
+export const DEFAULT_HOW_WE_WORK = [
   {
-    icon: Search,
     title: "Entendemos sua necessidade",
     text: "Conversamos para entender o que você busca: perfil, região, orçamento e prazo.",
   },
   {
-    icon: SearchCheck,
     title: "Selecionamos os melhores imóveis",
     text: "Filtramos o catálogo para trazer só opções que fazem sentido para você.",
   },
   {
-    icon: CalendarCheck,
     title: "Agendamos visitas",
     text: "Organizamos visitas no seu ritmo, com um corretor dedicado acompanhando cada uma.",
   },
   {
-    icon: Handshake,
     title: "Negociamos",
     text: "Conduzimos a negociação com transparência, sempre defendendo seu melhor interesse.",
   },
   {
-    icon: KeyRound,
     title: "Concluímos sua conquista",
     text: "Cuidamos da documentação até a entrega das chaves — o fechamento de uma nova fase.",
   },
 ]
 
-export function AboutHowWeWork() {
+export type AboutHowWeWorkStep = { title: string; text: string }
+
+export function AboutHowWeWork({ steps = DEFAULT_HOW_WE_WORK }: { steps?: AboutHowWeWorkStep[] }) {
+  const STEPS = steps.map((step, index) => ({
+    ...step,
+    icon: STEP_ICONS[index] ?? STEP_ICONS[0],
+  }))
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <Reveal className="mb-10 text-center sm:mb-14">

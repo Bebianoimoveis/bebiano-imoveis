@@ -1,6 +1,13 @@
 import { SettingsForm } from "@/components/admin/settings/settings-form"
 import { getAdminSettings } from "@/modules/settings/actions"
 import { DEFAULT_STORY_TEXT } from "@/components/public/about-story"
+import { DEFAULT_STATS } from "@/components/public/about-stats"
+import { DEFAULT_MISSION_VALUES } from "@/components/public/about-mission-values"
+import { DEFAULT_FOUNDATIONS } from "@/components/public/about-foundations"
+import { DEFAULT_DIFFERENTIATORS } from "@/components/public/about-differentiators"
+import { DEFAULT_HOW_WE_WORK } from "@/components/public/about-how-we-work"
+import { DEFAULT_VALUES } from "@/components/public/about-values-showcase"
+import { DEFAULT_WHY_CHOOSE } from "@/components/public/about-why-choose"
 import type { SiteSettingsInput } from "@/modules/settings/schema"
 
 export default async function AdminSettingsPage() {
@@ -23,6 +30,18 @@ export default async function AdminSettingsPage() {
     rentalEnabled: settings?.rentalEnabled ?? false,
     heroImageUrl: settings?.heroImageUrl ?? "",
     aboutStoryImageUrl: settings?.aboutStoryImageUrl ?? "",
+    // Mesma lógica do aboutText acima: cada seção da página Sobre já
+    // abre com o conteúdo padrão (o que já está no ar) pronto pra
+    // editar, nunca um formulário vazio escondendo o texto real.
+    aboutStats: (settings?.aboutStats as SiteSettingsInput["aboutStats"]) ?? DEFAULT_STATS,
+    aboutMissionValues:
+      (settings?.aboutMissionValues as SiteSettingsInput["aboutMissionValues"]) ?? DEFAULT_MISSION_VALUES,
+    aboutFoundations: (settings?.aboutFoundations as SiteSettingsInput["aboutFoundations"]) ?? DEFAULT_FOUNDATIONS,
+    aboutDifferentiators:
+      (settings?.aboutDifferentiators as SiteSettingsInput["aboutDifferentiators"]) ?? DEFAULT_DIFFERENTIATORS,
+    aboutHowWeWork: (settings?.aboutHowWeWork as SiteSettingsInput["aboutHowWeWork"]) ?? DEFAULT_HOW_WE_WORK,
+    aboutValues: (settings?.aboutValues as SiteSettingsInput["aboutValues"]) ?? DEFAULT_VALUES,
+    aboutWhyChoose: (settings?.aboutWhyChoose as SiteSettingsInput["aboutWhyChoose"]) ?? DEFAULT_WHY_CHOOSE,
   }
 
   return (

@@ -2,19 +2,28 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 
-const VALUES = [
-  { number: "01", title: "Confiança", text: "A base de toda negociação que conduzimos." },
-  { number: "02", title: "Ética", text: "Fazemos o certo, mesmo quando ninguém está olhando." },
-  { number: "03", title: "Transparência", text: "Informação clara, sem surpresas no meio do caminho." },
-  { number: "04", title: "Respeito", text: "Ao tempo, ao orçamento e à decisão de cada cliente." },
-  { number: "05", title: "Excelência", text: "Atenção aos detalhes em cada etapa do atendimento." },
-  { number: "06", title: "Compromisso", text: "Do primeiro contato até a chave na mão." },
-]
-
 // Seção intencionalmente distinta do bloco "Missão/Visão/Valores" (mais
 // enxuto, 3 cards) — aqui os mesmos temas de valores ganham um tratamento
 // maior e mais gráfico (numerais grandes), pedido explícito da cliente.
-export function AboutValuesShowcase() {
+// Só título/texto são editáveis em Configurações — o numeral (01-06) é
+// calculado pela posição na lista.
+export const DEFAULT_VALUES = [
+  { title: "Confiança", text: "A base de toda negociação que conduzimos." },
+  { title: "Ética", text: "Fazemos o certo, mesmo quando ninguém está olhando." },
+  { title: "Transparência", text: "Informação clara, sem surpresas no meio do caminho." },
+  { title: "Respeito", text: "Ao tempo, ao orçamento e à decisão de cada cliente." },
+  { title: "Excelência", text: "Atenção aos detalhes em cada etapa do atendimento." },
+  { title: "Compromisso", text: "Do primeiro contato até a chave na mão." },
+]
+
+export type AboutValueItem = { title: string; text: string }
+
+export function AboutValuesShowcase({ values = DEFAULT_VALUES }: { values?: AboutValueItem[] }) {
+  const VALUES = values.map((value, index) => ({
+    ...value,
+    number: String(index + 1).padStart(2, "0"),
+  }))
+
   return (
     <section className="border-t border-border/60 bg-secondary/30">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">

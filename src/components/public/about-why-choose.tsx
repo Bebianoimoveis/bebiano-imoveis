@@ -11,16 +11,27 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 
-const REASONS = [
-  { icon: MapPin, title: "Especialistas locais", text: "Conhecimento profundo de cada região onde atuamos." },
-  { icon: HandCoins, title: "Avaliação gratuita", text: "Descubra o valor real do seu imóvel, sem custo." },
-  { icon: MessagesSquare, title: "Atendimento rápido", text: "Respostas ágeis, do primeiro contato à visita." },
-  { icon: FileCheck2, title: "Documentação segura", text: "Conferência cuidadosa em cada etapa da negociação." },
-  { icon: ClipboardCheck, title: "Negociação transparente", text: "Condições claras, sem surpresas no contrato." },
-  { icon: BadgeCheck, title: "Suporte completo", text: "Acompanhamento até depois da entrega das chaves." },
+const REASON_ICONS = [MapPin, HandCoins, MessagesSquare, FileCheck2, ClipboardCheck, BadgeCheck]
+
+// Só título/texto são editáveis em Configurações — ícone e ordem ficam
+// fixos no código.
+export const DEFAULT_WHY_CHOOSE = [
+  { title: "Especialistas locais", text: "Conhecimento profundo de cada região onde atuamos." },
+  { title: "Avaliação gratuita", text: "Descubra o valor real do seu imóvel, sem custo." },
+  { title: "Atendimento rápido", text: "Respostas ágeis, do primeiro contato à visita." },
+  { title: "Documentação segura", text: "Conferência cuidadosa em cada etapa da negociação." },
+  { title: "Negociação transparente", text: "Condições claras, sem surpresas no contrato." },
+  { title: "Suporte completo", text: "Acompanhamento até depois da entrega das chaves." },
 ]
 
-export function AboutWhyChoose() {
+export type AboutWhyChooseReason = { title: string; text: string }
+
+export function AboutWhyChoose({ reasons = DEFAULT_WHY_CHOOSE }: { reasons?: AboutWhyChooseReason[] }) {
+  const REASONS = reasons.map((reason, index) => ({
+    ...reason,
+    icon: REASON_ICONS[index] ?? REASON_ICONS[0],
+  }))
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <Reveal className="mb-10 text-center sm:mb-12">

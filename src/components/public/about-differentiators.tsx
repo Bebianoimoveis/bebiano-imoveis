@@ -4,30 +4,41 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 
-const DIFERENCIAIS = [
+const DIFFERENTIATOR_ICONS = [HeartHandshake, MapPinned, ShieldCheck, Cpu]
+
+// Só título/texto são editáveis em Configurações — ícone e ordem ficam
+// fixos no código.
+export const DEFAULT_DIFFERENTIATORS = [
   {
-    icon: HeartHandshake,
     title: "Atendimento Humanizado",
     text: "Ouvimos antes de indicar. Cada conversa é o ponto de partida para entender sua real necessidade.",
   },
   {
-    icon: MapPinned,
     title: "Especialistas da Região",
     text: "Conhecemos cada bairro de Mogi das Cruzes — os preços justos, os detalhes que fazem diferença.",
   },
   {
-    icon: ShieldCheck,
     title: "Transparência",
     text: "Informações claras sobre preço, documentação e condições, sem letras miúdas.",
   },
   {
-    icon: Cpu,
     title: "Tecnologia",
     text: "Ferramentas modernas para buscar, comparar e acompanhar seu imóvel do início ao fim.",
   },
 ]
 
-export function AboutDifferentiators() {
+export type AboutDifferentiatorItem = { title: string; text: string }
+
+export function AboutDifferentiators({
+  items = DEFAULT_DIFFERENTIATORS,
+}: {
+  items?: AboutDifferentiatorItem[]
+}) {
+  const DIFERENCIAIS = items.map((item, index) => ({
+    ...item,
+    icon: DIFFERENTIATOR_ICONS[index] ?? DIFFERENTIATOR_ICONS[0],
+  }))
+
   return (
     <section className="border-t border-border/60 bg-secondary/30">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">

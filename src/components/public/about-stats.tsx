@@ -7,12 +7,15 @@ import { AccentWord } from "@/components/public/accent-word"
 
 // Números reais confirmados pela cliente. "Imóveis negociados" e "sonhos
 // realizados" (placeholder do briefing original) foram removidos a
-// pedido dela.
-const STATS = [
+// pedido dela. Exportado pra Configurações usar como valor inicial do
+// editor dessa seção (mesmo padrão do DEFAULT_STORY_TEXT).
+export const DEFAULT_STATS = [
   { value: 1, suffix: "", label: "ano de mercado" },
   { value: 1000, suffix: "+", label: "clientes atendidos com transparência e segurança" },
   { value: 100, suffix: "%", label: "satisfação" },
-] as const
+]
+
+export type AboutStat = { value: number; suffix: string; label: string }
 
 function Counter({ value, suffix }: { value: number; suffix: string }) {
   const ref = useRef<HTMLParagraphElement>(null)
@@ -46,7 +49,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
   )
 }
 
-export function AboutStats() {
+export function AboutStats({ stats = DEFAULT_STATS }: { stats?: AboutStat[] }) {
   return (
     <section className="border-t border-b border-border/60 bg-secondary/30">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
@@ -66,7 +69,7 @@ export function AboutStats() {
         </motion.div>
 
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-8">
-          {STATS.map((stat) => (
+          {stats.map((stat) => (
             <div key={stat.label} className="flex flex-col items-center gap-1.5 text-center">
               <Counter value={stat.value} suffix={stat.suffix} />
               <p className="text-xs text-muted-foreground sm:text-sm">{stat.label}</p>
