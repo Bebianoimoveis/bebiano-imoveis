@@ -20,7 +20,7 @@ export default async function AdminContractsPage() {
     listRealtors(),
   ])
 
-  const clientOptions = clients.map((c) => ({ id: c.id, name: c.name }))
+  const clientOptions = clients.map((c) => ({ id: c.id, name: c.name, cpf: c.cpf, email: c.email }))
   const realtorOptions = realtors.map((r) => ({ id: r.id, user: { name: r.user.name } }))
 
   return (

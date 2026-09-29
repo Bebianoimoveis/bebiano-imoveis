@@ -11,6 +11,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 export type ComboboxOption = {
   value: string
   label: string
+  // Texto extra (ex: CPF, e-mail) incluído na busca do cmdk mas não
+  // mostrado no gatilho fechado — só aparece como linha secundária na
+  // lista quando informado, útil pra diferenciar registros com nomes
+  // iguais.
+  keywords?: string
+  description?: string
 }
 
 // Select pesquisável para listas longas (ex.: cidades). Usa cmdk — a base
@@ -82,7 +88,7 @@ export function Combobox({
               return (
                 <CommandPrimitive.Item
                   key={option.value}
-                  value={option.label}
+                  value={[option.label, option.keywords].filter(Boolean).join(" ")}
                   onSelect={() => {
                     onValueChange(option.value)
                     setOpen(false)
@@ -100,7 +106,14 @@ export function Combobox({
                       </motion.span>
                     ) : null}
                   </span>
-                  {option.label}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{option.label}</span>
+                    {option.description ? (
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {option.description}
+                      </span>
+                    ) : null}
+                  </span>
                 </CommandPrimitive.Item>
               )
             })}

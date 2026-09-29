@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { CONTRACT_STATUS_LABELS } from "@/components/admin/contracts/contract-status-badge"
 import { createManualContract } from "@/modules/contract/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
@@ -35,7 +36,7 @@ import type { ContractStatus } from "@/generated/prisma/client"
 
 type RealtorOption = { id: string; user: { name: string } }
 type PropertyOption = { id: string; code: string; title: string; imageUrl?: string | null }
-type ClientOption = { id: string; name: string }
+type ClientOption = { id: string; name: string; cpf?: string | null; email?: string | null }
 
 // Cadastro direto de contrato sem passar por proposta — negócio fechado
 // fora do sistema, ou contrato antigo sendo migrado pra cá, anexando o
@@ -180,7 +181,7 @@ export function ManualContractFormDialog({
           {clientId ? null : (
             <div className="space-y-1.5">
               <Label>Cliente</Label>
-              <Select
+              <Combobox
                 value={selectedClientId}
                 onValueChange={(next) => {
                   setSelectedClientId(next)
@@ -188,18 +189,16 @@ export function ManualContractFormDialog({
                   setPropertyCode("")
                   setPropertyError(null)
                 }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(clients ?? []).map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Selecione"
+                searchPlaceholder="Buscar por nome, CPF ou e-mail..."
+                emptyMessage="Nenhum cliente encontrado."
+                options={(clients ?? []).map((client) => ({
+                  value: client.id,
+                  label: client.name,
+                  description: [client.cpf, client.email].filter(Boolean).join(" · ") || undefined,
+                  keywords: [client.cpf, client.email].filter(Boolean).join(" "),
+                }))}
+              />
             </div>
           )}
 
