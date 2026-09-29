@@ -10,10 +10,15 @@ import { PropertyRealtor } from "@/components/admin/properties/property-realtor"
 import { formatRelativeTime } from "@/lib/format"
 import type { ClientListItem } from "@/modules/client/repository"
 
+// A última coluna (ações) é de largura fixa (32px, igual ao botão "...")
+// em vez de "auto" nos dois grids — com "auto" o cabeçalho (que não tem
+// botão nenhum ali) e a linha (que tem) calculavam larguras diferentes
+// pras colunas flexíveis (Cliente/Cidade), deixando o cabeçalho
+// desalinhado com os dados a partir da coluna Cidade.
 const HEADER_GRID_CLASS =
-  "hidden lg:grid lg:grid-cols-[48px_minmax(0,1.6fr)_minmax(0,1fr)_120px_100px_100px_110px_auto] items-center gap-4 px-4 text-xs font-medium text-muted-foreground uppercase"
+  "hidden lg:grid lg:grid-cols-[48px_minmax(0,1.6fr)_minmax(0,1fr)_120px_100px_100px_110px_32px] items-center gap-4 px-4 text-xs font-medium text-muted-foreground uppercase"
 const ROW_GRID_CLASS =
-  "group hidden items-center gap-4 rounded-[20px] border border-border/60 bg-card p-4 transition-colors hover:border-primary/30 hover:bg-secondary/20 cursor-pointer lg:grid lg:grid-cols-[48px_minmax(0,1.6fr)_minmax(0,1fr)_120px_100px_100px_110px_auto]"
+  "group hidden items-center gap-4 rounded-[20px] border border-border/60 bg-card p-4 transition-colors hover:border-primary/30 hover:bg-secondary/20 cursor-pointer lg:grid lg:grid-cols-[48px_minmax(0,1.6fr)_minmax(0,1fr)_120px_100px_100px_110px_32px]"
 
 function ClientWhatsappLink({ phone }: { phone: string }) {
   return (
