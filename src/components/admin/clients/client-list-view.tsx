@@ -1,12 +1,13 @@
 "use client"
 
-import { Star } from "lucide-react"
+import { HelpCircle, Star } from "lucide-react"
 
 import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 import { ClientAvatar } from "@/components/admin/clients/client-avatar"
 import { ClientStatusBadge } from "@/components/admin/clients/client-status-badge"
 import { ClientRowActions } from "@/components/admin/clients/client-row-actions"
 import { PropertyRealtor } from "@/components/admin/properties/property-realtor"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatRelativeTime } from "@/lib/format"
 import type { ClientListItem } from "@/modules/client/repository"
 
@@ -19,6 +20,22 @@ const HEADER_GRID_CLASS =
   "hidden lg:grid lg:grid-cols-[48px_minmax(0,1.6fr)_minmax(0,1fr)_120px_100px_100px_110px_32px] items-center gap-4 px-4 text-xs font-medium text-muted-foreground uppercase"
 const ROW_GRID_CLASS =
   "group hidden items-center gap-4 rounded-[20px] border border-border/60 bg-card p-4 transition-colors hover:border-primary/30 hover:bg-secondary/20 cursor-pointer lg:grid lg:grid-cols-[48px_minmax(0,1.6fr)_minmax(0,1fr)_120px_100px_100px_110px_32px]"
+
+function HeaderHint({ label, hint }: { label: string; hint: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help">
+            <HelpCircle className="size-3.5 normal-case text-muted-foreground/70" />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-56 normal-case">{hint}</TooltipContent>
+      </Tooltip>
+    </span>
+  )
+}
 
 function ClientWhatsappLink({ phone }: { phone: string }) {
   return (
@@ -49,8 +66,14 @@ export function ClientListView({
         <span>Cliente</span>
         <span>Cidade</span>
         <span>Corretor</span>
-        <span>Leads</span>
-        <span>Propostas</span>
+        <HeaderHint
+          label="Contatos"
+          hint="Quantas vezes esse cliente demonstrou interesse (site, WhatsApp, indicação etc.), incluindo o contato que originou esse cadastro."
+        />
+        <HeaderHint
+          label="Propostas"
+          hint="Quantas propostas formais (imóvel + valor) já foram enviadas pra esse cliente."
+        />
         <span>Última interação</span>
         <span />
       </div>
@@ -89,7 +112,7 @@ export function ClientListView({
             </div>
 
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span>{client._count.leads} lead(s)</span>
+              <span>{client._count.leads} contato(s)</span>
               <span>{client._count.proposals} proposta(s)</span>
               <span className="ml-auto">{formatRelativeTime(client.lastInteractionAt)}</span>
             </div>
