@@ -206,7 +206,7 @@ export function ManualContractFormDialog({
           <div className="space-y-1.5">
             <Label>Imóvel</Label>
             {property ? (
-              <div className="flex items-center gap-3 rounded-lg border border-border/60 p-2 text-sm">
+              <div className="flex items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-sm">
                 <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
                   {property.imageUrl ? (
                     <Image src={property.imageUrl} alt="" fill className="object-cover" sizes="48px" />
@@ -216,7 +216,7 @@ export function ManualContractFormDialog({
                     </div>
                   )}
                 </div>
-                <span className="flex-1 truncate">
+                <span className="min-w-0 flex-1 truncate">
                   {property.code} · {property.title}
                 </span>
                 <button type="button" onClick={() => setProperty(null)} aria-label="Remover imóvel">
@@ -234,7 +234,7 @@ export function ManualContractFormDialog({
                           key={option.id}
                           type="button"
                           onClick={() => setProperty(option)}
-                          className="flex w-full items-center gap-3 rounded-lg border border-border/60 p-2 text-left text-sm transition-colors hover:border-primary"
+                          className="flex w-full items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-left text-sm transition-colors hover:border-primary"
                         >
                           <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
                             {option.imageUrl ? (
@@ -245,7 +245,7 @@ export function ManualContractFormDialog({
                               </div>
                             )}
                           </div>
-                          <span className="flex-1 truncate">
+                          <span className="min-w-0 flex-1 truncate">
                             {option.code} · {option.title}
                           </span>
                         </button>
