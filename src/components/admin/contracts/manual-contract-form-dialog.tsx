@@ -33,17 +33,22 @@ import type { ContractStatus } from "@/generated/prisma/client"
 
 type RealtorOption = { id: string; user: { name: string } }
 type PropertyOption = { id: string; code: string; title: string }
+type ClientOption = { id: string; name: string }
 
 // Cadastro direto de contrato sem passar por proposta — negócio fechado
 // fora do sistema, ou contrato antigo sendo migrado pra cá, anexando o
-// arquivo assinado na hora.
+// arquivo assinado na hora. `clientId` fixo quando aberto de dentro do
+// próprio cliente (Clientes); `clients` (lista pra escolher) quando
+// aberto solto, ex: da tela de Contratos.
 export function ManualContractFormDialog({
   clientId,
+  clients,
   realtors,
   trigger,
   defaultRealtorId,
 }: {
-  clientId: string
+  clientId?: string
+  clients?: ClientOption[]
   realtors: RealtorOption[]
   trigger: React.ReactNode
   defaultRealtorId?: string | null
@@ -53,6 +58,7 @@ export function ManualContractFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
+  const [selectedClientId, setSelectedClientId] = useState(clientId ?? "")
   const [propertyCode, setPropertyCode] = useState("")
   const [property, setProperty] = useState<PropertyOption | null>(null)
   const [propertyError, setPropertyError] = useState<string | null>(null)
@@ -63,6 +69,7 @@ export function ManualContractFormDialog({
   const [fileName, setFileName] = useState<string | undefined>(undefined)
 
   function reset() {
+    setSelectedClientId(clientId ?? "")
     setPropertyCode("")
     setProperty(null)
     setPropertyError(null)
@@ -106,15 +113,15 @@ export function ManualContractFormDialog({
   }
 
   async function handleSubmit() {
-    if (!property || !realtorId || !value) {
-      toast.error("Informe imóvel, corretor e valor.")
+    if (!selectedClientId || !property || !realtorId || !value) {
+      toast.error("Informe cliente, imóvel, corretor e valor.")
       return
     }
 
     setIsSubmitting(true)
     try {
       await createManualContract({
-        clientId,
+        clientId: selectedClientId,
         propertyId: property.id,
         realtorId,
         value,
@@ -147,6 +154,24 @@ export function ManualContractFormDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {clientId ? null : (
+            <div className="space-y-1.5">
+              <Label>Cliente</Label>
+              <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(clients ?? []).map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label>Imóvel</Label>
             {property ? (
