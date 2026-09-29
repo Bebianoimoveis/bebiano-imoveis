@@ -176,7 +176,7 @@ export function ManualContractFormDialog({
           <DialogTitle>Adicionar contrato</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           {clientId ? null : (
             <div className="space-y-1.5">
               <Label>Cliente</Label>
@@ -203,10 +203,10 @@ export function ManualContractFormDialog({
             </div>
           )}
 
-          <div className="space-y-1.5">
+          <div className="min-w-0 space-y-1.5">
             <Label>Imóvel</Label>
             {property ? (
-              <div className="flex items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-sm">
+              <div className="flex min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-sm">
                 <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
                   {property.imageUrl ? (
                     <Image src={property.imageUrl} alt="" fill className="object-cover" sizes="48px" />
@@ -226,15 +226,15 @@ export function ManualContractFormDialog({
             ) : (
               <>
                 {interestedProperties.length > 0 ? (
-                  <div className="space-y-1.5">
+                  <div className="min-w-0 space-y-1.5">
                     <p className="text-xs text-muted-foreground">Já ligado a esse cliente:</p>
-                    <div className="space-y-1.5">
+                    <div className="min-w-0 space-y-1.5">
                       {interestedProperties.map((option) => (
                         <button
                           key={option.id}
                           type="button"
                           onClick={() => setProperty(option)}
-                          className="flex w-full items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-left text-sm transition-colors hover:border-primary"
+                          className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-left text-sm transition-colors hover:border-primary"
                         >
                           <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
                             {option.imageUrl ? (
