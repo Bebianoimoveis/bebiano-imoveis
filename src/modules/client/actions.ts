@@ -170,27 +170,35 @@ export async function getAdminClient(id: string) {
 
 // Imóveis que já apareceram ligados a esse cliente — o(s) que ele
 // demonstrou interesse (via lead que virou esse cliente) e o(s) que já
-// receberam proposta. Usado pra sugerir o imóvel na hora de cadastrar
-// um contrato manual, em vez de pedir pra buscar o código de novo.
+// receberam proposta. Usado pra sugerir o imóvel (com foto) na hora de
+// cadastrar um contrato manual, em vez de pedir pra buscar o código de
+// novo. Consulta única (em vez de reaproveitar os objetos já incluídos
+// em getAdminClient) porque aqueles não trazem a imagem de capa.
 export async function getClientInterestedProperties(clientId: string) {
   const client = await getAdminClient(clientId)
   if (!client) return []
 
-  const fromProposals = client.proposals.map((p) => p.property)
-  const leadPropertyIds = [...new Set(client.leads.map((l) => l.propertyId).filter((id): id is string => Boolean(id)))]
-  const fromLeads =
-    leadPropertyIds.length > 0
-      ? await prisma.property.findMany({
-          where: { id: { in: leadPropertyIds } },
-          select: { id: true, code: true, title: true },
-        })
-      : []
+  const proposalPropertyIds = client.proposals.map((p) => p.property.id)
+  const leadPropertyIds = client.leads.map((l) => l.propertyId).filter((id): id is string => Boolean(id))
+  const propertyIds = [...new Set([...proposalPropertyIds, ...leadPropertyIds])]
+  if (propertyIds.length === 0) return []
 
-  const byId = new Map<string, { id: string; code: string; title: string }>()
-  for (const property of [...fromProposals, ...fromLeads]) {
-    byId.set(property.id, { id: property.id, code: property.code, title: property.title })
-  }
-  return Array.from(byId.values())
+  const properties = await prisma.property.findMany({
+    where: { id: { in: propertyIds } },
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      images: { where: { isCover: true }, select: { url: true }, take: 1 },
+    },
+  })
+
+  return properties.map((property) => ({
+    id: property.id,
+    code: property.code,
+    title: property.title,
+    imageUrl: property.images[0]?.url ?? null,
+  }))
 }
 
 async function assertCanManageClient(

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { toast } from "sonner"
-import { Paperclip, X } from "lucide-react"
+import { ImageOff, Paperclip, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +34,7 @@ import { uploadContractFile } from "@/modules/upload/client"
 import type { ContractStatus } from "@/generated/prisma/client"
 
 type RealtorOption = { id: string; user: { name: string } }
-type PropertyOption = { id: string; code: string; title: string }
+type PropertyOption = { id: string; code: string; title: string; imageUrl?: string | null }
 type ClientOption = { id: string; name: string }
 
 // Cadastro direto de contrato sem passar por proposta — negócio fechado
@@ -109,7 +110,8 @@ export function ManualContractFormDialog({
       setProperty(null)
       return
     }
-    setProperty({ id: found.id, code: found.code, title: found.title })
+    const cover = found.images.find((image) => image.isCover)?.url ?? found.images[0]?.url ?? null
+    setProperty({ id: found.id, code: found.code, title: found.title, imageUrl: cover })
     if (!value) setValue(Number(found.price))
     if (!realtorId && found.realtorId) setRealtorId(found.realtorId)
   }
@@ -204,12 +206,21 @@ export function ManualContractFormDialog({
           <div className="space-y-1.5">
             <Label>Imóvel</Label>
             {property ? (
-              <div className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm">
-                <span>
+              <div className="flex items-center gap-3 rounded-lg border border-border/60 p-2 text-sm">
+                <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
+                  {property.imageUrl ? (
+                    <Image src={property.imageUrl} alt="" fill className="object-cover" sizes="48px" />
+                  ) : (
+                    <div className="flex size-full items-center justify-center text-muted-foreground">
+                      <ImageOff className="size-4" />
+                    </div>
+                  )}
+                </div>
+                <span className="flex-1 truncate">
                   {property.code} · {property.title}
                 </span>
                 <button type="button" onClick={() => setProperty(null)} aria-label="Remover imóvel">
-                  <X className="size-3.5 text-muted-foreground hover:text-foreground" />
+                  <X className="size-3.5 shrink-0 text-muted-foreground hover:text-foreground" />
                 </button>
               </div>
             ) : (
@@ -217,15 +228,26 @@ export function ManualContractFormDialog({
                 {interestedProperties.length > 0 ? (
                   <div className="space-y-1.5">
                     <p className="text-xs text-muted-foreground">Já ligado a esse cliente:</p>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="space-y-1.5">
                       {interestedProperties.map((option) => (
                         <button
                           key={option.id}
                           type="button"
                           onClick={() => setProperty(option)}
-                          className="rounded-full border border-border/60 px-3 py-1.5 text-xs transition-colors hover:border-primary hover:text-primary"
+                          className="flex w-full items-center gap-3 rounded-lg border border-border/60 p-2 text-left text-sm transition-colors hover:border-primary"
                         >
-                          {option.code} · {option.title}
+                          <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
+                            {option.imageUrl ? (
+                              <Image src={option.imageUrl} alt="" fill className="object-cover" sizes="48px" />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-muted-foreground">
+                                <ImageOff className="size-4" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="flex-1 truncate">
+                            {option.code} · {option.title}
+                          </span>
                         </button>
                       ))}
                     </div>
