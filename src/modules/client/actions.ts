@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 import { logActivity } from "@/lib/activity-log"
 import type { Prisma } from "@/generated/prisma/client"
 import {
@@ -165,6 +166,31 @@ export async function getAdminClient(id: string) {
   }
 
   return client
+}
+
+// Imóveis que já apareceram ligados a esse cliente — o(s) que ele
+// demonstrou interesse (via lead que virou esse cliente) e o(s) que já
+// receberam proposta. Usado pra sugerir o imóvel na hora de cadastrar
+// um contrato manual, em vez de pedir pra buscar o código de novo.
+export async function getClientInterestedProperties(clientId: string) {
+  const client = await getAdminClient(clientId)
+  if (!client) return []
+
+  const fromProposals = client.proposals.map((p) => p.property)
+  const leadPropertyIds = [...new Set(client.leads.map((l) => l.propertyId).filter((id): id is string => Boolean(id)))]
+  const fromLeads =
+    leadPropertyIds.length > 0
+      ? await prisma.property.findMany({
+          where: { id: { in: leadPropertyIds } },
+          select: { id: true, code: true, title: true },
+        })
+      : []
+
+  const byId = new Map<string, { id: string; code: string; title: string }>()
+  for (const property of [...fromProposals, ...fromLeads]) {
+    byId.set(property.id, { id: property.id, code: property.code, title: property.title })
+  }
+  return Array.from(byId.values())
 }
 
 async function assertCanManageClient(

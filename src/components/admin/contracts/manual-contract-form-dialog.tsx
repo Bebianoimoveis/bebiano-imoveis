@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Paperclip, X } from "lucide-react"
@@ -27,6 +27,7 @@ import {
 import { CONTRACT_STATUS_LABELS } from "@/components/admin/contracts/contract-status-badge"
 import { createManualContract } from "@/modules/contract/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
+import { getClientInterestedProperties } from "@/modules/client/actions"
 import { createContractFileUploadSignature } from "@/modules/upload/actions"
 import { uploadContractFile } from "@/modules/upload/client"
 import type { ContractStatus } from "@/generated/prisma/client"
@@ -59,6 +60,7 @@ export function ManualContractFormDialog({
   const [isUploading, setIsUploading] = useState(false)
 
   const [selectedClientId, setSelectedClientId] = useState(clientId ?? "")
+  const [interestedProperties, setInterestedProperties] = useState<PropertyOption[]>([])
   const [propertyCode, setPropertyCode] = useState("")
   const [property, setProperty] = useState<PropertyOption | null>(null)
   const [propertyError, setPropertyError] = useState<string | null>(null)
@@ -70,6 +72,7 @@ export function ManualContractFormDialog({
 
   function reset() {
     setSelectedClientId(clientId ?? "")
+    setInterestedProperties([])
     setPropertyCode("")
     setProperty(null)
     setPropertyError(null)
@@ -79,6 +82,24 @@ export function ManualContractFormDialog({
     setFileUrl(undefined)
     setFileName(undefined)
   }
+
+  // Assim que um cliente é escolhido, busca os imóveis que já apareceram
+  // ligados a ele (interesse de algum lead que virou esse cliente, ou
+  // proposta já feita) — evita ter que digitar o código de novo pra um
+  // imóvel que o sistema já conhece. Só um resultado? Já pré-seleciona.
+  useEffect(() => {
+    if (!open || !selectedClientId) {
+      setInterestedProperties([])
+      return
+    }
+    getClientInterestedProperties(selectedClientId).then((properties) => {
+      setInterestedProperties(properties)
+      if (properties.length === 1 && !property) {
+        setProperty(properties[0])
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectedClientId])
 
   async function handleLookupProperty() {
     setPropertyError(null)
@@ -157,7 +178,15 @@ export function ManualContractFormDialog({
           {clientId ? null : (
             <div className="space-y-1.5">
               <Label>Cliente</Label>
-              <Select value={selectedClientId} onValueChange={setSelectedClientId}>
+              <Select
+                value={selectedClientId}
+                onValueChange={(next) => {
+                  setSelectedClientId(next)
+                  setProperty(null)
+                  setPropertyCode("")
+                  setPropertyError(null)
+                }}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -184,16 +213,35 @@ export function ManualContractFormDialog({
                 </button>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <Input
-                  value={propertyCode}
-                  onChange={(e) => setPropertyCode(e.target.value)}
-                  placeholder="Código do imóvel, ex: BB-1024"
-                />
-                <Button type="button" variant="outline" onClick={handleLookupProperty}>
-                  Buscar
-                </Button>
-              </div>
+              <>
+                {interestedProperties.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground">Já ligado a esse cliente:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {interestedProperties.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => setProperty(option)}
+                          className="rounded-full border border-border/60 px-3 py-1.5 text-xs transition-colors hover:border-primary hover:text-primary"
+                        >
+                          {option.code} · {option.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="flex gap-2">
+                  <Input
+                    value={propertyCode}
+                    onChange={(e) => setPropertyCode(e.target.value)}
+                    placeholder="Ou digite o código de outro imóvel, ex: BB-1024"
+                  />
+                  <Button type="button" variant="outline" onClick={handleLookupProperty}>
+                    Buscar
+                  </Button>
+                </div>
+              </>
             )}
             {propertyError ? <p className="text-sm text-destructive">{propertyError}</p> : null}
           </div>
