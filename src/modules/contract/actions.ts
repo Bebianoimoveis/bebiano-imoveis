@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
+import { prisma } from "@/lib/prisma"
 import { logActivity } from "@/lib/activity-log"
 import { serializeDecimals } from "@/lib/serialize"
 import type { Prisma, ContractStatus } from "@/generated/prisma/client"
@@ -166,4 +167,34 @@ export async function deleteContractAttachment(contractId: string, attachmentId:
   })
 
   revalidatePath("/admin/contratos")
+}
+
+// Sem soft-delete aqui (mesmo padrão do Appointment) — só bloqueia se
+// tiver lançamento financeiro vinculado, pra não perder registro real
+// de comissão/pagamento por tabela; anexos são removidos junto sem
+// problema (ver deleteContract no repository). Erro esperado volta
+// como valor, não `throw`: Server Action que lança erro tem a mensagem
+// mascarada em produção nessa versão do Next (mesmo motivo documentado
+// em taxonomy/actions.ts).
+export async function deleteContract(id: string): Promise<{ error: string } | undefined> {
+  const session = await requireContractManage()
+
+  const linkedEntries = await prisma.financialEntry.count({ where: { contractId: id } })
+  if (linkedEntries > 0) {
+    return {
+      error: `Este contrato tem ${linkedEntries} lançamento(s) financeiro(s) vinculado(s) e não pode ser excluído — desvincule ou exclua esses lançamentos primeiro.`,
+    }
+  }
+
+  await contractRepository.deleteContract(id)
+
+  await logActivity({
+    userId: session.user.id,
+    action: "contract.delete",
+    entityType: "Contract",
+    entityId: id,
+  })
+
+  revalidatePath("/admin/contratos")
+  revalidatePath("/admin/propostas")
 }

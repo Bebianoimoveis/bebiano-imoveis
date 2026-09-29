@@ -134,7 +134,7 @@ export function ContractDetailPanel({
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <ContractStatusBadge status={contract.status} />
-              <ContractRowActions contractId={contract.id} status={contract.status} />
+              <ContractRowActions contractId={contract.id} status={contract.status} onDeleted={onClose} />
             </div>
           </div>
 

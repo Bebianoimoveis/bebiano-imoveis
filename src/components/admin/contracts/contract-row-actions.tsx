@@ -9,10 +9,22 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { updateContractStatus } from "@/modules/contract/actions"
+import { updateContractStatus, deleteContract } from "@/modules/contract/actions"
 import type { ContractStatus } from "@/generated/prisma/client"
 
 const OPTIONS: Partial<Record<ContractStatus, { status: ContractStatus; label: string }[]>> = {
@@ -29,9 +41,14 @@ const OPTIONS: Partial<Record<ContractStatus, { status: ContractStatus; label: s
 export function ContractRowActions({
   contractId,
   status,
+  onDeleted,
 }: {
   contractId: string
   status: ContractStatus
+  // Passado pelo painel de detalhes pra fechar o Sheet junto — na
+  // listagem (linha da tabela) fica undefined, só o router.refresh()
+  // já resolve.
+  onDeleted?: () => void
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -48,23 +65,58 @@ export function ContractRowActions({
     })
   }
 
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteContract(contractId)
+      if (result?.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Contrato excluído.")
+      onDeleted?.()
+      router.refresh()
+    })
+  }
+
   const options = OPTIONS[status] ?? []
-  if (options.length === 0) return null
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={isPending}>
-          <MoreHorizontal className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {options.map((option) => (
-          <DropdownMenuItem key={option.status} onClick={() => handleChange(option.status)}>
-            {option.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <AlertDialog>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" disabled={isPending} onClick={(e) => e.stopPropagation()}>
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+          {options.map((option) => (
+            <DropdownMenuItem key={option.status} onClick={() => handleChange(option.status)}>
+              {option.label}
+            </DropdownMenuItem>
+          ))}
+          {options.length > 0 ? <DropdownMenuSeparator /> : null}
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
+              Excluir
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir este contrato?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Essa ação não pode ser desfeita. Só é possível excluir um contrato sem lançamento financeiro
+            vinculado — se já tiver comissão ou pagamento lançado, desvincule ou exclua esses lançamentos
+            primeiro.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel />
+          <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }

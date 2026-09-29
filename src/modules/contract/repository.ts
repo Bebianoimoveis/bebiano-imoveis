@@ -55,6 +55,17 @@ export async function deleteContractAttachment(id: string) {
   return prisma.contractAttachment.delete({ where: { id } })
 }
 
+// Anexos não têm significado próprio fora do contrato (só arquivo) —
+// removidos junto sem exigir confirmação separada. Lançamento
+// financeiro é dado real (comissão/pagamento) e é bloqueado antes de
+// chegar aqui (ver deleteContract em actions.ts).
+export async function deleteContract(id: string) {
+  await prisma.$transaction([
+    prisma.contractAttachment.deleteMany({ where: { contractId: id } }),
+    prisma.contract.delete({ where: { id } }),
+  ])
+}
+
 export async function createContract(data: Prisma.ContractCreateInput) {
   return prisma.contract.create({ data, include: contractInclude })
 }
