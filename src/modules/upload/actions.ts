@@ -296,22 +296,48 @@ const SUBMISSION_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 // 8MB
 // uso indevido da assinatura; o rate limit por IP evita um script pedir
 // milhares de assinaturas por minuto pra encher a pasta no Cloudinary.
 export async function createSubmissionImageUploadSignature(): Promise<UploadSignature> {
+  return createPublicSubmissionSignature(
+    "bebiano-imoveis/captacao",
+    SUBMISSION_ALLOWED_FORMATS,
+    SUBMISSION_MAX_FILE_SIZE_BYTES
+  )
+}
+
+// Documentação do imóvel (matrícula, IPTU, escritura) — PDF ou foto do
+// papel, via resource_type "raw" (ver uploadSubmissionFile).
+export async function createSubmissionDocumentUploadSignature(): Promise<UploadSignature> {
+  return createPublicSubmissionSignature(
+    "bebiano-imoveis/captacao/documentos",
+    "pdf,jpg,jpeg,png",
+    10 * 1024 * 1024
+  )
+}
+
+// Vídeos gravados no celular (mov = iPhone, mp4 = Android) — 100MB é o
+// limite por arquivo do plano do Cloudinary.
+export async function createSubmissionVideoUploadSignature(): Promise<UploadSignature> {
+  return createPublicSubmissionSignature(
+    "bebiano-imoveis/captacao/videos",
+    "mp4,mov,webm,3gp",
+    100 * 1024 * 1024
+  )
+}
+
+// Mesmo limite por IP pros três tipos de arquivo (fotos, documentos,
+// vídeos) — é um formulário só, então conta como um envio só.
+async function createPublicSubmissionSignature(
+  folder: string,
+  allowedFormats: string,
+  maxFileSize: number
+): Promise<UploadSignature> {
   const ip = await getClientIp()
   if (isRateLimited(`submission-upload:${ip}`, { maxAttempts: 30, windowMs: 10 * 60 * 1000 })) {
     throw new Error("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
-  const folder = "bebiano-imoveis/captacao"
-
-  const paramsToSign = {
-    timestamp,
-    folder,
-    allowed_formats: SUBMISSION_ALLOWED_FORMATS,
-  }
-
   const signature = cloudinary.utils.api_sign_request(
-    paramsToSign,
+    { timestamp, folder, allowed_formats: allowedFormats },
     process.env.CLOUDINARY_API_SECRET as string
   )
 
@@ -321,7 +347,7 @@ export async function createSubmissionImageUploadSignature(): Promise<UploadSign
     apiKey: process.env.CLOUDINARY_API_KEY as string,
     cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
     folder,
-    allowedFormats: SUBMISSION_ALLOWED_FORMATS,
-    maxFileSize: SUBMISSION_MAX_FILE_SIZE_BYTES,
+    allowedFormats,
+    maxFileSize,
   }
 }

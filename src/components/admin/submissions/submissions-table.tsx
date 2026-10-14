@@ -5,7 +5,7 @@ import { useState } from "react"
 import { SubmissionStatusBadge } from "@/components/admin/submissions/submission-status-badge"
 import { SubmissionDetailPanel } from "@/components/admin/submissions/submission-detail-panel"
 import { formatCurrency, formatDateBR } from "@/lib/format"
-import type { SubmissionWithRefs } from "@/modules/submission/repository"
+import type { SubmissionDetail } from "@/modules/submission/actions"
 
 type PropertyOption = { id: string; code: string; title: string }
 
@@ -13,7 +13,7 @@ export function SubmissionsTable({
   submissions,
   properties,
 }: {
-  submissions: SubmissionWithRefs[]
+  submissions: SubmissionDetail[]
   properties: PropertyOption[]
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -47,7 +47,7 @@ export function SubmissionsTable({
                   {submission.city ? `${submission.city.name} - ${submission.city.state}` : "—"}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {submission.askingPrice ? formatCurrency(submission.askingPrice.toString()) : "—"}
+                  {submission.askingPrice ? formatCurrency(submission.askingPrice) : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <SubmissionStatusBadge status={submission.status} />

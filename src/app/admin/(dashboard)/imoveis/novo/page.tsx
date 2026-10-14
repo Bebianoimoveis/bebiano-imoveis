@@ -59,6 +59,12 @@ export default async function NewPropertyPage({
         typeId: submission.typeId ?? "",
         price: submission.askingPrice ? Number(submission.askingPrice) : 0,
         cityId: submission.cityId ?? "",
+        bedrooms: submission.bedrooms ?? baseDefaultValues.bedrooms,
+        suites: submission.suites ?? baseDefaultValues.suites,
+        bathrooms: submission.bathrooms ?? baseDefaultValues.bathrooms,
+        parkingSpots: submission.parkingSpots ?? baseDefaultValues.parkingSpots,
+        builtArea: submission.builtArea ? Number(submission.builtArea) : baseDefaultValues.builtArea,
+        totalArea: submission.totalArea ? Number(submission.totalArea) : baseDefaultValues.totalArea,
       }
     : baseDefaultValues
 

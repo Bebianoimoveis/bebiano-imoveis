@@ -82,6 +82,43 @@ export async function uploadFinancialAttachment(
   return { url: data.secure_url, name: file.name }
 }
 
+// Documento ("raw", aceita PDF) ou vídeo ("video") enviado pelo dono no
+// formulário público de captação.
+export async function uploadSubmissionFile(
+  file: File,
+  signature: UploadSignature,
+  resourceType: "raw" | "video"
+): Promise<UploadedAttachment> {
+  if (file.size === 0) {
+    throw new Error("Esse arquivo está vazio ou corrompido. Tente selecionar o arquivo novamente.")
+  }
+  if (file.size > signature.maxFileSize) {
+    const limitMb = Math.round(signature.maxFileSize / (1024 * 1024))
+    throw new Error(`"${file.name}" passa do tamanho máximo permitido (${limitMb}MB).`)
+  }
+
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("api_key", signature.apiKey)
+  formData.append("timestamp", String(signature.timestamp))
+  formData.append("signature", signature.signature)
+  formData.append("folder", signature.folder)
+  formData.append("allowed_formats", signature.allowedFormats)
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${signature.cloudName}/${resourceType}/upload`,
+    { method: "POST", body: formData }
+  )
+
+  if (!response.ok) {
+    throw new Error(`Falha ao enviar "${file.name}". Confira o formato do arquivo e tente novamente.`)
+  }
+
+  const data = (await response.json()) as { secure_url: string }
+
+  return { url: data.secure_url, name: file.name }
+}
+
 // Mesmo princípio, pro arquivo do contrato assinado (Contract.fileUrl,
 // ver createContractFileUploadSignature).
 export async function uploadContractFile(

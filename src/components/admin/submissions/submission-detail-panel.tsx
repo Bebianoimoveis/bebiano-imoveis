@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { toast } from "sonner"
-import { ImageOff, Mail, Phone } from "lucide-react"
+import { FileText, ImageOff, Mail, Phone } from "lucide-react"
 
 import { Sheet } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -26,11 +26,44 @@ import {
   getAdminSubmission,
   updateSubmissionStatus,
   linkSubmissionToProperty,
+  type SubmissionDetail,
 } from "@/modules/submission/actions"
 import { formatCurrency } from "@/lib/format"
-import type { SubmissionWithRefs } from "@/modules/submission/repository"
 
 type PropertyOption = { id: string; code: string; title: string }
+
+function formatArea(value: string) {
+  return `${Number(value).toLocaleString("pt-BR")} m²`
+}
+
+function SubmissionDetails({ submission }: { submission: SubmissionDetail }) {
+  const items = [
+    { label: "Quartos", value: submission.bedrooms },
+    { label: "Suítes", value: submission.suites },
+    { label: "Banheiros", value: submission.bathrooms },
+    { label: "Salas", value: submission.livingRooms },
+    { label: "Cozinhas", value: submission.kitchens },
+    { label: "Vagas", value: submission.parkingSpots },
+    { label: "Área construída", value: submission.builtArea ? formatArea(submission.builtArea) : null },
+    { label: "Área do terreno", value: submission.totalArea ? formatArea(submission.totalArea) : null },
+  ].filter((item) => item.value !== null && item.value !== undefined)
+
+  if (items.length === 0) return null
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-muted-foreground">O que o imóvel tem</p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {items.map((item) => (
+          <div key={item.label} className="rounded-lg border border-border/60 p-2.5">
+            <p className="text-xs text-muted-foreground">{item.label}</p>
+            <p className="font-semibold">{item.value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export function SubmissionDetailPanel({
   submissionId,
@@ -42,7 +75,7 @@ export function SubmissionDetailPanel({
   properties: PropertyOption[]
 }) {
   const router = useRouter()
-  const [submission, setSubmission] = useState<SubmissionWithRefs | null>(null)
+  const [submission, setSubmission] = useState<SubmissionDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [selectedPropertyId, setSelectedPropertyId] = useState("")
@@ -90,6 +123,9 @@ export function SubmissionDetailPanel({
       }
     })
   }
+
+  const videos = submission?.files.filter((file) => file.kind === "VIDEO") ?? []
+  const documents = submission?.files.filter((file) => file.kind === "DOCUMENT") ?? []
 
   return (
     <Sheet open={!!submissionId} onOpenChange={(open) => !open && onClose()} side="right" className="w-full max-w-xl">
@@ -207,7 +243,7 @@ export function SubmissionDetailPanel({
             {submission.askingPrice ? (
               <div className="rounded-xl border border-border/60 p-3 text-sm">
                 <p className="text-xs text-muted-foreground">Valor pretendido</p>
-                <p className="font-semibold text-primary">{formatCurrency(submission.askingPrice.toString())}</p>
+                <p className="font-semibold text-primary">{formatCurrency(submission.askingPrice)}</p>
               </div>
             ) : null}
 
@@ -217,6 +253,8 @@ export function SubmissionDetailPanel({
                 <p className="font-medium">{submission.neighborhoodText}</p>
               </div>
             ) : null}
+
+            <SubmissionDetails submission={submission} />
 
             <div className="space-y-1 text-sm">
               <p className="text-muted-foreground">Descrição</p>
@@ -239,6 +277,47 @@ export function SubmissionDetailPanel({
                 </div>
               )}
             </div>
+
+            {videos.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Vídeos ({videos.length})</p>
+                <div className="space-y-2">
+                  {videos.map((file) => (
+                    <div key={file.id} className="space-y-1">
+                      <video
+                        src={file.url}
+                        controls
+                        preload="metadata"
+                        className="aspect-video w-full rounded-lg bg-black"
+                      />
+                      <p className="truncate text-xs text-muted-foreground">{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {documents.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Documentação ({documents.length})</p>
+                <ul className="space-y-1.5">
+                  {documents.map((file) => (
+                    <li key={file.id}>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex min-w-0 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm transition-colors hover:border-primary"
+                      >
+                        <FileText className="size-4 shrink-0 text-primary" />
+                        <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">Abrir</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

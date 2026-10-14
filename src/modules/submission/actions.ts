@@ -9,6 +9,7 @@ import { logActivity } from "@/lib/activity-log"
 import { isRateLimited } from "@/lib/rate-limit"
 import { submissionFiltersSchema, submissionInputSchema } from "@/modules/submission/schema"
 import * as submissionRepository from "@/modules/submission/repository"
+import type { SubmissionWithRefs } from "@/modules/submission/repository"
 
 async function getClientIp() {
   const headerList = await headers()
@@ -44,7 +45,17 @@ export async function createPropertySubmission(input: unknown) {
     neighborhoodText: data.neighborhoodText,
     description: data.description,
     askingPrice: data.askingPrice,
+    bedrooms: data.bedrooms,
+    suites: data.suites,
+    bathrooms: data.bathrooms,
+    livingRooms: data.livingRooms,
+    kitchens: data.kitchens,
+    parkingSpots: data.parkingSpots,
+    builtArea: data.builtArea,
+    totalArea: data.totalArea,
     images: data.images,
+    documents: data.documents,
+    videos: data.videos,
   })
 
   revalidatePath("/admin/captacao")
@@ -53,15 +64,33 @@ export async function createPropertySubmission(input: unknown) {
   return { id: submission.id }
 }
 
+// Decimal (valor, áreas) vira string: o resultado atravessa a fronteira
+// Server Action/Server Component → Client Component, e instância de
+// Decimal não é serializável ali.
+function serializeSubmission(submission: SubmissionWithRefs) {
+  return {
+    ...submission,
+    askingPrice: submission.askingPrice?.toString() ?? null,
+    builtArea: submission.builtArea?.toString() ?? null,
+    totalArea: submission.totalArea?.toString() ?? null,
+  }
+}
+
+export type SubmissionDetail = ReturnType<typeof serializeSubmission>
+
 export async function listAdminSubmissions(rawFilters: unknown = {}) {
   await requireSubmissionManage()
   const filters = submissionFiltersSchema.parse(rawFilters ?? {})
-  return submissionRepository.listSubmissions(filters.status ? { status: filters.status } : {})
+  const submissions = await submissionRepository.listSubmissions(
+    filters.status ? { status: filters.status } : {}
+  )
+  return submissions.map(serializeSubmission)
 }
 
 export async function getAdminSubmission(id: string) {
   await requireSubmissionManage()
-  return submissionRepository.findSubmissionById(id)
+  const submission = await submissionRepository.findSubmissionById(id)
+  return submission ? serializeSubmission(submission) : null
 }
 
 export async function countNewSubmissions() {

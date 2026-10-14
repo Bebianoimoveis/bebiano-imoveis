@@ -4,7 +4,7 @@ import { useRef, useState } from "react"
 import Image from "next/image"
 import { useForm, Controller } from "react-hook-form"
 import { toast } from "sonner"
-import { CheckCircle2, ImagePlus, Loader2, Trash2 } from "lucide-react"
+import { CheckCircle2, FilePlus2, FileText, Film, ImagePlus, Loader2, Trash2, Video } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,14 +19,118 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { createPropertySubmission } from "@/modules/submission/actions"
-import { createSubmissionImageUploadSignature } from "@/modules/upload/actions"
-import { uploadPropertyImage } from "@/modules/upload/client"
+import {
+  createSubmissionDocumentUploadSignature,
+  createSubmissionImageUploadSignature,
+  createSubmissionVideoUploadSignature,
+} from "@/modules/upload/actions"
+import { uploadPropertyImage, uploadSubmissionFile } from "@/modules/upload/client"
 import type { SubmissionFormValues } from "@/modules/submission/schema"
 
 type City = { id: string; name: string; state: string }
 type PropertyType = { id: string; name: string }
 
 type UploadedImage = { url: string; uploading?: boolean }
+type UploadedFile = { url: string; name: string }
+
+type QuantityField =
+  | "bedrooms"
+  | "suites"
+  | "bathrooms"
+  | "livingRooms"
+  | "kitchens"
+  | "parkingSpots"
+  | "builtArea"
+  | "totalArea"
+
+const QUANTITY_FIELDS: { name: QuantityField; label: string; placeholder: string; decimal?: boolean }[] = [
+  { name: "bedrooms", label: "Quartos", placeholder: "0" },
+  { name: "suites", label: "Suítes", placeholder: "0" },
+  { name: "bathrooms", label: "Banheiros", placeholder: "0" },
+  { name: "livingRooms", label: "Salas", placeholder: "0" },
+  { name: "kitchens", label: "Cozinhas", placeholder: "0" },
+  { name: "parkingSpots", label: "Vagas de garagem", placeholder: "0" },
+  { name: "builtArea", label: "Área construída (m²)", placeholder: "Ex: 120", decimal: true },
+  { name: "totalArea", label: "Área do terreno (m²)", placeholder: "Ex: 250", decimal: true },
+]
+
+// Campo vazio = "não informado" (undefined), não zero — o dono pode não
+// saber a metragem, e isso é diferente de dizer que o imóvel não tem.
+function toOptionalNumber(value: string) {
+  if (value === "" || value == null) return undefined
+  const parsed = Number(String(value).replace(",", "."))
+  return Number.isFinite(parsed) ? parsed : undefined
+}
+
+function FileUploadList({
+  label,
+  hint,
+  files,
+  icon: Icon,
+  addIcon: AddIcon,
+  addLabel,
+  accept,
+  uploading,
+  disabled,
+  onSelect,
+  onRemove,
+}: {
+  label: string
+  hint: string
+  files: UploadedFile[]
+  icon: React.ComponentType<{ className?: string }>
+  addIcon: React.ComponentType<{ className?: string }>
+  addLabel: string
+  accept: string
+  uploading: boolean
+  disabled: boolean
+  onSelect: (input: HTMLInputElement) => void
+  onRemove: (url: string) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <div>
+        <Label>{label}</Label>
+        <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+      </div>
+      {files.length > 0 ? (
+        <ul className="space-y-1.5">
+          {files.map((file) => (
+            <li
+              key={file.url}
+              className="flex min-w-0 items-center gap-2 rounded-lg border border-border/60 bg-secondary/30 px-3 py-2 text-sm"
+            >
+              <Icon className="size-4 shrink-0 text-gold" />
+              <span className="min-w-0 flex-1 truncate">{file.name}</span>
+              <button
+                type="button"
+                onClick={() => onRemove(file.url)}
+                aria-label={`Remover ${file.name}`}
+                className="text-muted-foreground transition-colors hover:text-destructive"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <label
+        className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border py-4 text-xs text-muted-foreground transition-colors hover:border-gold hover:text-gold ${disabled ? "pointer-events-none opacity-60" : ""}`}
+      >
+        {uploading ? <Loader2 className="size-4 animate-spin" /> : <AddIcon className="size-4" />}
+        {uploading ? "Enviando..." : addLabel}
+        <input
+          type="file"
+          accept={accept}
+          multiple
+          className="hidden"
+          disabled={disabled}
+          onChange={(event) => onSelect(event.target)}
+        />
+      </label>
+    </div>
+  )
+}
 
 export function PropertySubmissionForm({
   cities,
@@ -40,6 +144,9 @@ export function PropertySubmissionForm({
   const [images, setImages] = useState<UploadedImage[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [videos, setVideos] = useState<UploadedFile[]>([])
+  const [documents, setDocuments] = useState<UploadedFile[]>([])
+  const [uploadingKind, setUploadingKind] = useState<"video" | "document" | null>(null)
 
   const form = useForm<SubmissionFormValues>({
     defaultValues: {
@@ -75,6 +182,30 @@ export function PropertySubmissionForm({
     setImages((prev) => prev.filter((image) => image.url !== url))
   }
 
+  async function handleFileUpload(kind: "video" | "document", input: HTMLInputElement) {
+    const fileList = input.files
+    if (!fileList || fileList.length === 0) return
+    setUploadingKind(kind)
+    try {
+      const signature =
+        kind === "video"
+          ? await createSubmissionVideoUploadSignature()
+          : await createSubmissionDocumentUploadSignature()
+      const uploaded = await Promise.all(
+        Array.from(fileList).map((file) =>
+          uploadSubmissionFile(file, signature, kind === "video" ? "video" : "raw")
+        )
+      )
+      const setter = kind === "video" ? setVideos : setDocuments
+      setter((prev) => [...prev, ...uploaded])
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha ao enviar arquivo.")
+    } finally {
+      setUploadingKind(null)
+      input.value = ""
+    }
+  }
+
   async function onSubmit(values: SubmissionFormValues) {
     setIsSubmitting(true)
     try {
@@ -85,6 +216,8 @@ export function PropertySubmissionForm({
         cityId: values.cityId || undefined,
         neighborhoodText: values.neighborhoodText || undefined,
         images: images.map((image) => image.url),
+        videos,
+        documents,
       })
       setSubmitted(true)
     } catch (error) {
@@ -187,12 +320,37 @@ export function PropertySubmissionForm({
         </div>
       </div>
 
+      <div className="space-y-3 rounded-xl border border-border/60 p-4">
+        <div>
+          <p className="text-sm font-medium">O que o imóvel tem</p>
+          <p className="text-xs text-muted-foreground">Só coloque a quantidade. Deixe em branco o que não souber.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {QUANTITY_FIELDS.map((field) => (
+            <div key={field.name} className="space-y-1.5">
+              <Label htmlFor={field.name} className="text-xs">
+                {field.label}
+              </Label>
+              <Input
+                id={field.name}
+                type="number"
+                min={0}
+                step={field.decimal ? "any" : 1}
+                inputMode={field.decimal ? "decimal" : "numeric"}
+                placeholder={field.placeholder}
+                {...form.register(field.name, { setValueAs: toOptionalNumber })}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="description">Descreva o imóvel</Label>
         <Textarea
           id="description"
           rows={5}
-          placeholder="Conte sobre o imóvel: área, quartos, diferenciais, estado de conservação..."
+          placeholder="Conte o que mais o imóvel tem: diferenciais, estado de conservação, área de lazer..."
           {...form.register("description", { required: true, minLength: 10 })}
         />
       </div>
@@ -229,11 +387,39 @@ export function PropertySubmissionForm({
         </div>
       </div>
 
+      <FileUploadList
+        label="Vídeos (opcional)"
+        hint="Grave um tour pelo imóvel no celular. Até 100MB por vídeo."
+        files={videos}
+        icon={Film}
+        addIcon={Video}
+        addLabel="Adicionar vídeos"
+        accept="video/mp4,video/quicktime,video/webm,video/3gpp"
+        uploading={uploadingKind === "video"}
+        disabled={uploadingKind !== null}
+        onSelect={(input) => handleFileUpload("video", input)}
+        onRemove={(url) => setVideos((prev) => prev.filter((file) => file.url !== url))}
+      />
+
+      <FileUploadList
+        label="Documentação (opcional)"
+        hint="Matrícula, IPTU, escritura ou outros documentos do imóvel. PDF ou foto, até 10MB cada."
+        files={documents}
+        icon={FileText}
+        addIcon={FilePlus2}
+        addLabel="Adicionar documentos"
+        accept="application/pdf,image/jpeg,image/png"
+        uploading={uploadingKind === "document"}
+        disabled={uploadingKind !== null}
+        onSelect={(input) => handleFileUpload("document", input)}
+        onRemove={(url) => setDocuments((prev) => prev.filter((file) => file.url !== url))}
+      />
+
       <Button
         type="submit"
         size="lg"
         className="w-full bg-gold text-black hover:bg-gold-light"
-        disabled={isSubmitting || isUploading}
+        disabled={isSubmitting || isUploading || uploadingKind !== null}
       >
         {isSubmitting ? "Enviando..." : "Enviar meu imóvel"}
       </Button>

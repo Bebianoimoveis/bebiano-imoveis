@@ -5,6 +5,7 @@ const submissionInclude = {
   type: true,
   city: true,
   images: { orderBy: { order: "asc" as const } },
+  files: { orderBy: { createdAt: "asc" as const } },
   convertedProperty: { select: { id: true, code: true, slug: true } },
 } satisfies Prisma.PropertySubmissionInclude
 
@@ -36,7 +37,17 @@ export async function createSubmission(data: {
   neighborhoodText?: string
   description: string
   askingPrice?: number
+  bedrooms?: number
+  suites?: number
+  bathrooms?: number
+  livingRooms?: number
+  kitchens?: number
+  parkingSpots?: number
+  builtArea?: number
+  totalArea?: number
   images: string[]
+  documents: { url: string; name: string }[]
+  videos: { url: string; name: string }[]
 }) {
   return prisma.propertySubmission.create({
     data: {
@@ -49,8 +60,22 @@ export async function createSubmission(data: {
       neighborhoodText: data.neighborhoodText,
       description: data.description,
       askingPrice: data.askingPrice,
+      bedrooms: data.bedrooms,
+      suites: data.suites,
+      bathrooms: data.bathrooms,
+      livingRooms: data.livingRooms,
+      kitchens: data.kitchens,
+      parkingSpots: data.parkingSpots,
+      builtArea: data.builtArea,
+      totalArea: data.totalArea,
       images: {
         create: data.images.map((url, index) => ({ url, order: index })),
+      },
+      files: {
+        create: [
+          ...data.documents.map((file) => ({ ...file, kind: "DOCUMENT" as const })),
+          ...data.videos.map((file) => ({ ...file, kind: "VIDEO" as const })),
+        ],
       },
     },
     include: submissionInclude,
