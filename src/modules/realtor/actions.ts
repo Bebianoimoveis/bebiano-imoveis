@@ -161,6 +161,7 @@ export async function createRealtor(
   revalidatePath("/admin/corretores")
   revalidatePath("/admin/corretores/links")
   revalidatePath("/sobre")
+  revalidatePath("/corretores")
   revalidatePath("/")
   return { id: realtor.id }
 }
@@ -211,6 +212,7 @@ export async function updateRealtor(
   revalidatePath("/admin/corretores")
   revalidatePath("/admin/corretores/links")
   revalidatePath("/sobre")
+  revalidatePath("/corretores")
   revalidatePath("/")
   return { id }
 }
@@ -232,6 +234,7 @@ export async function setRealtorActive(id: string, active: boolean) {
   revalidatePath("/admin/corretores")
   revalidatePath("/admin/corretores/links")
   revalidatePath("/sobre")
+  revalidatePath("/corretores")
   revalidatePath("/")
 }
 
@@ -275,5 +278,6 @@ export async function deleteRealtor(id: string) {
   revalidatePath("/admin/corretores/links")
   revalidatePath("/admin/usuarios")
   revalidatePath("/sobre")
+  revalidatePath("/corretores")
   revalidatePath("/")
 }

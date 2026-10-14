@@ -1,15 +1,23 @@
-import Image from "next/image"
 import Link from "next/link"
-import { User } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
+import { RealtorCard } from "@/components/public/realtor-card"
 import { listPublicRealtors } from "@/modules/realtor/actions"
+
+// Até 8 corretores aqui (2 linhas no computador) pra seção não crescer
+// sem limite conforme a equipe aumenta — o resto fica em /corretores.
+const MAX_VISIBLE = 8
 
 export async function TeamSection() {
   const realtors = await listPublicRealtors()
   if (realtors.length === 0) return null
+
+  const visible = realtors.slice(0, MAX_VISIBLE)
+  const hasMore = realtors.length > MAX_VISIBLE
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
@@ -23,48 +31,23 @@ export async function TeamSection() {
       </Reveal>
 
       <StaggerGroup className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {realtors.map((realtor) => {
-          return (
-            <StaggerItem key={realtor.id}>
-              <div className="group relative flex flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border/60 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/30 hover:ring-gold/30">
-                <Link
-                  href={`/corretores/${realtor.slug}`}
-                  className="absolute inset-0 z-10"
-                  aria-label={`Ver perfil de ${realtor.user.name}`}
-                />
-                <div className="relative aspect-square overflow-hidden bg-muted">
-                  {realtor.photoUrl ? (
-                    <Image
-                      src={realtor.photoUrl}
-                      alt={realtor.user.name}
-                      fill
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                      style={{ objectPosition: `center ${realtor.photoPositionY ?? 0}%` }}
-                      sizes="(max-width: 640px) 50vw, 25vw"
-                    />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-muted-foreground">
-                      <User className="size-10" strokeWidth={1.25} />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                </div>
-                <div className="flex flex-col gap-0.5 p-4">
-                  <p className="text-[10px] font-medium tracking-widest text-gold-dark uppercase">
-                    Corretora
-                  </p>
-                  <p className="truncate font-medium transition-colors group-hover:text-gold-light">
-                    {realtor.user.name}
-                  </p>
-                  <p className={`text-xs text-muted-foreground ${realtor.creci ? "" : "invisible"}`}>
-                    CRECI {realtor.creci ?? "0"}
-                  </p>
-                </div>
-              </div>
-            </StaggerItem>
-          )
-        })}
+        {visible.map((realtor) => (
+          <StaggerItem key={realtor.id}>
+            <RealtorCard realtor={realtor} />
+          </StaggerItem>
+        ))}
       </StaggerGroup>
+
+      {hasMore ? (
+        <Reveal className="mt-8 flex justify-center">
+          <Button asChild variant="outline" className="gap-2 border-gold/40 hover:border-gold">
+            <Link href="/corretores">
+              Ver toda a equipe ({realtors.length})
+              <ArrowRight className="size-4" />
+            </Link>
+          </Button>
+        </Reveal>
+      ) : null}
     </section>
   )
 }
