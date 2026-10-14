@@ -10,17 +10,21 @@ import { cn } from "@/lib/utils"
 // mais devagar que o scroll (parallax).
 export function SectionBackdrop({
   imageUrl,
+  mobilePositionClassName,
   className,
   children,
 }: {
   imageUrl: string
+  /** Enquadramento no celular, onde só aparece uma faixa vertical da foto
+   * (ex: "object-[60%_50%] sm:object-center"). */
+  mobilePositionClassName?: string
   className?: string
   children: React.ReactNode
 }) {
   return (
     <section className={cn("relative isolate overflow-hidden", className)}>
       <ScrollParallax className="absolute inset-0 -z-30">
-        <Image src={imageUrl} alt="" fill sizes="100vw" className="object-cover object-center saturate-[0.8]" />
+        <Image src={imageUrl} alt="" fill sizes="100vw" className={cn("object-cover object-center saturate-[0.8]", mobilePositionClassName)} />
       </ScrollParallax>
       {/* Mais leve no celular: lá os cards (com fundo próprio) cobrem quase a
           seção toda e, com o escurecimento cheio, a foto praticamente sumia. */}
