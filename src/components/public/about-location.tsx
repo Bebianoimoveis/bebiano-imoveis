@@ -11,8 +11,8 @@ export async function AboutLocation() {
   const { phone, businessHours } = await getPublicContactInfo()
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <Reveal className="mb-10 sm:mb-12">
+    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+      <Reveal className="mb-6 sm:mb-12">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           Venha nos visitar
         </p>

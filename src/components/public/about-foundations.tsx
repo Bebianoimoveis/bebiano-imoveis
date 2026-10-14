@@ -5,6 +5,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { SectionBackdrop } from "@/components/public/section-backdrop"
 import { cn } from "@/lib/utils"
+import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
 
 const PURPOSE_ICONS = [Flag, Sun, Users]
 
@@ -72,8 +73,8 @@ export function AboutFoundations({
   return (
     <>
       <SectionBackdrop imageUrl={VERSE_BACKGROUND}>
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <Reveal className="mb-10 text-center sm:mb-12">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+          <Reveal className="mb-6 text-center sm:mb-12">
             <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
               Nascemos através de uma palavra
             </p>
@@ -93,8 +94,8 @@ export function AboutFoundations({
       </SectionBackdrop>
 
       <SectionBackdrop imageUrl={LIFE_BACKGROUND}>
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-          <div className="mb-14 grid gap-5 sm:grid-cols-2">
+        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+          <div className="mb-10 grid gap-5 sm:mb-14 sm:grid-cols-2">
             <Reveal className={cn(CARD_CLASS, "p-6 text-center sm:p-8")}>
               <h3 className={TITLE_CLASS}>
                 Temos uma Regra de <AccentWord>Vida</AccentWord>
@@ -111,7 +112,7 @@ export function AboutFoundations({
             </Reveal>
           </div>
 
-          <Reveal className="mx-auto mb-14 max-w-3xl text-center">
+          <Reveal className="mx-auto mb-10 max-w-3xl text-center sm:mb-14">
             <h3 className={TITLE_CLASS}>
               Seguimos uma Lista de <AccentWord>Prioridades</AccentWord>
             </h3>
@@ -127,18 +128,19 @@ export function AboutFoundations({
             </div>
           </Reveal>
 
-          <Reveal className="mb-8 text-center">
+          <Reveal className="mb-6 text-center sm:mb-8">
             <h3 className={TITLE_CLASS}>
               Qual o nosso <AccentWord>Propósito</AccentWord>?
             </h3>
           </Reveal>
 
-          <StaggerGroup className="grid gap-6 sm:grid-cols-3">
+          <StaggerGroup className={cn(MOBILE_CAROUSEL, "sm:grid-cols-3")}>
             {PROPOSITO.map((item) => (
               <StaggerItem
                 key={item.title}
                 className={cn(
                   CARD_CLASS,
+                  MOBILE_CAROUSEL_ITEM,
                   "space-y-3 p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30"
                 )}
               >

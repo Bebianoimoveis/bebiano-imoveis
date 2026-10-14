@@ -18,10 +18,11 @@ export function AccentWord({
         "font-script relative inline-block translate-y-[0.06em] px-1.5 text-gold",
         className
       )}
-      // Maior que o texto ao redor (1.45x) — no script fino/pequeno, do
-      // mesmo tamanho do resto do título, a palavra passava despercebida
-      // em vez de ler como um destaque de assinatura.
-      style={{ fontSize: "1.45em", lineHeight: 1 }}
+      // A Parisienne tem minúsculas baixas e traço bem fino (um peso só):
+      // mesmo do mesmo "tamanho de fonte" ela parecia menor que o título em
+      // semi-negrito ao lado. 1.6em iguala a altura das minúsculas e o
+      // contorno de 0.02em engrossa o traço pra ter o mesmo peso visual.
+      style={{ fontSize: "1.6em", lineHeight: 1, WebkitTextStroke: "0.02em currentColor" }}
     >
       {children}
     </span>

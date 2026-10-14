@@ -8,6 +8,8 @@ type RevealProps = {
   delay?: number
   /** Distância (px) de onde o elemento "chega" — 0 desativa o deslocamento. */
   y?: number
+  /** Deslocamento horizontal (px) de onde o elemento "chega" — negativo vem da esquerda. */
+  x?: number
   /** Duração em segundos. */
   duration?: number
   as?: "div" | "li"
@@ -22,14 +24,16 @@ export function Reveal({
   className,
   delay = 0,
   y = 24,
+  x = 0,
   duration = 0.6,
   as = "div",
 }: RevealProps) {
   const variants: Variants = {
-    hidden: { opacity: 0, y },
+    hidden: { opacity: 0, y, x },
     visible: {
       opacity: 1,
       y: 0,
+      x: 0,
       transition: { duration, delay, ease: [0.22, 1, 0.36, 1] },
     },
   }

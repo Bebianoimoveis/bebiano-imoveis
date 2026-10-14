@@ -52,7 +52,7 @@ function Counter({ value, suffix }: { value: number; suffix: string }) {
 export function AboutStats({ stats = DEFAULT_STATS }: { stats?: AboutStat[] }) {
   return (
     <section className="border-t border-b border-border/60 bg-secondary/30">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}

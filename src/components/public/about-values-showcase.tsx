@@ -1,6 +1,8 @@
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
+import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
+import { cn } from "@/lib/utils"
 
 // Seção intencionalmente distinta do bloco "Missão/Visão/Valores" (mais
 // enxuto, 3 cards) — aqui os mesmos temas de valores ganham um tratamento
@@ -26,8 +28,8 @@ export function AboutValuesShowcase({ values = DEFAULT_VALUES }: { values?: Abou
 
   return (
     <section className="border-t border-border/60 bg-secondary/30">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <Reveal className="mb-10 text-center sm:mb-14">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+        <Reveal className="mb-6 text-center sm:mb-14">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
             O que carregamos em cada negociação
           </p>
@@ -36,11 +38,11 @@ export function AboutValuesShowcase({ values = DEFAULT_VALUES }: { values?: Abou
           </h2>
         </Reveal>
 
-        <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerGroup className={cn(MOBILE_CAROUSEL, "sm:grid-cols-2 lg:grid-cols-3")}>
           {VALUES.map((value) => (
             <StaggerItem
               key={value.number}
-              className="group relative overflow-hidden rounded-[20px] border border-border/60 bg-card p-8 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/30 hover:ring-1 hover:ring-gold/30"
+            className={cn(MOBILE_CAROUSEL_ITEM, "group relative overflow-hidden rounded-[20px] border border-border/60 bg-card p-8 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/30 hover:ring-1 hover:ring-gold/30")}
             >
               <p className="font-heading text-5xl font-bold text-gold/20 transition-colors duration-500 group-hover:text-gold/30">
                 {value.number}

@@ -3,6 +3,8 @@ import { Cpu, HeartHandshake, MapPinned, ShieldCheck } from "lucide-react"
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
+import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
+import { cn } from "@/lib/utils"
 
 const DIFFERENTIATOR_ICONS = [HeartHandshake, MapPinned, ShieldCheck, Cpu]
 
@@ -41,8 +43,8 @@ export function AboutDifferentiators({
 
   return (
     <section className="border-t border-border/60 bg-secondary/30">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <Reveal className="mb-10 sm:mb-12">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+        <Reveal className="mb-6 sm:mb-12">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
             O que nos diferencia
           </p>
@@ -51,11 +53,11 @@ export function AboutDifferentiators({
           </h2>
         </Reveal>
 
-        <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <StaggerGroup className={cn(MOBILE_CAROUSEL, "sm:grid-cols-2 lg:grid-cols-4")}>
           {DIFERENCIAIS.map((item) => (
             <StaggerItem
               key={item.title}
-              className="space-y-3 rounded-[20px] border border-border/60 bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30"
+            className={cn(MOBILE_CAROUSEL_ITEM, "space-y-3 rounded-[20px] border border-border/60 bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30")}
             >
               <div className="flex size-11 items-center justify-center rounded-full bg-primary/15">
                 <item.icon className="size-5 text-gold" strokeWidth={1.5} />

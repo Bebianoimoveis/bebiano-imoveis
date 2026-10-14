@@ -4,6 +4,8 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { SectionBackdrop } from "@/components/public/section-backdrop"
+import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
+import { cn } from "@/lib/utils"
 
 const BACKGROUND = "/images/about/mission.jpg"
 
@@ -36,8 +38,8 @@ export function AboutMissionValues({
 
   return (
     <SectionBackdrop imageUrl={BACKGROUND}>
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <Reveal className="mb-10 text-center sm:mb-12">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+      <Reveal className="mb-6 text-center sm:mb-12">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           O que nos move
         </p>
@@ -46,11 +48,11 @@ export function AboutMissionValues({
         </h2>
       </Reveal>
 
-      <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <StaggerGroup className={cn(MOBILE_CAROUSEL, "sm:grid-cols-2 lg:grid-cols-4")}>
         {CARDS.map((card) => (
           <StaggerItem
             key={card.title}
-            className="group flex flex-col items-center gap-4 rounded-[20px] border border-white/10 bg-card/75 p-8 text-center backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/30 hover:ring-1 hover:ring-gold/30"
+            className={cn(MOBILE_CAROUSEL_ITEM, "group flex flex-col items-center gap-4 rounded-[20px] border border-white/10 bg-card/75 p-8 text-center backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/30 hover:ring-1 hover:ring-gold/30")}
           >
             <div className="flex size-14 items-center justify-center rounded-full bg-primary/15 transition-transform duration-500 group-hover:scale-110">
               <card.icon className="size-6 text-gold" strokeWidth={1.5} />

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { ScrollProgress } from "@/components/motion/scroll-progress"
 import { AboutHero } from "@/components/public/about-hero"
 import { AboutFounders } from "@/components/public/about-founders"
 import { AboutStory } from "@/components/public/about-story"
@@ -62,6 +63,8 @@ export default async function AboutPage() {
 
   return (
     <div>
+      <ScrollProgress />
+
       {/* 1. Hero */}
       <AboutHero heroImageUrl={aboutHeroImageUrl ?? FALLBACK_HERO_IMAGE} />
 

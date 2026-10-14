@@ -15,8 +15,8 @@ export async function AboutTestimonials() {
 
   return (
     <section className="border-t border-border/60 bg-secondary/30">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <Reveal className="mb-8 sm:mb-10">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+        <Reveal className="mb-8 sm:mb-6">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
             Quem já viveu a experiência
           </p>

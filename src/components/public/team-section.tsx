@@ -12,8 +12,8 @@ export async function TeamSection() {
   if (realtors.length === 0) return null
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <Reveal className="mb-8 sm:mb-10">
+    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+      <Reveal className="mb-8 sm:mb-6">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           Quem cuida de você
         </p>

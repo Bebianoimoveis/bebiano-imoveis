@@ -3,6 +3,8 @@ import { CalendarCheck, Handshake, KeyRound, Search, SearchCheck } from "lucide-
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
+import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
+import { cn } from "@/lib/utils"
 
 const STEP_ICONS = [Search, SearchCheck, CalendarCheck, Handshake, KeyRound]
 
@@ -40,8 +42,8 @@ export function AboutHowWeWork({ steps = DEFAULT_HOW_WE_WORK }: { steps?: AboutH
   }))
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <Reveal className="mb-10 text-center sm:mb-14">
+    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+      <Reveal className="mb-6 text-center sm:mb-14">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           Do primeiro contato às chaves na mão
         </p>
@@ -50,12 +52,18 @@ export function AboutHowWeWork({ steps = DEFAULT_HOW_WE_WORK }: { steps?: AboutH
         </h2>
       </Reveal>
 
-      <StaggerGroup className="relative grid gap-8 sm:grid-cols-5 sm:gap-4">
+      <StaggerGroup className={cn(MOBILE_CAROUSEL, "relative sm:grid-cols-5 sm:gap-4")}>
         {/* Linha conectora — só no desktop, atrás dos círculos numerados */}
         <div className="pointer-events-none absolute top-7 right-0 left-0 hidden h-px bg-border sm:block" />
 
         {STEPS.map((step, index) => (
-          <StaggerItem key={step.title} className="relative flex flex-col items-center gap-3 text-center sm:items-start sm:text-left">
+          <StaggerItem
+            key={step.title}
+            className={cn(
+              MOBILE_CAROUSEL_ITEM,
+              "relative flex flex-col items-center gap-3 rounded-[20px] border border-border/60 bg-card p-5 text-center sm:items-start sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:text-left"
+            )}
+          >
             <div className="relative z-10 flex size-14 shrink-0 items-center justify-center rounded-full bg-card ring-1 ring-gold/40">
               <step.icon className="size-6 text-gold" strokeWidth={1.5} />
             </div>

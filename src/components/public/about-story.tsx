@@ -37,7 +37,7 @@ export function AboutStory({
 }) {
   return (
     <SectionBackdrop imageUrl={BACKGROUND}>
-      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16">
+      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-10 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16">
         <Reveal className="order-2 lg:order-1">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
             Nome e logo

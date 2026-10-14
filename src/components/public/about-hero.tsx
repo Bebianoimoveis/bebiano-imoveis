@@ -31,7 +31,7 @@ export function AboutHero({ heroImageUrl }: { heroImageUrl?: string | null }) {
   const { phone } = useAttributedWhatsapp()
 
   return (
-    <section className="relative flex min-h-[70vh] items-end overflow-hidden bg-primary sm:min-h-[75vh]">
+    <section className="relative flex min-h-[60vh] items-end overflow-hidden bg-primary sm:min-h-[75vh]">
       <Parallax className="absolute inset-0" strength={60}>
         <HeroBackground posterUrl={heroImageUrl} />
       </Parallax>
