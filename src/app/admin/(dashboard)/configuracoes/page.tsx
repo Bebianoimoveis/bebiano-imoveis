@@ -1,6 +1,6 @@
 import { SettingsForm } from "@/components/admin/settings/settings-form"
 import { getAdminSettings } from "@/modules/settings/actions"
-import { DEFAULT_STORY_TEXT } from "@/components/public/about-story"
+import { resolveStoryText } from "@/components/public/about-story"
 import { DEFAULT_STATS } from "@/components/public/about-stats"
 import { DEFAULT_MISSION_VALUES } from "@/components/public/about-mission-values"
 import { DEFAULT_FOUNDATIONS } from "@/components/public/about-foundations"
@@ -27,7 +27,7 @@ export default async function AdminSettingsPage() {
     // texto padrão embutido no código (ver about-story.tsx) — pra não
     // mostrar um campo vazio escondendo o texto que está de verdade no
     // ar, o formulário já abre com esse texto padrão pronto pra editar.
-    aboutText: settings?.aboutText ?? DEFAULT_STORY_TEXT,
+    aboutText: resolveStoryText(settings?.aboutText),
     businessHours: settings?.businessHours ?? "",
     instagram: socialLinks.instagram || siteConfig.instagram,
     rentalEnabled: settings?.rentalEnabled ?? false,
