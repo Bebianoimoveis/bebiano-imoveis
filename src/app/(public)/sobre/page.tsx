@@ -30,6 +30,10 @@ import type { AboutWhyChooseReason } from "@/components/public/about-why-choose"
 import { listPublicRealtors } from "@/modules/realtor/actions"
 import { siteConfig } from "@/config/site"
 
+// A página é gerada estática; sem isso as idades da seção "Quem somos
+// nós?" ficariam congeladas no ano do último deploy. Regenera 1x por dia.
+export const revalidate = 86400
+
 export const metadata: Metadata = {
   title: "Sobre Nós",
   description: `Conheça a ${siteConfig.name}, imobiliária em ${siteConfig.city}, ${siteConfig.state}.`,
