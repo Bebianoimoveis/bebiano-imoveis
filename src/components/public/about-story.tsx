@@ -40,7 +40,7 @@ export function AboutStory({
       <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16">
         <Reveal className="order-2 lg:order-1">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
-            Nossa história · Nome e logo
+            Nome e logo
           </p>
           <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight text-balance">
             Bebiano significa <AccentWord>Candeeiro</AccentWord>

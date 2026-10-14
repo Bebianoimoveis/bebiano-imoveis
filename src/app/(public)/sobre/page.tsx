@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { AboutHero } from "@/components/public/about-hero"
+import { AboutFounders } from "@/components/public/about-founders"
 import { AboutStory } from "@/components/public/about-story"
 import { AboutStats } from "@/components/public/about-stats"
 import { AboutMissionValues } from "@/components/public/about-mission-values"
@@ -59,7 +60,10 @@ export default async function AboutPage() {
       {/* 1. Hero */}
       <AboutHero heroImageUrl={aboutHeroImageUrl ?? FALLBACK_HERO_IMAGE} />
 
-      {/* 2. Nossa História */}
+      {/* 2. Quem somos nós — história dos fundadores */}
+      <AboutFounders />
+
+      {/* 2b. Nome e logo — Bebiano significa Candeeiro */}
       <AboutStory aboutText={aboutText} imageUrl={storyImage} />
 
       {/* 3. Números */}

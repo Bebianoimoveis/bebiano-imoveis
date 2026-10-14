@@ -278,7 +278,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
                 name="aboutStoryImageUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Imagem da seção "Nossa História"</FormLabel>
+                    <FormLabel>Imagem da seção "Bebiano significa Candeeiro" (nome e logo)</FormLabel>
                     <p className="text-xs text-muted-foreground">
                       Aparece só na página &ldquo;Sobre Nós&rdquo;, na foto redonda ao lado do texto
                       institucional (aba &ldquo;Página Sobre Nós&rdquo; aqui ao lado). Formato quadrado
@@ -289,7 +289,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
                         {field.value ? (
                           <Image
                             src={field.value}
-                            alt="Imagem da Nossa História"
+                            alt="Imagem da seção nome e logo"
                             fill
                             className="object-cover"
                             sizes="112px"
@@ -386,7 +386,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
                 <FormItem>
                   <FormLabel>Texto institucional (Quem somos)</FormLabel>
                   <p className="text-xs text-muted-foreground">
-                    Seção &ldquo;Nossa História&rdquo;, logo no início da página, ao lado da foto redonda.
+                    Seção &ldquo;Bebiano significa Candeeiro&rdquo; (nome e logo), logo depois da história da Bel e do Jairton, ao lado da foto redonda.
                   </p>
                   <FormControl>
                     <Textarea rows={5} {...field} />
@@ -398,7 +398,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
 
             <SettingsSection
               title="Números (Resultados em números)"
-              description="3 números em destaque, logo abaixo de Nossa História."
+              description="3 números em destaque, logo abaixo da seção &ldquo;Bebiano significa Candeeiro&rdquo;."
             >
               <AboutStatsFields />
             </SettingsSection>
