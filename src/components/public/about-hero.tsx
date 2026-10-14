@@ -27,13 +27,19 @@ const item = {
 // (Parallax discreto + overlay em camadas + entrada escalonada), só que
 // mais compacto (min-h-[70vh] em vez de 100svh) já que não carrega a
 // busca de imóveis.
-export function AboutHero({ heroImageUrl }: { heroImageUrl?: string | null }) {
+export function AboutHero({
+  heroImageUrl,
+  mobilePositionClassName,
+}: {
+  heroImageUrl?: string | null
+  mobilePositionClassName?: string
+}) {
   const { phone } = useAttributedWhatsapp()
 
   return (
     <section className="relative flex min-h-[60vh] items-end overflow-hidden bg-primary sm:min-h-[75vh]">
       <Parallax className="absolute inset-0" strength={60}>
-        <HeroBackground posterUrl={heroImageUrl} />
+        <HeroBackground posterUrl={heroImageUrl} positionClassName={mobilePositionClassName} />
       </Parallax>
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/50 to-black/25" />

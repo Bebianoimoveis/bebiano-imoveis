@@ -1,5 +1,7 @@
 import Image from "next/image"
 
+import { cn } from "@/lib/utils"
+
 // Imagem em modo paisagem (fornecida pela cliente) — a anterior era
 // vertical (foto de celular) e cortava boa parte do enquadramento numa
 // tela larga de desktop via object-cover.
@@ -14,7 +16,15 @@ const HERO_ALT = "Bebiano Imóveis"
 // quadro sem precisar compensar recorte.
 const MEDIA_FILTER = "object-cover object-center contrast-[1.1] saturate-[0.75] brightness-[0.9]"
 
-export function HeroBackground({ posterUrl }: { posterUrl?: string | null }) {
+// `positionClassName` ajusta o enquadramento (ex: só no celular, onde a
+// tela estreita mostra apenas uma faixa vertical da foto paisagem).
+export function HeroBackground({
+  posterUrl,
+  positionClassName,
+}: {
+  posterUrl?: string | null
+  positionClassName?: string
+}) {
   return (
     <div className="relative size-full">
       <Image
@@ -23,7 +33,7 @@ export function HeroBackground({ posterUrl }: { posterUrl?: string | null }) {
         fill
         priority
         sizes="100vw"
-        className={MEDIA_FILTER}
+        className={cn(MEDIA_FILTER, positionClassName)}
       />
     </div>
   )

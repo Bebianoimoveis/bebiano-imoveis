@@ -66,7 +66,13 @@ export default async function AboutPage() {
       <ScrollProgress />
 
       {/* 1. Hero */}
-      <AboutHero heroImageUrl={aboutHeroImageUrl ?? FALLBACK_HERO_IMAGE} />
+      <AboutHero
+        heroImageUrl={aboutHeroImageUrl ?? FALLBACK_HERO_IMAGE}
+        // No celular só uma faixa da foto padrão aparece; centralizada ela
+        // mostrava a porta entre o casal. 80% enquadra o rapaz com as
+        // chaves. Foto enviada em Configurações fica centralizada.
+        mobilePositionClassName={aboutHeroImageUrl ? undefined : "object-[80%_50%] sm:object-center"}
+      />
 
       {/* 2. Quem somos nós — história dos fundadores */}
       <AboutFounders content={parseFoundersContent(sections.founders)} />

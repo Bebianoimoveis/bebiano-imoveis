@@ -22,7 +22,9 @@ export function SectionBackdrop({
       <ScrollParallax className="absolute inset-0 -z-30">
         <Image src={imageUrl} alt="" fill sizes="100vw" className="object-cover object-center saturate-[0.8]" />
       </ScrollParallax>
-      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/85 via-black/70 to-black/85" />
+      {/* Mais leve no celular: lá os cards (com fundo próprio) cobrem quase a
+          seção toda e, com o escurecimento cheio, a foto praticamente sumia. */}
+      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/75 via-black/50 to-black/75 sm:from-black/85 sm:via-black/70 sm:to-black/85" />
       <div className="absolute inset-0 -z-10 bg-primary/30 mix-blend-multiply" />
       {children}
     </section>
