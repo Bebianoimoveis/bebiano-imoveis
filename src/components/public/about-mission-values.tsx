@@ -3,6 +3,9 @@ import { Compass, Eye, Heart, Target } from "lucide-react"
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
+
+const BACKGROUND = "/images/about/mission.jpg"
 
 // Só o texto de cada card é editável em Configurações — título e ícone
 // ficam fixos (são a identidade da seção, não conteúdo institucional).
@@ -32,7 +35,8 @@ export function AboutMissionValues({
   ]
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+    <SectionBackdrop imageUrl={BACKGROUND}>
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <Reveal className="mb-10 text-center sm:mb-12">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           O que nos move
@@ -46,16 +50,17 @@ export function AboutMissionValues({
         {CARDS.map((card) => (
           <StaggerItem
             key={card.title}
-            className="group flex flex-col items-center gap-4 rounded-[20px] border border-border/60 bg-card p-8 text-center transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/30 hover:ring-1 hover:ring-gold/30"
+            className="group flex flex-col items-center gap-4 rounded-[20px] border border-white/10 bg-card/75 p-8 text-center backdrop-blur-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-black/30 hover:ring-1 hover:ring-gold/30"
           >
             <div className="flex size-14 items-center justify-center rounded-full bg-primary/15 transition-transform duration-500 group-hover:scale-110">
               <card.icon className="size-6 text-gold" strokeWidth={1.5} />
             </div>
-            <p className="font-heading text-xl font-semibold">{card.title}</p>
-            <p className="text-sm leading-relaxed text-muted-foreground">{card.text}</p>
+            <h3 className="font-heading text-3xl font-semibold tracking-tight">{card.title}</h3>
+            <p className="text-sm leading-relaxed text-white/75">{card.text}</p>
           </StaggerItem>
         ))}
       </StaggerGroup>
-    </section>
+      </div>
+    </SectionBackdrop>
   )
 }

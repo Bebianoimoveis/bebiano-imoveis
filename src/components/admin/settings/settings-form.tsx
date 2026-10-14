@@ -263,7 +263,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
                           </button>
                         ) : (
                           <p className="text-xs text-muted-foreground">
-                            Nenhuma — usando a mesma imagem da página inicial.
+                            Nenhuma — usando a imagem padrão da Sobre Nós (casal na casa nova).
                           </p>
                         )}
                       </div>

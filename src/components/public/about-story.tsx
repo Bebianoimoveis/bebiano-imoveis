@@ -2,6 +2,9 @@ import Image from "next/image"
 
 import { Reveal } from "@/components/motion/reveal"
 import { AccentWord } from "@/components/public/accent-word"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
+
+const BACKGROUND = "/images/about/story.jpg"
 
 // Exportado pra Configurações usar como valor inicial do campo "Quem
 // somos" — sem isso, a pessoa via um campo vazio no admin enquanto o
@@ -18,8 +21,8 @@ export function AboutStory({
   imageUrl: string
 }) {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
+    <SectionBackdrop imageUrl={BACKGROUND}>
+      <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16">
         <Reveal className="order-2 lg:order-1">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
             Nossa trajetória
@@ -27,7 +30,7 @@ export function AboutStory({
           <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
             Nossa <AccentWord>História</AccentWord>
           </h2>
-          <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mt-5 text-base leading-relaxed text-white/80 sm:text-lg">
             {aboutText || DEFAULT_STORY_TEXT}
           </p>
         </Reveal>
@@ -44,6 +47,6 @@ export function AboutStory({
           </div>
         </Reveal>
       </div>
-    </section>
+    </SectionBackdrop>
   )
 }

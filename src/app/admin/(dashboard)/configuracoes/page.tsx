@@ -32,11 +32,13 @@ export default async function AdminSettingsPage() {
     instagram: socialLinks.instagram || siteConfig.instagram,
     rentalEnabled: settings?.rentalEnabled ?? false,
     heroImageUrl: settings?.heroImageUrl ?? "",
-    // Mesmo raciocínio do getPublicAboutHeroImage: se a pessoa nunca
-    // customizou o Hero da Sobre separadamente, o formulário mostra a
-    // imagem da home (que é o que está no ar hoje ali), não um campo
-    // vazio.
-    aboutHeroImageUrl: settings?.aboutHeroImageUrl ?? settings?.heroImageUrl ?? "",
+    // Igual à da home = não customizada (ver getPublicAboutHeroImage) —
+    // não pré-preenche com a da home, senão salvar o formulário
+    // gravaria a mesma foto nas duas páginas de novo.
+    aboutHeroImageUrl:
+      settings?.aboutHeroImageUrl && settings.aboutHeroImageUrl !== settings.heroImageUrl
+        ? settings.aboutHeroImageUrl
+        : "",
     aboutStoryImageUrl: settings?.aboutStoryImageUrl ?? "",
     // Mesma lógica do aboutText acima: cada seção da página Sobre já
     // abre com o conteúdo padrão (o que já está no ar) pronto pra

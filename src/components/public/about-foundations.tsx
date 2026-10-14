@@ -3,8 +3,22 @@ import { Flag, Quote, Sun, Users } from "lucide-react"
 import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
+import { cn } from "@/lib/utils"
 
 const PURPOSE_ICONS = [Flag, Sun, Users]
+
+// Lamparina acesa atrás do versículo ("vocês são a luz do mundo... uma
+// lamparina"); família de mãos dadas atrás da regra de vida e das
+// prioridades (Deus, Família, Trabalho).
+const VERSE_BACKGROUND = "/images/about/foundations-verse.jpg"
+const LIFE_BACKGROUND = "/images/about/foundations-life.jpg"
+
+// Mesmo tamanho dos títulos de seção do resto da página, a pedido da
+// cliente — antes os subtítulos (Regra de Vida, Placa Invisível,
+// Prioridades, Propósito) eram bem menores e alinhados à esquerda.
+const TITLE_CLASS = "font-heading text-3xl font-semibold tracking-tight text-balance"
+const CARD_CLASS = "rounded-[20px] border border-white/10 bg-card/75 backdrop-blur-sm"
 
 // Conteúdo institucional/de fé passado pela cliente (versículo-base,
 // regra de vida, "placa invisível", prioridades, propósito) — tudo
@@ -56,75 +70,88 @@ export function AboutFoundations({
   }))
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-      <Reveal className="mb-10 text-center sm:mb-12">
-        <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
-          Nascemos através de uma palavra
-        </p>
-        <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
-          E seremos sempre <AccentWord>guiados</AccentWord> por ela!
-        </h2>
-      </Reveal>
+    <>
+      <SectionBackdrop imageUrl={VERSE_BACKGROUND}>
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <Reveal className="mb-10 text-center sm:mb-12">
+            <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
+              Nascemos através de uma palavra
+            </p>
+            <h2 className={cn(TITLE_CLASS, "mt-2")}>
+              E seremos sempre <AccentWord>guiados</AccentWord> por ela!
+            </h2>
+          </Reveal>
 
-      <Reveal className="mx-auto mb-10 max-w-3xl rounded-[20px] border border-border/60 bg-card p-6 text-center sm:p-8">
-        <Quote className="mx-auto mb-3 size-6 text-gold" strokeWidth={1.5} />
-        <p className="font-heading text-sm font-semibold text-gold-dark">{content.verseRef}</p>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground italic sm:text-base">
-          {content.verseText}
-        </p>
-      </Reveal>
-
-      <div className="mb-12 grid gap-5 sm:grid-cols-2">
-        <Reveal className="rounded-[20px] border border-border/60 bg-card p-6">
-          <p className="font-heading font-semibold">
-            Temos uma Regra de <AccentWord>Vida</AccentWord>
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">{content.ruleText}</p>
-          <p className="mt-2 text-xs font-medium text-gold-dark">{content.ruleRef}</p>
-        </Reveal>
-        <Reveal delay={0.1} className="rounded-[20px] border border-border/60 bg-card p-6">
-          <p className="font-heading font-semibold">
-            A Placa <AccentWord>Invisível</AccentWord>
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground italic">{content.badgeText}</p>
-          <p className="mt-2 text-xs font-medium text-gold-dark">{content.badgeAuthor}</p>
-        </Reveal>
-      </div>
-
-      <Reveal className="mx-auto mb-14 max-w-sm text-center">
-        <p className="font-heading font-semibold">Seguimos uma Lista de Prioridades</p>
-        <div className="mt-4 space-y-2.5">
-          {PRIORIDADES.map((item) => (
-            <div key={item.label} className="flex items-center justify-center gap-3">
-              <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold text-gold-dark">
-                {item.order}
-              </span>
-              <span className="text-sm font-medium">{item.label}</span>
-            </div>
-          ))}
+          <Reveal className={cn(CARD_CLASS, "mx-auto max-w-3xl p-6 text-center sm:p-8")}>
+            <Quote className="mx-auto mb-3 size-6 text-gold" strokeWidth={1.5} />
+            <p className="font-heading text-sm font-semibold text-gold-dark">{content.verseRef}</p>
+            <p className="mt-3 text-sm leading-relaxed text-white/80 italic sm:text-base">
+              {content.verseText}
+            </p>
+          </Reveal>
         </div>
-      </Reveal>
+      </SectionBackdrop>
 
-      <Reveal className="mb-8 text-center">
-        <p className="font-heading font-semibold">
-          Qual o nosso <AccentWord>Propósito</AccentWord>?
-        </p>
-      </Reveal>
+      <SectionBackdrop imageUrl={LIFE_BACKGROUND}>
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mb-14 grid gap-5 sm:grid-cols-2">
+            <Reveal className={cn(CARD_CLASS, "p-6 text-center sm:p-8")}>
+              <h3 className={TITLE_CLASS}>
+                Temos uma Regra de <AccentWord>Vida</AccentWord>
+              </h3>
+              <p className="mt-4 text-sm leading-relaxed text-white/80 italic sm:text-base">{content.ruleText}</p>
+              <p className="mt-3 text-xs font-medium text-gold-dark">{content.ruleRef}</p>
+            </Reveal>
+            <Reveal delay={0.1} className={cn(CARD_CLASS, "p-6 text-center sm:p-8")}>
+              <h3 className={TITLE_CLASS}>
+                A Placa <AccentWord>Invisível</AccentWord>
+              </h3>
+              <p className="mt-4 text-sm leading-relaxed text-white/80 italic sm:text-base">{content.badgeText}</p>
+              <p className="mt-3 text-xs font-medium text-gold-dark">{content.badgeAuthor}</p>
+            </Reveal>
+          </div>
 
-      <StaggerGroup className="grid gap-6 sm:grid-cols-3">
-        {PROPOSITO.map((item) => (
-          <StaggerItem
-            key={item.title}
-            className="space-y-3 rounded-[20px] border border-border/60 bg-card p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30"
-          >
-            <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-primary/15">
-              <item.icon className="size-5 text-gold" strokeWidth={1.5} />
+          <Reveal className="mx-auto mb-14 max-w-3xl text-center">
+            <h3 className={TITLE_CLASS}>
+              Seguimos uma Lista de <AccentWord>Prioridades</AccentWord>
+            </h3>
+            <div className="mt-6 space-y-2.5">
+              {PRIORIDADES.map((item) => (
+                <div key={item.label} className="flex items-center justify-center gap-3">
+                  <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold text-gold-dark">
+                    {item.order}
+                  </span>
+                  <span className="text-base font-medium">{item.label}</span>
+                </div>
+              ))}
             </div>
-            <p className="font-medium text-foreground">{item.title}</p>
-            <p className="text-sm leading-relaxed text-muted-foreground">{item.text}</p>
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
-    </section>
+          </Reveal>
+
+          <Reveal className="mb-8 text-center">
+            <h3 className={TITLE_CLASS}>
+              Qual o nosso <AccentWord>Propósito</AccentWord>?
+            </h3>
+          </Reveal>
+
+          <StaggerGroup className="grid gap-6 sm:grid-cols-3">
+            {PROPOSITO.map((item) => (
+              <StaggerItem
+                key={item.title}
+                className={cn(
+                  CARD_CLASS,
+                  "space-y-3 p-6 text-center transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30"
+                )}
+              >
+                <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-primary/15">
+                  <item.icon className="size-5 text-gold" strokeWidth={1.5} />
+                </div>
+                <p className="font-heading text-xl font-semibold text-balance">{item.title}</p>
+                <p className="text-sm leading-relaxed text-white/75">{item.text}</p>
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+        </div>
+      </SectionBackdrop>
+    </>
   )
 }

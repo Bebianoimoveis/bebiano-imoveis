@@ -81,7 +81,12 @@ export async function getPublicHeroImage() {
 // nada.
 export async function getPublicAboutHeroImage() {
   const settings = await settingsRepository.getSettings()
-  return settings?.aboutHeroImageUrl ?? settings?.heroImageUrl ?? null
+  // Igual à da home conta como "não customizada": o formulário de
+  // Configurações já chegou a pré-preencher (e salvar) a imagem da home
+  // nesse campo, e a cliente pediu explicitamente que as duas páginas não
+  // repitam a mesma foto — aí cai pro padrão próprio da Sobre.
+  const url = settings?.aboutHeroImageUrl
+  return url && url !== settings?.heroImageUrl ? url : null
 }
 
 // Leitura pública — imagem da seção "Nossa História" em "/sobre".

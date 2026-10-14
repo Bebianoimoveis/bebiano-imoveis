@@ -38,6 +38,7 @@ export const metadata: Metadata = {
 // Configurações nem nenhum corretor com foto existirem ainda — mesmo
 // asset paisagem já usado no Hero da home.
 const FALLBACK_STORY_IMAGE = "/images/hero-bg.png"
+const FALLBACK_HERO_IMAGE = "/images/about/hero.jpg"
 
 export default async function AboutPage() {
   const [aboutText, realtors, aboutHeroImageUrl, aboutStoryImageUrl, sections] = await Promise.all([
@@ -56,7 +57,7 @@ export default async function AboutPage() {
   return (
     <div>
       {/* 1. Hero */}
-      <AboutHero heroImageUrl={aboutHeroImageUrl} />
+      <AboutHero heroImageUrl={aboutHeroImageUrl ?? FALLBACK_HERO_IMAGE} />
 
       {/* 2. Nossa História */}
       <AboutStory aboutText={aboutText} imageUrl={storyImage} />
