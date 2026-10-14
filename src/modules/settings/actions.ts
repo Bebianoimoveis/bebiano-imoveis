@@ -8,6 +8,7 @@ import { logActivity } from "@/lib/activity-log"
 import { siteSettingsInputSchema } from "@/modules/settings/schema"
 import * as settingsRepository from "@/modules/settings/repository"
 import { siteConfig } from "@/config/site"
+import { currentYearBR } from "@/lib/founders-content"
 
 async function requireSettingsManage() {
   const session = await auth()
@@ -106,6 +107,7 @@ export async function getPublicAboutSections() {
     stats: (settings?.aboutStats as unknown[] | null) ?? null,
     missionValues: (settings?.aboutMissionValues as Record<string, string> | null) ?? null,
     foundations: (settings?.aboutFoundations as Record<string, unknown> | null) ?? null,
+    founders: settings?.aboutFounders ?? null,
     differentiators: (settings?.aboutDifferentiators as unknown[] | null) ?? null,
     howWeWork: (settings?.aboutHowWeWork as unknown[] | null) ?? null,
     values: (settings?.aboutValues as unknown[] | null) ?? null,
@@ -131,6 +133,11 @@ export async function updateSettings(input: unknown) {
     aboutStats: data.aboutStats,
     aboutMissionValues: data.aboutMissionValues,
     aboutFoundations: data.aboutFoundations,
+    // Os números entre [[ ]] do formulário já vêm com o valor de hoje
+    // (ver configuracoes/page.tsx), então o "ano base" é o ano do save.
+    aboutFounders: data.aboutFounders
+      ? { ...data.aboutFounders, photoUrl: data.aboutFounders.photoUrl || undefined, baseYear: currentYearBR() }
+      : undefined,
     aboutDifferentiators: data.aboutDifferentiators,
     aboutHowWeWork: data.aboutHowWeWork,
     aboutValues: data.aboutValues,

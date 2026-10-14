@@ -1,86 +1,47 @@
-import Image from "next/image";
+import Image from "next/image"
 
-import { Reveal } from "@/components/motion/reveal";
-import { AccentWord } from "@/components/public/accent-word";
+import { Reveal } from "@/components/motion/reveal"
+import { AccentWord } from "@/components/public/accent-word"
+import {
+  DEFAULT_FOUNDERS_CONTENT,
+  renderFounderText,
+  type FounderContent,
+  type FoundersContent,
+} from "@/lib/founders-content"
 
-// Anos de vida/trabalho que crescem com o tempo no texto abaixo (idade,
-// "há 15 anos", "há 25 anos na indústria"…). Os valores base são os da
-// apresentação, em 2026; a cada virada de ano somam +1 sozinhos. Conta
-// pelo ano do calendário (não pela data de aniversário, que não temos),
-// então a idade pode adiantar até alguns meses em relação ao aniversário.
-const BASE_YEAR = 2026;
-
-function currentYearBR() {
-  return Number(
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Sao_Paulo",
-      year: "numeric",
-    }).format(new Date()),
-  );
-}
-
-// Texto do slide "Quem somos nós? Conheça a nossa história" da
-// apresentação institucional, na voz de cada um dos fundadores — só
-// corrigidos erros de digitação.
-function buildFounders() {
-  const grown = (base: number) =>
-    base + Math.max(0, currentYearBR() - BASE_YEAR);
-
-  return [
-    {
-      name: "Bel",
-      paragraphs: [
-        `Conheci Jesus com 19 anos, hoje tenho ${grown(42)} anos de idade, sou mãe, sou esposa, e comecei a empreender com 27 anos, há ${grown(15)} anos atrás.`,
-        "Meu 1º emprego foi como caixa de supermercado, após em loja infantil, depois como auxiliar administrativo, onde estudei e me formei em Administração. Fui Diretora de Vendas na Mary Kay do Brasil, e após trabalhei como Representante Comercial, aí sim conheci e me apaixonei pela Corretagem.",
-        "Sempre amei SERVIR e, por amar pessoas, sempre tive a oportunidade de liderar. De forma natural as coisas sempre vinham na minha mão, onde entendi que Deus queria me usar ali, ajudando, guiando e liderando pessoas pra glória dEle.",
-      ],
-    },
-    {
-      name: "Jairton",
-      paragraphs: [
-        `Com 6 anos, tive meu primeiro contato com Jesus, minha conversão aconteceu com 29 anos, hoje tenho ${grown(43)} anos de idade, sou pai, sou esposo e trabalho há ${grown(25)} anos na área de indústria.`,
-        `Comecei a trabalhar com 14 anos, em supermercado, também fui ajudante de obras e após iniciei na indústria. Na De Carlo fiquei 7 anos e atualmente trabalho há ${grown(18)} anos na AGCO. Mas sempre pensei em mudar de área e agora a oportunidade chegou.`,
-        "Gosto de ouvir as pessoas, sempre tive bom relacionamento pois tenho paciência com o ser humano, e por isso também sempre SERVI as pessoas ao meu redor, seja no trabalho ou na igreja, onde liderava homens e famílias.",
-      ],
-    },
-  ];
-}
-
-const PHOTO = "/images/about/bel-e-jairton.jpg";
+const DEFAULT_PHOTO = "/images/about/bel-e-jairton.jpg"
 
 function FounderStory({
   founder,
+  baseYear,
   side,
 }: {
-  founder: ReturnType<typeof buildFounders>[number];
-  side: "left" | "right";
+  founder: FounderContent
+  baseYear: number
+  side: "left" | "right"
 }) {
   return (
     <div className={side === "left" ? "space-y-4 lg:text-right" : "space-y-4"}>
-      <h3 className="font-heading text-2xl font-semibold tracking-tight text-gold">
-        {founder.name}
-      </h3>
-      {founder.paragraphs.map((paragraph) => (
-        <p
-          key={paragraph}
-          className="text-sm leading-relaxed text-muted-foreground sm:text-base"
-        >
-          {paragraph}
+      <h3 className="font-heading text-2xl font-semibold tracking-tight text-gold">{founder.name}</h3>
+      {founder.paragraphs.map((paragraph, index) => (
+        <p key={index} className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {renderFounderText(paragraph, baseYear)}
         </p>
       ))}
     </div>
-  );
+  )
 }
 
-export function AboutFounders() {
-  const [bel, jairton] = buildFounders();
+// Texto e foto editáveis em Configurações; sem nada salvo cai no padrão
+// do slide institucional (ver founders-content.ts).
+export function AboutFounders({ content = DEFAULT_FOUNDERS_CONTENT }: { content?: FoundersContent }) {
+  const [first, second] = content.founders
+  const photo = content.photoUrl || DEFAULT_PHOTO
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <Reveal className="mb-10 text-center sm:mb-14">
-        <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
-          Quem somos nós?
-        </p>
+        <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">Quem somos nós?</p>
         <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
           Conheça a nossa <AccentWord>História</AccentWord>
         </h2>
@@ -88,29 +49,28 @@ export function AboutFounders() {
 
       <div className="grid items-center gap-10 lg:grid-cols-[1fr_auto_1fr] lg:gap-12">
         <Reveal className="order-2 lg:order-1">
-          <FounderStory founder={bel} side="left" />
+          <FounderStory founder={first} baseYear={content.baseYear} side="left" />
         </Reveal>
 
-        <Reveal
-          delay={0.1}
-          className="order-1 flex flex-col items-center gap-4 lg:order-2"
-        >
+        <Reveal delay={0.1} className="order-1 flex flex-col items-center gap-4 lg:order-2">
           <div className="relative size-64 overflow-hidden rounded-full ring-2 ring-gold/40 ring-offset-4 ring-offset-background sm:size-72">
             <Image
-              src={PHOTO}
-              alt="Bel e Jairton, fundadores da Bebiano Imóveis"
+              src={photo}
+              alt={`${first.name} e ${second.name}, fundadores da Bebiano Imóveis`}
               fill
               className="object-cover"
               sizes="288px"
             />
           </div>
-          <p className="font-script text-3xl text-gold">Bel e Jairton</p>
+          <p className="font-script text-3xl text-gold">
+            {first.name} e {second.name}
+          </p>
         </Reveal>
 
         <Reveal delay={0.2} className="order-3">
-          <FounderStory founder={jairton} side="right" />
+          <FounderStory founder={second} baseYear={content.baseYear} side="right" />
         </Reveal>
       </div>
     </section>
-  );
+  )
 }

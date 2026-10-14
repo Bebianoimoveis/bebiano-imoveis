@@ -9,11 +9,15 @@ import { DEFAULT_HOW_WE_WORK } from "@/components/public/about-how-we-work"
 import { DEFAULT_VALUES } from "@/components/public/about-values-showcase"
 import { DEFAULT_WHY_CHOOSE } from "@/components/public/about-why-choose"
 import { siteConfig } from "@/config/site"
+import { advanceFounderText, parseFoundersContent } from "@/lib/founders-content"
 import type { SiteSettingsInput } from "@/modules/settings/schema"
 
 export default async function AdminSettingsPage() {
   const settings = await getAdminSettings()
   const socialLinks = (settings?.socialLinks as { instagram?: string } | null) ?? {}
+  // Números entre [[ ]] já chegam no formulário com o valor de hoje, e o
+  // save grava o ano atual como base (ver updateSettings).
+  const founders = parseFoundersContent(settings?.aboutFounders)
 
   const defaultValues: SiteSettingsInput = {
     phone: settings?.phone ?? "",
@@ -47,6 +51,13 @@ export default async function AdminSettingsPage() {
     aboutMissionValues:
       (settings?.aboutMissionValues as SiteSettingsInput["aboutMissionValues"]) ?? DEFAULT_MISSION_VALUES,
     aboutFoundations: (settings?.aboutFoundations as SiteSettingsInput["aboutFoundations"]) ?? DEFAULT_FOUNDATIONS,
+    aboutFounders: {
+      photoUrl: founders.photoUrl ?? "",
+      founders: founders.founders.map((founder) => ({
+        name: founder.name,
+        paragraphs: founder.paragraphs.map((paragraph) => advanceFounderText(paragraph, founders.baseYear)),
+      })),
+    },
     aboutDifferentiators:
       (settings?.aboutDifferentiators as SiteSettingsInput["aboutDifferentiators"]) ?? DEFAULT_DIFFERENTIATORS,
     aboutHowWeWork: (settings?.aboutHowWeWork as SiteSettingsInput["aboutHowWeWork"]) ?? DEFAULT_HOW_WE_WORK,

@@ -23,6 +23,7 @@ import {
 import { SettingsSection } from "@/components/admin/settings/settings-section"
 import { AboutStatsFields } from "@/components/admin/settings/about-stats-fields"
 import { AboutMissionValuesFields } from "@/components/admin/settings/about-mission-values-fields"
+import { AboutFoundersFields } from "@/components/admin/settings/about-founders-fields"
 import { AboutFoundationsFields } from "@/components/admin/settings/about-foundations-fields"
 import { AboutItemListFields } from "@/components/admin/settings/about-item-list-fields"
 import { updateSettings } from "@/modules/settings/actions"
@@ -34,7 +35,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadingField, setUploadingField] = useState<
-    "heroImageUrl" | "aboutHeroImageUrl" | "aboutStoryImageUrl" | null
+    "heroImageUrl" | "aboutHeroImageUrl" | "aboutStoryImageUrl" | "aboutFounders.photoUrl" | null
   >(null)
 
   const form = useForm<SiteSettingsInput>({
@@ -43,7 +44,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
   })
 
   async function handleImageChange(
-    field: "heroImageUrl" | "aboutHeroImageUrl" | "aboutStoryImageUrl",
+    field: "heroImageUrl" | "aboutHeroImageUrl" | "aboutStoryImageUrl" | "aboutFounders.photoUrl",
     e: React.ChangeEvent<HTMLInputElement>
   ) {
     const file = e.target.files?.[0]
@@ -378,6 +379,59 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
               aparecem lá. Clique pra abrir e editar — todos já vêm preenchidos com o texto que está no ar
               agora.
             </p>
+
+            <SettingsSection
+              title="Quem somos nós? Conheça a nossa história"
+              description="A história da Bel e do Jairton, logo depois do topo da página: foto no meio e um texto de cada lado."
+            >
+              <FormField
+                control={form.control}
+                name="aboutFounders.photoUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Foto do casal (no meio, em círculo)</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Formato quadrado funciona melhor, já que a foto é cortada em círculo. Sem foto enviada, o site
+                      usa a foto padrão da Bel e do Jairton.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-muted-foreground">
+                        <Image
+                          src={field.value || "/images/about/bel-e-jairton.jpg"}
+                          alt="Foto do casal"
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <FormControl>
+                          <Input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => handleImageChange("aboutFounders.photoUrl", e)}
+                            disabled={uploadingField === "aboutFounders.photoUrl"}
+                          />
+                        </FormControl>
+                        {uploadingField === "aboutFounders.photoUrl" ? (
+                          <p className="text-xs text-muted-foreground">Enviando...</p>
+                        ) : field.value ? (
+                          <button
+                            type="button"
+                            onClick={() => form.setValue("aboutFounders.photoUrl", "")}
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="size-3" /> Remover (volta pra foto padrão)
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <AboutFoundersFields />
+            </SettingsSection>
 
             <FormField
               control={form.control}

@@ -33,6 +33,18 @@ const foundationsSchema = z.object({
   purpose: z.array(titleTextItemSchema).length(3),
 })
 
+const foundersSchema = z.object({
+  photoUrl: z.string().optional(),
+  founders: z
+    .array(
+      z.object({
+        name: z.string().min(1, "Preencha o nome."),
+        paragraphs: z.array(z.string().min(1, "Preencha o texto.")).length(3),
+      })
+    )
+    .length(2),
+})
+
 export const siteSettingsInputSchema = z.object({
   phone: z.string().min(8, "Informe um telefone válido."),
   whatsapp: z.string().min(8, "Informe um WhatsApp válido."),
@@ -53,6 +65,7 @@ export const siteSettingsInputSchema = z.object({
   aboutStats: z.array(statItemSchema).length(3).optional(),
   aboutMissionValues: missionValuesSchema.optional(),
   aboutFoundations: foundationsSchema.optional(),
+  aboutFounders: foundersSchema.optional(),
   aboutDifferentiators: z.array(titleTextItemSchema).length(4).optional(),
   aboutHowWeWork: z.array(titleTextItemSchema).length(5).optional(),
   aboutValues: z.array(titleTextItemSchema).length(6).optional(),

@@ -1059,6 +1059,12 @@ model SiteSettings {
   aboutValues          Json?
   aboutWhyChoose       Json?
 
+  // Seção "Quem somos nós? Conheça a nossa história" da "/sobre":
+  // { baseYear, photoUrl?, founders: [{ name, paragraphs[3] }] }. Números
+  // entre [[ ]] no texto (ex: [[42]]) somam +1 por ano desde baseYear
+  // (ano em que foi salvo) — ver src/lib/founders-content.ts.
+  aboutFounders Json?
+
   // Corretor responsável por visitantes sem nenhuma referência de link,
   // quando leadDistributionMode = FIXED.
   defaultRealtorId String?

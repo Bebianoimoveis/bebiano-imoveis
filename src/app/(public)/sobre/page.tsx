@@ -29,6 +29,7 @@ import type { AboutValueItem } from "@/components/public/about-values-showcase"
 import type { AboutWhyChooseReason } from "@/components/public/about-why-choose"
 import { listPublicRealtors } from "@/modules/realtor/actions"
 import { siteConfig } from "@/config/site"
+import { parseFoundersContent } from "@/lib/founders-content"
 
 // A página é gerada estática; sem isso as idades da seção "Quem somos
 // nós?" ficariam congeladas no ano do último deploy. Regenera 1x por dia.
@@ -65,7 +66,7 @@ export default async function AboutPage() {
       <AboutHero heroImageUrl={aboutHeroImageUrl ?? FALLBACK_HERO_IMAGE} />
 
       {/* 2. Quem somos nós — história dos fundadores */}
-      <AboutFounders />
+      <AboutFounders content={parseFoundersContent(sections.founders)} />
 
       {/* 2b. Nome e logo — Bebiano significa Candeeiro */}
       <AboutStory aboutText={aboutText} imageUrl={storyImage} />
