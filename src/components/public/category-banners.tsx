@@ -30,7 +30,9 @@ export async function CategoryBanners() {
   if (segments.length === 0) return null
 
   return (
-    <SectionBackdrop imageUrl="/images/home/categories.jpg">
+    // Seção alta (vários cards grandes) — foto parada, sem parallax, pra
+    // não pesar no scroll.
+    <SectionBackdrop imageUrl="/images/home/categories-house.jpg" parallax={false}>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
       <Reveal className="mb-8 sm:mb-10">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
