@@ -35,10 +35,6 @@ export default async function HomePage() {
       {/* 1. Hero + busca premium */}
       <Hero cities={cities} propertyTypes={propertyTypes} rentalEnabled={rentalEnabled} heroImageUrl={heroImageUrl} />
 
-      {/* Espaço extra no topo para acomodar a busca flutuante que "quebra"
-          a borda inferior do Hero (ver Hero: -mb-12/-mb-16 no card de busca). */}
-      <div className="pt-16 sm:pt-20 lg:pt-24" />
-
       {/* 2. Categorias */}
       <CategoryBanners />
 

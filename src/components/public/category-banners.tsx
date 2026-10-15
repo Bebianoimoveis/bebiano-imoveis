@@ -6,6 +6,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { resolveSegmentIcon } from "@/lib/segment-icons"
 import { listPublicSegments } from "@/modules/segment/actions"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
 import { cn } from "@/lib/utils"
 
 function buildSegmentHref(segment: Awaited<ReturnType<typeof listPublicSegments>>[number]) {
@@ -28,8 +29,10 @@ export async function CategoryBanners() {
   const segments = await listPublicSegments()
   if (segments.length === 0) return null
 
+  // Foto aérea com muito céu no topo — puxada pra baixo pra mostrar as casas.
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+    <SectionBackdrop imageUrl="/images/home/categories.jpg" mobilePositionClassName="object-[50%_80%]">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
       <Reveal className="mb-8 sm:mb-10">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           Explore por categoria
@@ -90,6 +93,7 @@ export async function CategoryBanners() {
           )
         })}
       </StaggerGroup>
-    </section>
+      </div>
+    </SectionBackdrop>
   )
 }
