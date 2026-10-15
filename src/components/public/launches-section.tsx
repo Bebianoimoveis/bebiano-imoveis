@@ -7,6 +7,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { formatCurrency } from "@/lib/format"
 import { listLaunchProperties } from "@/modules/property/actions"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
 
 function launchStatusLabel(property: Awaited<ReturnType<typeof listLaunchProperties>>[number]) {
   if (property.launchDeliveryAt) {
@@ -24,8 +25,8 @@ export async function LaunchesSection() {
   if (launches.length === 0) return null
 
   return (
-    <section className="border-t border-border/60 bg-secondary/30">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+    <SectionBackdrop imageUrl="/images/home/launches.jpg" className="border-t border-border/60">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
         <Reveal className="mb-8 flex items-end justify-between sm:mb-10">
           <div>
             <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
@@ -37,7 +38,7 @@ export async function LaunchesSection() {
           </div>
         </Reveal>
 
-        <StaggerGroup className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
+        <StaggerGroup className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
           {launches.map((property) => {
             const cover = property.images.find((image) => image.isCover) ?? property.images[0]
             return (
@@ -87,6 +88,6 @@ export async function LaunchesSection() {
           })}
         </StaggerGroup>
       </div>
-    </section>
+    </SectionBackdrop>
   )
 }

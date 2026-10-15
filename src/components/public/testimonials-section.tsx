@@ -5,14 +5,19 @@ import { Reveal } from "@/components/motion/reveal"
 import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { listPublicTestimonials } from "@/modules/testimonial/actions"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
 
 export async function TestimonialsSection() {
   const testimonials = await listPublicTestimonials(6)
   if (testimonials.length === 0) return null
 
   return (
-    <section className="border-t border-border/60 bg-secondary/30">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+    <SectionBackdrop
+      imageUrl="/images/home/testimonials.jpg"
+      className="border-t border-border/60"
+      mobilePositionClassName="object-[55%_50%] sm:object-center"
+    >
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
         <Reveal className="mb-8 sm:mb-10">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
             Quem já viveu a experiência
@@ -22,13 +27,13 @@ export async function TestimonialsSection() {
           </h2>
         </Reveal>
 
-        <StaggerGroup className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
+        <StaggerGroup className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
           {testimonials.map((testimonial) => (
             <StaggerItem
               key={testimonial.id}
               className="w-[85vw] shrink-0 snap-start sm:w-auto"
             >
-              <div className="flex h-full flex-col gap-4 rounded-2xl bg-card p-6 ring-1 ring-border/60">
+              <div className="flex h-full flex-col gap-4 rounded-2xl bg-card/80 p-6 ring-1 ring-white/10 backdrop-blur-sm">
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
@@ -70,6 +75,6 @@ export async function TestimonialsSection() {
           ))}
         </StaggerGroup>
       </div>
-    </section>
+    </SectionBackdrop>
   )
 }

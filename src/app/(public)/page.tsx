@@ -16,6 +16,8 @@ import { listCities, listPublicPropertyTypes } from "@/modules/taxonomy/actions"
 import { getPublicRentalEnabled, getPublicHeroImage } from "@/modules/settings/actions"
 import { siteConfig } from "@/config/site"
 import { Building2 } from "lucide-react"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
+import { ScrollProgress } from "@/components/motion/scroll-progress"
 
 export default async function HomePage() {
   const [featured, cities, propertyTypes, rentalEnabled, heroImageUrl] = await Promise.all([
@@ -28,6 +30,8 @@ export default async function HomePage() {
 
   return (
     <div>
+      <ScrollProgress />
+
       {/* 1. Hero + busca premium */}
       <Hero cities={cities} propertyTypes={propertyTypes} rentalEnabled={rentalEnabled} heroImageUrl={heroImageUrl} />
 
@@ -42,7 +46,7 @@ export default async function HomePage() {
       <LaunchesSection />
 
       {/* 4. Destaques / exclusivos */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
         <Reveal className="mb-8 flex items-center justify-between sm:mb-10">
           <div>
             <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
@@ -89,11 +93,9 @@ export default async function HomePage() {
       <TestimonialsSection />
 
       {/* 7. CTA */}
-      {/* Marsala mais escuro que o --primary padrão (mesmo tom do header/
-          barra mobile/WhatsApp) — a cor cheia ficava clara demais contra o
-          resto do site, que é bem mais escuro. */}
-      <section className="relative overflow-hidden border-t border-border/60 bg-[#4a0c1c] text-primary-foreground">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklch,var(--color-gold)_12%,transparent),transparent_60%)]" />
+      {/* Clientes assinando com o corretor ao fundo — fecha a página com o
+          momento do negócio fechado. */}
+      <SectionBackdrop imageUrl="/images/home/final-cta.jpg" className="border-t border-border/60 text-primary-foreground">
         <Reveal className="relative mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-20 text-center sm:px-6 sm:py-24">
           <h2 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             Encontrou o imóvel ideal?
@@ -118,7 +120,7 @@ export default async function HomePage() {
             </Button>
           ) : null}
         </Reveal>
-      </section>
+      </SectionBackdrop>
     </div>
   )
 }

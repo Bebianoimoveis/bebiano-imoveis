@@ -29,7 +29,7 @@ export async function CategoryBanners() {
   if (segments.length === 0) return null
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
       <Reveal className="mb-8 sm:mb-10">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           Explore por categoria
