@@ -5,6 +5,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
 import { cn } from "@/lib/utils"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
 
 const DIFFERENTIATOR_ICONS = [HeartHandshake, MapPinned, ShieldCheck, Cpu]
 
@@ -42,7 +43,11 @@ export function AboutDifferentiators({
   }))
 
   return (
-    <section className="border-t border-border/60 bg-secondary/30">
+    <SectionBackdrop
+      imageUrl="/images/about/differentiators.jpg"
+      className="border-t border-border/60"
+      mobilePositionClassName="object-[65%_50%] sm:object-center"
+    >
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
         <Reveal className="mb-6 sm:mb-12">
           <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
@@ -57,7 +62,7 @@ export function AboutDifferentiators({
           {DIFERENCIAIS.map((item) => (
             <StaggerItem
               key={item.title}
-            className={cn(MOBILE_CAROUSEL_ITEM, "space-y-3 rounded-[20px] border border-border/60 bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30")}
+            className={cn(MOBILE_CAROUSEL_ITEM, "space-y-3 rounded-[20px] border border-white/10 bg-card/80 p-6 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30")}
             >
               <div className="flex size-11 items-center justify-center rounded-full bg-primary/15">
                 <item.icon className="size-5 text-gold" strokeWidth={1.5} />
@@ -68,6 +73,6 @@ export function AboutDifferentiators({
           ))}
         </StaggerGroup>
       </div>
-    </section>
+    </SectionBackdrop>
   )
 }

@@ -3,13 +3,13 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Reveal } from "@/components/motion/reveal"
 import { siteConfig } from "@/config/site"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
 
-// Mesmo tom marsala escuro (#4a0c1c) usado no CTA final da home — reservado
-// para os pontos de maior ênfase da página, nunca como cor de base.
+// Foto de casal com a casinha da casa nova ao fundo — o convite final da
+// página fecha com a mesma ideia de "chegar no lar".
 export function AboutFinalCta() {
   return (
-    <section className="relative overflow-hidden border-t border-border/60 bg-[#4a0c1c] text-primary-foreground">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,color-mix(in_oklch,var(--color-gold)_12%,transparent),transparent_60%)]" />
+    <SectionBackdrop imageUrl="/images/about/final-cta.jpg" className="border-t border-border/60 text-primary-foreground">
       <Reveal className="relative mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-20 text-center sm:px-6 sm:py-24">
         <h2 className="font-heading text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           Vamos encontrar o imóvel ideal para você?
@@ -40,6 +40,6 @@ export function AboutFinalCta() {
           ) : null}
         </div>
       </Reveal>
-    </section>
+    </SectionBackdrop>
   )
 }

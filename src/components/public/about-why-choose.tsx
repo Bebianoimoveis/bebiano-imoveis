@@ -12,6 +12,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
 import { cn } from "@/lib/utils"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
 
 const REASON_ICONS = [MapPin, HandCoins, MessagesSquare, FileCheck2, ClipboardCheck, BadgeCheck]
 
@@ -35,7 +36,8 @@ export function AboutWhyChoose({ reasons = DEFAULT_WHY_CHOOSE }: { reasons?: Abo
   }))
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+    <SectionBackdrop imageUrl="/images/about/why-choose.jpg">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
       <Reveal className="mb-6 text-center sm:mb-12">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           Sua confiança, nossa responsabilidade
@@ -49,7 +51,7 @@ export function AboutWhyChoose({ reasons = DEFAULT_WHY_CHOOSE }: { reasons?: Abo
         {REASONS.map((reason) => (
           <StaggerItem
             key={reason.title}
-            className={cn(MOBILE_CAROUSEL_ITEM, "flex items-start gap-4 rounded-[20px] border border-border/60 bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30")}
+            className={cn(MOBILE_CAROUSEL_ITEM, "flex items-start gap-4 rounded-[20px] border border-white/10 bg-card/80 p-6 backdrop-blur-sm transition-all duration-500 hover:-translate-y-1 hover:ring-1 hover:ring-gold/30")}
           >
             <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/15">
               <reason.icon className="size-5 text-gold" strokeWidth={1.5} />
@@ -61,6 +63,7 @@ export function AboutWhyChoose({ reasons = DEFAULT_WHY_CHOOSE }: { reasons?: Abo
           </StaggerItem>
         ))}
       </StaggerGroup>
-    </section>
+    </div>
+    </SectionBackdrop>
   )
 }

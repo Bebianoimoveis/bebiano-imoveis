@@ -5,6 +5,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { AccentWord } from "@/components/public/accent-word"
 import { MOBILE_CAROUSEL, MOBILE_CAROUSEL_ITEM } from "@/components/public/mobile-carousel"
 import { cn } from "@/lib/utils"
+import { SectionBackdrop } from "@/components/public/section-backdrop"
 
 const STEP_ICONS = [Search, SearchCheck, CalendarCheck, Handshake, KeyRound]
 
@@ -42,7 +43,9 @@ export function AboutHowWeWork({ steps = DEFAULT_HOW_WE_WORK }: { steps?: AboutH
   }))
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
+    <SectionBackdrop imageUrl="/images/about/how-we-work.jpg"
+      mobilePositionClassName="object-[68%_40%] sm:object-center">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-20">
       <Reveal className="mb-6 text-center sm:mb-14">
         <p className="text-sm font-medium tracking-widest text-gold-dark uppercase">
           Do primeiro contato às chaves na mão
@@ -75,6 +78,7 @@ export function AboutHowWeWork({ steps = DEFAULT_HOW_WE_WORK }: { steps?: AboutH
           </StaggerItem>
         ))}
       </StaggerGroup>
-    </section>
+    </div>
+    </SectionBackdrop>
   )
 }
