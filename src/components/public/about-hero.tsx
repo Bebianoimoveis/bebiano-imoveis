@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "motion/react"
+import { HeartHandshake, KeyRound, MapPin } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Parallax } from "@/components/motion/parallax"
@@ -23,10 +24,16 @@ const item = {
   },
 }
 
+// Frases que já aparecem no site (Diferencial e Como Trabalhamos) —
+// preenchem, no celular, o espaço que na home é do card de busca.
+const HIGHLIGHTS = [
+  { icon: HeartHandshake, label: "Atendimento humanizado" },
+  { icon: MapPin, label: "Todo o Alto Tietê" },
+  { icon: KeyRound, label: "Do contato às chaves" },
+]
+
 // Hero da página "Sobre Nós" — mesma receita visual do Hero da home
-// (Parallax discreto + overlay em camadas + entrada escalonada), só que
-// mais compacto (min-h-[70vh] em vez de 100svh) já que não carrega a
-// busca de imóveis.
+// (Parallax discreto + overlay em camadas + entrada escalonada).
 export function AboutHero({
   heroImageUrl,
   mobilePositionClassName,
@@ -39,7 +46,8 @@ export function AboutHero({
   return (
     // No celular: mesma altura (tela cheia) e mesma posição do texto que o
     // Hero da home — lá o texto fica ancorado embaixo com o card de busca
-    // (≈213px) ocupando o rodapé; aqui esse espaço vira foto (pb maior).
+    // (≈213px) no rodapé; aqui esse espaço é a lista de destaques + pb, com
+    // a mesma altura total pro texto de cima cair no mesmo lugar.
     <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-primary sm:min-h-[75vh]">
       <Parallax className="absolute inset-0" strength={60}>
         <HeroBackground posterUrl={heroImageUrl} positionClassName={mobilePositionClassName} />
@@ -53,7 +61,7 @@ export function AboutHero({
         initial="hidden"
         animate="visible"
         variants={container}
-        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-24 pb-[213px] sm:px-6 sm:pt-32 sm:pb-20"
+        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-24 pb-[69px] sm:px-6 sm:pt-32 sm:pb-20"
       >
         <motion.p
           variants={item}
@@ -106,6 +114,20 @@ export function AboutHero({
             </motion.div>
           ) : null}
         </motion.div>
+
+        {/* Só no celular: preenche o espaço que na home é do card de busca.
+            Lista à esquerda pra não ficar embaixo do botão flutuante do
+            WhatsApp (canto direito). */}
+        <motion.ul variants={item} className="mt-7 space-y-2.5 sm:hidden">
+          {HIGHLIGHTS.map(({ icon: Icon, label }) => (
+            <li key={label} className="flex items-center gap-3 text-sm text-white/85">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-gold/30 bg-black/30 backdrop-blur-sm">
+                <Icon className="size-4 text-gold" strokeWidth={1.5} />
+              </span>
+              {label}
+            </li>
+          ))}
+        </motion.ul>
       </motion.div>
     </section>
   )
