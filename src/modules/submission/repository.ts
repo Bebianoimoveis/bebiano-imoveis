@@ -47,6 +47,7 @@ export async function createSubmission(data: {
   totalArea?: number
   images: string[]
   documents: { url: string; name: string }[]
+  features: string[]
   videos: { url: string; name: string }[]
 }) {
   return prisma.propertySubmission.create({
@@ -68,6 +69,7 @@ export async function createSubmission(data: {
       parkingSpots: data.parkingSpots,
       builtArea: data.builtArea,
       totalArea: data.totalArea,
+      features: data.features,
       images: {
         create: data.images.map((url, index) => ({ url, order: index })),
       },

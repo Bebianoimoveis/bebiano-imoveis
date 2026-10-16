@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
@@ -26,6 +27,11 @@ import {
 } from "@/modules/upload/actions"
 import { uploadPropertyImage, uploadSubmissionFile } from "@/modules/upload/client"
 import type { SubmissionFormValues } from "@/modules/submission/schema"
+import {
+  SUBMISSION_FEATURE_GROUPS,
+  SUBMISSION_FEATURES,
+  type SubmissionFeature,
+} from "@/modules/submission/features"
 
 type City = { id: string; name: string; state: string }
 type PropertyType = { id: string; name: string }
@@ -159,6 +165,7 @@ export function PropertySubmissionForm({
       neighborhoodText: "",
       description: "",
       images: [],
+      features: [],
     },
   })
 
@@ -343,6 +350,49 @@ export function PropertySubmissionForm({
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-4 rounded-xl border border-border/60 p-4">
+        <div>
+          <p className="text-sm font-medium">Características</p>
+          <p className="text-xs text-muted-foreground">Marque tudo o que o imóvel ou o condomínio tem.</p>
+        </div>
+        <Controller
+          control={form.control}
+          name="features"
+          render={({ field }) => {
+            const selected = new Set(field.value ?? [])
+            function toggle(item: SubmissionFeature, checked: boolean) {
+              // Lê o valor atual do form (não o `selected` desta renderização),
+              // senão dois cliques seguidos antes de re-renderizar perdiam o
+              // primeiro.
+              const next = new Set(form.getValues("features") ?? [])
+              if (checked) next.add(item)
+              else next.delete(item)
+              field.onChange(SUBMISSION_FEATURES.filter((feature) => next.has(feature)))
+            }
+            return (
+              <div className="space-y-4">
+                {SUBMISSION_FEATURE_GROUPS.map((group) => (
+                  <div key={group.title} className="space-y-2">
+                    <p className="text-xs font-medium tracking-wider text-gold-dark uppercase">{group.title}</p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {group.items.map((item) => (
+                        <label key={item} className="flex cursor-pointer items-center gap-2.5 text-sm">
+                          <Checkbox
+                            checked={selected.has(item)}
+                            onCheckedChange={(checked) => toggle(item, checked === true)}
+                          />
+                          {item}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          }}
+        />
       </div>
 
       <div className="space-y-1.5">

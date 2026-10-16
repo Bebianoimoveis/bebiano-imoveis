@@ -935,6 +935,9 @@ model PropertySubmission {
   parkingSpots Int?
   builtArea    Decimal? @db.Decimal(8, 2)
   totalArea    Decimal? @db.Decimal(8, 2)
+  // Características marcadas pelo dono (rótulos de
+  // src/modules/submission/features.ts, ex: "Academia", "Aceita pets").
+  features     String[] @default([])
 
   convertedPropertyId String?   @unique
   convertedProperty   Property? @relation(fields: [convertedPropertyId], references: [id])

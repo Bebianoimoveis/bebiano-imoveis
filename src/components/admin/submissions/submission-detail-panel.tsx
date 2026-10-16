@@ -256,6 +256,19 @@ export function SubmissionDetailPanel({
 
             <SubmissionDetails submission={submission} />
 
+            {submission.features.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Características marcadas pelo dono</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {submission.features.map((feature) => (
+                    <span key={feature} className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-foreground ring-1 ring-border/60">
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="space-y-1 text-sm">
               <p className="text-muted-foreground">Descrição</p>
               <p>{submission.description}</p>

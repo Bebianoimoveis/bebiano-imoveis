@@ -55,6 +55,7 @@ export async function createPropertySubmission(input: unknown) {
     totalArea: data.totalArea,
     images: data.images,
     documents: data.documents,
+    features: data.features,
     videos: data.videos,
   })
 

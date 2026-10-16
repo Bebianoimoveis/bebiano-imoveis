@@ -3,6 +3,7 @@ import { listCities, listPropertyTypes, listPropertyFeatures } from "@/modules/t
 import { listRealtors } from "@/modules/realtor/actions"
 import { getAdminSubmission } from "@/modules/submission/actions"
 import type { PropertyInput } from "@/modules/property/schema"
+import { matchCatalogFeatureIds } from "@/modules/submission/features"
 
 const baseDefaultValues: PropertyInput = {
   title: "",
@@ -65,6 +66,12 @@ export default async function NewPropertyPage({
         parkingSpots: submission.parkingSpots ?? baseDefaultValues.parkingSpots,
         builtArea: submission.builtArea ? Number(submission.builtArea) : baseDefaultValues.builtArea,
         totalArea: submission.totalArea ? Number(submission.totalArea) : baseDefaultValues.totalArea,
+        acceptsFinancing: submission.features.includes("Aceita financiamento"),
+        acceptsFgts: submission.features.includes("Aceita FGTS"),
+        furnished: submission.features.includes("Mobiliado"),
+        gatedCommunity: submission.features.includes("Condomínio fechado"),
+        pool: submission.features.includes("Piscina"),
+        featureIds: matchCatalogFeatureIds(submission.features, features),
       }
     : baseDefaultValues
 

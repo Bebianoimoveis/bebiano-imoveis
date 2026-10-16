@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { SUBMISSION_FEATURES, type SubmissionFeature } from "@/modules/submission/features"
 
 // Campo em branco no formulário chega como undefined (ver
 // property-submission-form) — "não informado", diferente de 0.
@@ -32,6 +33,7 @@ export const submissionInputSchema = z.object({
   totalArea: area,
   images: z.array(z.string()).default([]),
   documents: z.array(fileSchema).max(20).default([]),
+  features: z.array(z.enum(SUBMISSION_FEATURES as [SubmissionFeature, ...SubmissionFeature[]])).default([]),
   videos: z.array(fileSchema).max(10).default([]),
 })
 
