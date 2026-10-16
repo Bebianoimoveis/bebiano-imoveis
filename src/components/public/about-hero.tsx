@@ -37,7 +37,10 @@ export function AboutHero({
   const { phone } = useAttributedWhatsapp()
 
   return (
-    <section className="relative flex min-h-[60vh] items-end overflow-hidden bg-primary sm:min-h-[75vh]">
+    // No celular: mesma altura (tela cheia) e mesma posição do texto que o
+    // Hero da home — lá o texto fica ancorado embaixo com o card de busca
+    // (≈213px) ocupando o rodapé; aqui esse espaço vira foto (pb maior).
+    <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-primary sm:min-h-[75vh]">
       <Parallax className="absolute inset-0" strength={60}>
         <HeroBackground posterUrl={heroImageUrl} positionClassName={mobilePositionClassName} />
       </Parallax>
@@ -50,7 +53,7 @@ export function AboutHero({
         initial="hidden"
         animate="visible"
         variants={container}
-        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-24 pb-14 sm:px-6 sm:pt-32 sm:pb-20"
+        className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-24 pb-[213px] sm:px-6 sm:pt-32 sm:pb-20"
       >
         <motion.p
           variants={item}
