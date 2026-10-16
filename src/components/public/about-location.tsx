@@ -25,7 +25,7 @@ export async function AboutLocation() {
         <div className="flex items-start gap-3">
           <MapPin className="mt-0.5 size-5 shrink-0 text-gold" strokeWidth={1.5} />
           <p className="text-sm text-muted-foreground">
-            Não temos um ponto fixo — agendamos e atendemos você nos estandes de todos os
+            Trabalhamos de forma exclusiva — agendamos e atendemos você nos estandes de todos os
             empreendimentos que representamos em toda a região do Alto Tietê.
           </p>
         </div>
