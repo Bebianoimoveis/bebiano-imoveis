@@ -11,6 +11,7 @@ import { NavLink } from "@/components/motion/nav-link"
 import { MobileNav } from "@/components/public/mobile-nav"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
+import { hasFullBleedHero } from "@/lib/hero-pages"
 
 const BASE_NAV_LINKS = [
   { href: "/imoveis", label: "Todos os imóveis" },
@@ -35,21 +36,21 @@ export function Header({
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
 
-  // Só a home tem um Hero escuro em tela cheia por trás — nas outras
-  // páginas o header já nasce sólido, senão o texto ficaria ilegível
-  // sobre um fundo branco comum.
-  const isHome = pathname === "/"
-  const transparent = isHome && !scrolled
+  // Só páginas com Hero escuro em tela cheia por trás (home e Sobre) — nas
+  // outras o header já nasce sólido, senão o texto ficaria ilegível sobre
+  // um fundo comum.
+  const withHero = hasFullBleedHero(pathname)
+  const transparent = withHero && !scrolled
 
   useEffect(() => {
-    if (!isHome) return
+    if (!withHero) return
     function onScroll() {
       setScrolled(window.scrollY > 40)
     }
     onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
-  }, [isHome])
+  }, [withHero])
 
   return (
     <header
