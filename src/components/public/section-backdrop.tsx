@@ -42,10 +42,12 @@ export function SectionBackdrop({
       ) : (
         <div className="absolute inset-0 -z-30">{image}</div>
       )}
-      {/* Mais leve no celular: lá os cards (com fundo próprio) cobrem quase a
-          seção toda e, com o escurecimento cheio, a foto praticamente sumia. */}
-      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/75 via-black/50 to-black/75 sm:from-black/85 sm:via-black/70 sm:to-black/85" />
-      <div className="absolute inset-0 -z-10 bg-primary/20" />
+      {/* Escurecimento mais leve no meio (onde fica a foto em destaque) e mais
+          forte nas bordas (onde ficam títulos e o começo/fim da seção). A
+          cliente pediu as fotos mais visíveis; os cards têm fundo próprio,
+          então a leitura deles não depende desse escurecimento. */}
+      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/65 via-black/35 to-black/65 sm:from-black/70 sm:via-black/45 sm:to-black/70" />
+      <div className="absolute inset-0 -z-10 bg-primary/15" />
       {children}
     </section>
   )
