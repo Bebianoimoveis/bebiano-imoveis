@@ -35,8 +35,13 @@ export function SectionBackdrop({
     />
   )
 
+  // text-shadow herda pros textos de dentro: com a foto mais visível, o
+  // texto cinza direto sobre partes claras dela (cabelo, roupa) perdia
+  // contraste.
   return (
-    <section className={cn("relative isolate overflow-hidden", className)}>
+    <section
+      className={cn("relative isolate overflow-hidden [text-shadow:0_1px_10px_rgb(0_0_0/0.6)]", className)}
+    >
       {parallax ? (
         <ScrollParallax className="absolute inset-0 -z-30">{image}</ScrollParallax>
       ) : (
@@ -46,8 +51,8 @@ export function SectionBackdrop({
           forte nas bordas (onde ficam títulos e o começo/fim da seção). A
           cliente pediu as fotos mais visíveis; os cards têm fundo próprio,
           então a leitura deles não depende desse escurecimento. */}
-      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/65 via-black/35 to-black/65 sm:from-black/70 sm:via-black/45 sm:to-black/70" />
-      <div className="absolute inset-0 -z-10 bg-primary/15" />
+      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/45 via-black/22 to-black/45 sm:from-black/50 sm:via-black/30 sm:to-black/50" />
+      <div className="absolute inset-0 -z-10 bg-primary/10" />
       {children}
     </section>
   )
