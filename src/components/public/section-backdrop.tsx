@@ -31,16 +31,16 @@ export function SectionBackdrop({
       alt=""
       fill
       sizes="100vw"
-      className={cn("object-cover object-center", mobilePositionClassName)}
+      className={cn("object-cover object-center opacity-30", mobilePositionClassName)}
     />
   )
 
-  // text-shadow herda pros textos de dentro: com a foto mais visível, o
-  // texto cinza direto sobre partes claras dela (cabelo, roupa) perdia
-  // contraste.
+  // A foto fica com 30% de opacidade sobre o fundo escuro do site (marca
+  // d'água suave): a cliente quer o texto em destaque, não a foto. O
+  // text-shadow herda pros textos de dentro e reforça o contraste.
   return (
     <section
-      className={cn("relative isolate overflow-hidden [text-shadow:0_1px_10px_rgb(0_0_0/0.6)]", className)}
+      className={cn("relative isolate overflow-hidden bg-background [text-shadow:0_1px_10px_rgb(0_0_0/0.6)]", className)}
     >
       {parallax ? (
         <ScrollParallax className="absolute inset-0 -z-30">{image}</ScrollParallax>
@@ -51,7 +51,7 @@ export function SectionBackdrop({
           forte nas bordas (onde ficam títulos e o começo/fim da seção). A
           cliente pediu as fotos mais visíveis; os cards têm fundo próprio,
           então a leitura deles não depende desse escurecimento. */}
-      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/45 via-black/22 to-black/45 sm:from-black/50 sm:via-black/30 sm:to-black/50" />
+      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-black/25 via-black/10 to-black/25" />
       <div className="absolute inset-0 -z-10 bg-primary/10" />
       {children}
     </section>

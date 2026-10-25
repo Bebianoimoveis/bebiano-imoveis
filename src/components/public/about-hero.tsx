@@ -53,9 +53,9 @@ export function AboutHero({
         <HeroBackground posterUrl={heroImageUrl} positionClassName={mobilePositionClassName} />
       </Parallax>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/30 to-black/10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/10 to-transparent" />
-      <div className="absolute inset-0 bg-primary/15 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/82 via-black/50 to-black/25" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
+      <div className="absolute inset-0 bg-primary/30 mix-blend-multiply" />
 
       <motion.div
         initial="hidden"
