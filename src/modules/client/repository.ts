@@ -134,6 +134,8 @@ export async function suggestClients(where: Prisma.ClientWhereInput, take: numbe
       name: true,
       phone: true,
       code: true,
+      cpf: true,
+      rg: true,
       realtor: { select: { user: { select: { name: true } } } },
     },
     orderBy: { createdAt: "desc" },

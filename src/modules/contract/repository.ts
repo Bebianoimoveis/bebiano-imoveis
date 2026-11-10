@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma, ContractStatus } from "@/generated/prisma/client"
 
+// realtor.user só com id/nome: a lista vai inteira pro navegador e o
+// User completo carregaria o hash de senha junto.
 const contractInclude = {
   property: { select: { id: true, title: true, code: true } },
   client: true,
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   proposal: { select: { id: true, value: true } },
 } satisfies Prisma.ContractInclude
 

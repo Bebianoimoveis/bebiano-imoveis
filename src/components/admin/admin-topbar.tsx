@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   CommandDialog,
   CommandEmpty,
@@ -52,8 +52,19 @@ function initials(name?: string | null) {
   return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase()
 }
 
+// Cliente escolhido na busca abre na aba em que a pessoa está: em
+// Contratos filtra os contratos dele, em Propostas as propostas dele;
+// fora dessas, vai pro cadastro em Clientes.
+function contextualHref(result: GlobalSearchResult, pathname: string) {
+  if (result.type !== "client") return result.href
+  if (pathname.startsWith("/admin/contratos")) return `/admin/contratos?cliente=${result.id}`
+  if (pathname.startsWith("/admin/propostas")) return `/admin/propostas?search=${encodeURIComponent(result.title)}`
+  return result.href
+}
+
 function GlobalSearch() {
   const router = useRouter()
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<GlobalSearchResult[]>([])
@@ -129,7 +140,7 @@ function GlobalSearch() {
           <CommandInput
             value={query}
             onValueChange={setQuery}
-            placeholder="Buscar imóveis, leads, clientes…"
+            placeholder="Imóvel, lead ou cliente (nome, CPF, RG, telefone)…"
             className="flex-1 bg-transparent py-3.5 text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -159,7 +170,7 @@ function GlobalSearch() {
                     onSelect={() => {
                       setOpen(false)
                       setQuery("")
-                      router.push(result.href)
+                      router.push(contextualHref(result, pathname))
                     }}
                     className={cn(
                       "flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-sm",

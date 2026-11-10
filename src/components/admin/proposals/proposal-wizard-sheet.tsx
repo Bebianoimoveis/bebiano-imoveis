@@ -22,16 +22,54 @@ import {
 import { cn } from "@/lib/utils"
 import { formatCurrency, formatDateOnlyBR } from "@/lib/format"
 import { createProposalWizard } from "@/modules/proposal/actions"
-import { suggestClients, createClientManually } from "@/modules/client/actions"
+import { suggestClients, createClientManually, getClientDealContext } from "@/modules/client/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
+import { PropertyPicker } from "@/components/admin/property-picker"
 import type { PropertyListItem } from "@/modules/property/repository"
 
 type RealtorOption = { id: string; user: { name: string } }
-type ClientChoice = { id: string; label: string; phone?: string; email?: string }
+type ClientChoice = { id: string; label: string; detail?: string }
+type ClientContext = NonNullable<Awaited<ReturnType<typeof getClientDealContext>>>
+
+const CONTRACT_STATUS_TEXT: Record<string, string> = {
+  DRAFT: "rascunho",
+  ACTIVE: "ativo",
+  COMPLETED: "concluído",
+  CANCELED: "cancelado",
+}
 
 const PAYMENT_METHODS = ["À vista", "Financiado", "Financiado + FGTS", "Parcelado com a imobiliária"]
 
 const STEPS = ["Cliente", "Imóvel", "Valores", "Condições", "Resumo"] as const
+
+// Resumo do que o cliente já tem com a imobiliária, logo abaixo dele.
+function ClientHistory({ context }: { context: ClientContext | null }) {
+  if (!context || (context.contracts.length === 0 && context.proposalsCount === 0)) return null
+  return (
+    <div className="space-y-1 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-xs">
+      <p className="font-medium text-foreground">
+        Este cliente já tem{" "}
+        {[
+          context.contracts.length
+            ? `${context.contracts.length} contrato${context.contracts.length === 1 ? "" : "s"}`
+            : null,
+          context.proposalsCount
+            ? `${context.proposalsCount} proposta${context.proposalsCount === 1 ? "" : "s"}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" e ")}{" "}
+        — o corretor e os imóveis ligados a ele já aparecem sugeridos.
+      </p>
+      {context.contracts.slice(0, 3).map((contract) => (
+        <p key={contract.id} className="text-muted-foreground">
+          Contrato {contract.propertyCode} · {CONTRACT_STATUS_TEXT[contract.status] ?? contract.status} ·{" "}
+          {formatCurrency(contract.value)}
+        </p>
+      ))}
+    </div>
+  )
+}
 
 function coverUrl(property: PropertyListItem) {
   return property.images.find((image) => image.isCover)?.url ?? property.images[0]?.url ?? null
@@ -75,7 +113,6 @@ export function ProposalWizardSheet({
 
   // Passo 2 — Imóvel
   const [property, setProperty] = useState<PropertyListItem | null>(null)
-  const [propertyCode, setPropertyCode] = useState("")
   const [propertyError, setPropertyError] = useState<string | null>(null)
 
   // Passo 3 — Valores
@@ -106,11 +143,60 @@ export function ProposalWizardSheet({
     }
     const timeout = setTimeout(() => {
       suggestClients(clientQuery).then((rows) =>
-        setClientResults(rows.map((row) => ({ id: row.id, label: `${row.name} · ${row.phone}` })))
+        setClientResults(
+          rows.map((row) => ({
+            id: row.id,
+            label: row.name,
+            detail: [row.cpf ? `CPF ${row.cpf}` : row.rg ? `RG ${row.rg}` : null, row.phone, row.code]
+              .filter(Boolean)
+              .join(" · "),
+          }))
+        )
       )
     }, 200)
     return () => clearTimeout(timeout)
   }, [clientQuery])
+
+  // Cliente escolhido → busca o que já está ligado a ele (contratos,
+  // propostas, interesses) pra sugerir o imóvel e o corretor sozinho.
+  const selectedClientId = client?.id ?? fixedClientId ?? null
+  const [clientContext, setClientContext] = useState<ClientContext | null>(null)
+  const [contextFor, setContextFor] = useState<string | null>(null)
+  if (open && selectedClientId !== contextFor) {
+    setContextFor(selectedClientId)
+    setClientContext(null)
+  }
+  useEffect(() => {
+    if (!open || !selectedClientId) return
+    let cancelled = false
+    getClientDealContext(selectedClientId)
+      .then((context) => {
+        if (cancelled || !context) return
+        setClientContext(context)
+        if (context.realtorId && realtors.some((r) => r.id === context.realtorId)) setRealtorId(context.realtorId)
+        // Só um imóvel ligado ao cliente → já vem escolhido.
+        if (context.properties.length === 1 && !fixedPropertyId) pickProperty(context.properties[0].code, context)
+      })
+      .catch(() => null)
+    return () => {
+      cancelled = true
+    }
+  }, [open, selectedClientId, realtors])
+
+  async function pickProperty(code: string, context: ClientContext | null = clientContext) {
+    setPropertyError(null)
+    const found = await findPropertyByCode(code)
+    if (!found) {
+      setPropertyError("Imóvel não encontrado.")
+      return
+    }
+    setProperty(found)
+    setOriginalValue(found.price.toString())
+    // Corretor que já atende o cliente tem prioridade; senão, o do imóvel.
+    const clientRealtor = context?.realtorId
+    if (clientRealtor && realtors.some((r) => r.id === clientRealtor)) setRealtorId(clientRealtor)
+    else if (found.realtorId) setRealtorId(found.realtorId)
+  }
 
   async function handleCreateClient() {
     if (!newClientName.trim() || !newClientPhone.trim()) {
@@ -127,19 +213,6 @@ export function ProposalWizardSheet({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao cadastrar cliente.")
     }
-  }
-
-  async function handleLookupProperty() {
-    setPropertyError(null)
-    const found = await findPropertyByCode(propertyCode.trim())
-    if (!found) {
-      setPropertyError("Imóvel não encontrado com esse código.")
-      setProperty(null)
-      return
-    }
-    setProperty(found)
-    setOriginalValue(found.price.toString())
-    if (found.realtorId) setRealtorId(found.realtorId)
   }
 
   const numericValue = Number(value) || 0
@@ -166,7 +239,7 @@ export function ProposalWizardSheet({
     if (!fixedClientId) setClient(null)
     setClientQuery("")
     setProperty(null)
-    setPropertyCode("")
+    setPropertyError(null)
     setValue("")
     setOriginalValue("")
     setDownPayment("")
@@ -253,11 +326,24 @@ export function ProposalWizardSheet({
           <div className="space-y-4">
             <h3 className="font-heading text-base font-semibold">Selecionar cliente</h3>
             {client ? (
-              <div className="flex items-center justify-between rounded-xl border border-border/60 p-3 text-sm">
-                <span className="font-medium">{client.label}</span>
-                <Button variant="ghost" size="sm" onClick={() => setClient(null)}>
-                  Trocar
-                </Button>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 p-3 text-sm">
+                  <span className="min-w-0">
+                    <span className="block font-medium">{client.label}</span>
+                    {client.detail ? <span className="block text-xs text-muted-foreground">{client.detail}</span> : null}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setClient(null)
+                      setProperty(null)
+                    }}
+                  >
+                    Trocar
+                  </Button>
+                </div>
+                <ClientHistory context={clientContext} />
               </div>
             ) : (
               <>
@@ -266,7 +352,7 @@ export function ProposalWizardSheet({
                   <Input
                     value={clientQuery}
                     onChange={(e) => setClientQuery(e.target.value)}
-                    placeholder="Buscar cliente por nome, telefone ou código"
+                    placeholder="Buscar cliente por nome, CPF, RG, telefone ou código"
                     className="pl-8"
                   />
                 </div>
@@ -279,7 +365,10 @@ export function ProposalWizardSheet({
                         onClick={() => setClient(result)}
                         className="block w-full px-3 py-2 text-left text-sm hover:bg-secondary"
                       >
-                        {result.label}
+                        <span className="block font-medium">{result.label}</span>
+                        {result.detail ? (
+                          <span className="block text-xs text-muted-foreground">{result.detail}</span>
+                        ) : null}
                       </button>
                     ))}
                   </div>
@@ -340,15 +429,46 @@ export function ProposalWizardSheet({
                 </Button>
               </div>
             ) : (
-              <div className="space-y-2">
-                <Label>Código do imóvel</Label>
-                <div className="flex gap-2">
-                  <Input value={propertyCode} onChange={(e) => setPropertyCode(e.target.value)} placeholder="Ex: BB-1024" />
-                  <Button type="button" variant="outline" onClick={handleLookupProperty}>
-                    Buscar
-                  </Button>
+              <div className="space-y-4">
+                {clientContext && clientContext.properties.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-muted-foreground">Já ligado a esse cliente:</p>
+                    {clientContext.properties.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => pickProperty(option.code)}
+                        className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-left text-sm transition-colors hover:border-primary"
+                      >
+                        <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
+                          {option.imageUrl ? (
+                            <NextImage src={option.imageUrl} alt="" fill className="object-cover" sizes="48px" />
+                          ) : (
+                            <div className="flex size-full items-center justify-center text-muted-foreground">
+                              <ImageOff className="size-4" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium">{option.title}</span>
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {option.code} · {formatCurrency(option.price)}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          {option.reason}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="space-y-2">
+                  <Label>
+                    {clientContext && clientContext.properties.length > 0 ? "Ou buscar outro imóvel" : "Buscar imóvel"}
+                  </Label>
+                  <PropertyPicker onSelect={(option) => pickProperty(option.code)} />
+                  {propertyError ? <p className="text-sm text-destructive">{propertyError}</p> : null}
                 </div>
-                {propertyError ? <p className="text-sm text-destructive">{propertyError}</p> : null}
               </div>
             )}
           </div>

@@ -28,15 +28,22 @@ import {
 import { Combobox } from "@/components/ui/combobox"
 import { CONTRACT_STATUS_LABELS } from "@/components/admin/contracts/contract-status-badge"
 import { createManualContract } from "@/modules/contract/actions"
-import { findPropertyByCode } from "@/modules/property/actions"
-import { getClientInterestedProperties } from "@/modules/client/actions"
+import { getClientDealContext } from "@/modules/client/actions"
+import { PropertyPicker } from "@/components/admin/property-picker"
 import { createContractFileUploadSignature } from "@/modules/upload/actions"
 import { uploadContractFile } from "@/modules/upload/client"
 import type { ContractStatus } from "@/generated/prisma/client"
 import { fileViewUrl } from "@/lib/file-url"
 
 type RealtorOption = { id: string; user: { name: string } }
-type PropertyOption = { id: string; code: string; title: string; imageUrl?: string | null }
+type PropertyOption = {
+  id: string
+  code: string
+  title: string
+  imageUrl?: string | null
+  price?: number
+  realtorId?: string | null
+}
 type ClientOption = { id: string; name: string; cpf?: string | null; email?: string | null }
 
 // Cadastro direto de contrato sem passar por proposta — negócio fechado
@@ -64,7 +71,7 @@ export function ManualContractFormDialog({
 
   const [selectedClientId, setSelectedClientId] = useState(clientId ?? "")
   const [interestedProperties, setInterestedProperties] = useState<PropertyOption[]>([])
-  const [propertyCode, setPropertyCode] = useState("")
+  const [clientRealtorId, setClientRealtorId] = useState<string | null>(null)
   const [property, setProperty] = useState<PropertyOption | null>(null)
   const [propertyError, setPropertyError] = useState<string | null>(null)
   const [realtorId, setRealtorId] = useState(defaultRealtorId ?? "")
@@ -76,7 +83,7 @@ export function ManualContractFormDialog({
   function reset() {
     setSelectedClientId(clientId ?? "")
     setInterestedProperties([])
-    setPropertyCode("")
+    setClientRealtorId(null)
     setProperty(null)
     setPropertyError(null)
     setRealtorId(defaultRealtorId ?? "")
@@ -95,27 +102,32 @@ export function ManualContractFormDialog({
       setInterestedProperties([])
       return
     }
-    getClientInterestedProperties(selectedClientId).then((properties) => {
-      setInterestedProperties(properties)
-      if (properties.length === 1 && !property) {
-        setProperty(properties[0])
-      }
-    })
+    getClientDealContext(selectedClientId)
+      .then((context) => {
+        if (!context) return
+        setInterestedProperties(context.properties)
+        setClientRealtorId(context.realtorId)
+        if (!realtorId && context.realtorId && realtors.some((r) => r.id === context.realtorId)) {
+          setRealtorId(context.realtorId)
+        }
+        if (context.properties.length === 1 && !property) {
+          choosePropertyOption(context.properties[0])
+        }
+      })
+      .catch(() => null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, selectedClientId])
 
-  async function handleLookupProperty() {
+  // Imóvel escolhido (da busca ou dos já ligados ao cliente): preenche
+  // valor e corretor se ainda estiverem vazios.
+  function choosePropertyOption(option: PropertyOption) {
     setPropertyError(null)
-    const found = await findPropertyByCode(propertyCode.trim())
-    if (!found) {
-      setPropertyError("Imóvel não encontrado com esse código.")
-      setProperty(null)
-      return
+    setProperty({ id: option.id, code: option.code, title: option.title, imageUrl: option.imageUrl })
+    if (!value && option.price) setValue(option.price)
+    if (!realtorId) {
+      const preferred = clientRealtorId ?? option.realtorId
+      if (preferred && realtors.some((r) => r.id === preferred)) setRealtorId(preferred)
     }
-    const cover = found.images.find((image) => image.isCover)?.url ?? found.images[0]?.url ?? null
-    setProperty({ id: found.id, code: found.code, title: found.title, imageUrl: cover })
-    if (!value) setValue(Number(found.price))
-    if (!realtorId && found.realtorId) setRealtorId(found.realtorId)
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -187,7 +199,6 @@ export function ManualContractFormDialog({
                 onValueChange={(next) => {
                   setSelectedClientId(next)
                   setProperty(null)
-                  setPropertyCode("")
                   setPropertyError(null)
                 }}
                 placeholder="Selecione"
@@ -233,7 +244,7 @@ export function ManualContractFormDialog({
                         <button
                           key={option.id}
                           type="button"
-                          onClick={() => setProperty(option)}
+                          onClick={() => choosePropertyOption(option)}
                           className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-border/60 p-2 text-left text-sm transition-colors hover:border-primary"
                         >
                           <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-secondary">
@@ -253,16 +264,14 @@ export function ManualContractFormDialog({
                     </div>
                   </div>
                 ) : null}
-                <div className="flex gap-2">
-                  <Input
-                    value={propertyCode}
-                    onChange={(e) => setPropertyCode(e.target.value)}
-                    placeholder="Ou digite o código de outro imóvel, ex: BB-1024"
-                  />
-                  <Button type="button" variant="outline" onClick={handleLookupProperty}>
-                    Buscar
-                  </Button>
-                </div>
+                <PropertyPicker
+                  placeholder={
+                    interestedProperties.length > 0
+                      ? "Ou busque outro imóvel: código ou nome"
+                      : "Código (ex: BB-1024) ou nome do imóvel"
+                  }
+                  onSelect={(option) => choosePropertyOption(option)}
+                />
               </>
             )}
             {propertyError ? <p className="text-sm text-destructive">{propertyError}</p> : null}

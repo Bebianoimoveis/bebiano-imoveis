@@ -11,7 +11,7 @@ export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
 
 const STYLES: Record<ContractStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  ACTIVE: "bg-primary/10 text-primary",
+  ACTIVE: "bg-sky-500/15 text-sky-700 dark:text-sky-400",
   COMPLETED: "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400",
   CANCELED: "bg-destructive/10 text-destructive",
 }

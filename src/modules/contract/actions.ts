@@ -11,6 +11,7 @@ import type { Prisma, ContractStatus } from "@/generated/prisma/client"
 import * as contractRepository from "@/modules/contract/repository"
 import * as proposalRepository from "@/modules/proposal/repository"
 import { manualContractInputSchema, contractAttachmentInputSchema } from "@/modules/contract/schema"
+import { clientMatchWhere } from "@/modules/client/document-search"
 
 async function requireSession() {
   const session = await auth()
@@ -26,15 +27,38 @@ async function requireContractManage() {
   return session
 }
 
-export async function listAdminContracts(status?: ContractStatus) {
+export type ContractListFilters = {
+  status?: ContractStatus
+  // Texto livre: cliente (nome, CPF, RG, telefone, e-mail, código) ou
+  // imóvel (código, título).
+  search?: string
+  clientId?: string
+  realtorId?: string
+}
+
+export async function listAdminContracts(filters: ContractListFilters = {}) {
   const session = await requireSession()
   const canViewAll = await can(session.user, "contract.view.all")
 
+  const and: Prisma.ContractWhereInput[] = []
+  const search = filters.search?.trim()
+  if (search) {
+    and.push({
+      OR: [
+        { client: await clientMatchWhere(search) },
+        { property: { code: { contains: search, mode: "insensitive" } } },
+        { property: { title: { contains: search, mode: "insensitive" } } },
+      ],
+    })
+  }
+
   const where: Prisma.ContractWhereInput = {
-    status,
+    status: filters.status,
+    clientId: filters.clientId,
     realtorId: canViewAll
-      ? undefined
+      ? filters.realtorId
       : (session.user.realtorId ?? "__none__"),
+    ...(and.length ? { AND: and } : {}),
   }
 
   return contractRepository.listContracts(where)

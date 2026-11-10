@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { prisma } from "@/lib/prisma"
+import { clientDocumentsLabel, clientMatchWhere } from "@/modules/client/document-search"
 
 export type GlobalSearchResult = {
   type: "property" | "lead" | "client"
@@ -57,16 +58,13 @@ export async function globalSearch(query: string): Promise<GlobalSearchResult[]>
       take: 5,
     }),
     canManageClients
-      ? prisma.client.findMany({
-          where: {
-            OR: [
-              { name: { contains: q, mode: "insensitive" } },
-              { phone: { contains: q } },
-            ],
-          },
-          select: { id: true, name: true, phone: true },
-          take: 5,
-        })
+      ? clientMatchWhere(q).then((where) =>
+          prisma.client.findMany({
+            where: { ...where, deletedAt: null },
+            select: { id: true, name: true, phone: true, cpf: true, rg: true },
+            take: 6,
+          })
+        )
       : Promise.resolve([]),
   ])
 
@@ -89,7 +87,7 @@ export async function globalSearch(query: string): Promise<GlobalSearchResult[]>
       type: "client" as const,
       id: client.id,
       title: client.name,
-      subtitle: client.phone,
+      subtitle: [clientDocumentsLabel(client), client.phone].filter(Boolean).join(" · "),
       href: `/admin/clientes?search=${encodeURIComponent(client.name)}`,
     })),
   ]

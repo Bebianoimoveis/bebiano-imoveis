@@ -15,6 +15,7 @@ import {
   clientUpdateSchema,
 } from "@/modules/client/schema"
 import * as clientRepository from "@/modules/client/repository"
+import { clientMatchWhere } from "@/modules/client/document-search"
 
 async function requireSession() {
   const session = await auth()
@@ -87,11 +88,8 @@ export async function suggestClients(query: string) {
   const canViewAll = await can(session.user, "client.view.all")
   const where: Prisma.ClientWhereInput = {
     realtorId: canViewAll ? undefined : (session.user.realtorId ?? "__none__"),
-    OR: [
-      { name: { contains: query, mode: "insensitive" } },
-      { phone: { contains: query } },
-      { code: { contains: query, mode: "insensitive" } },
-    ],
+    // Nome, telefone, e-mail, código, CPF ou RG (com ou sem pontuação).
+    ...(await clientMatchWhere(query)),
   }
 
   return clientRepository.suggestClients(where, 6)
@@ -175,30 +173,75 @@ export async function getAdminClient(id: string) {
 // novo. Consulta única (em vez de reaproveitar os objetos já incluídos
 // em getAdminClient) porque aqueles não trazem a imagem de capa.
 export async function getClientInterestedProperties(clientId: string) {
+  const context = await getClientDealContext(clientId)
+  return context?.properties ?? []
+}
+
+export type ClientLinkedProperty = {
+  id: string
+  code: string
+  title: string
+  imageUrl: string | null
+  price: number
+  realtorId: string | null
+  // De onde vem a ligação: contrato, proposta ou interesse (lead).
+  reason: "Contrato" | "Proposta" | "Interesse"
+}
+
+// Tudo que já está ligado ao cliente — contratos, propostas, interesses —
+// pra preencher sozinho a proposta/contrato novo: imóveis (com foto), o
+// corretor que já atende o cliente e um resumo do histórico.
+export async function getClientDealContext(clientId: string): Promise<{
+  properties: ClientLinkedProperty[]
+  realtorId: string | null
+  contracts: { id: string; propertyCode: string; status: string; value: number }[]
+  proposalsCount: number
+} | null> {
   const client = await getAdminClient(clientId)
-  if (!client) return []
+  if (!client) return null
 
-  const proposalPropertyIds = client.proposals.map((p) => p.property.id)
-  const leadPropertyIds = client.leads.map((l) => l.propertyId).filter((id): id is string => Boolean(id))
-  const propertyIds = [...new Set([...proposalPropertyIds, ...leadPropertyIds])]
-  if (propertyIds.length === 0) return []
+  const reasons = new Map<string, ClientLinkedProperty["reason"]>()
+  for (const contract of client.contracts) if (!reasons.has(contract.propertyId)) reasons.set(contract.propertyId, "Contrato")
+  for (const proposal of client.proposals) if (!reasons.has(proposal.property.id)) reasons.set(proposal.property.id, "Proposta")
+  for (const lead of client.leads) if (lead.propertyId && !reasons.has(lead.propertyId)) reasons.set(lead.propertyId, "Interesse")
 
-  const properties = await prisma.property.findMany({
-    where: { id: { in: propertyIds } },
-    select: {
-      id: true,
-      code: true,
-      title: true,
-      images: { where: { isCover: true }, select: { url: true }, take: 1 },
-    },
-  })
+  const properties = reasons.size
+    ? await prisma.property.findMany({
+        where: { id: { in: [...reasons.keys()] } },
+        select: {
+          id: true,
+          code: true,
+          title: true,
+          price: true,
+          realtorId: true,
+          images: { where: { isCover: true }, select: { url: true }, take: 1 },
+        },
+      })
+    : []
+  const order = [...reasons.keys()]
 
-  return properties.map((property) => ({
-    id: property.id,
-    code: property.code,
-    title: property.title,
-    imageUrl: property.images[0]?.url ?? null,
-  }))
+  return {
+    properties: properties
+      .map((property) => ({
+        id: property.id,
+        code: property.code,
+        title: property.title,
+        imageUrl: property.images[0]?.url ?? null,
+        price: Number(property.price),
+        realtorId: property.realtorId,
+        reason: reasons.get(property.id)!,
+      }))
+      .sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)),
+    // Corretor do cliente; sem isso, o do contrato/proposta mais recente.
+    realtorId: client.realtorId ?? client.contracts[0]?.realtorId ?? client.proposals[0]?.realtorId ?? null,
+    contracts: client.contracts.map((contract) => ({
+      id: contract.id,
+      propertyCode: contract.property.code,
+      status: contract.status,
+      value: Number(contract.value),
+    })),
+    proposalsCount: client.proposals.length,
+  }
 }
 
 async function assertCanManageClient(

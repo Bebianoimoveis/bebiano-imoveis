@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
 import { cloudinary } from "@/lib/cloudinary"
+import { prisma } from "@/lib/prisma"
 import type { Prisma, PropertyStatus } from "@/generated/prisma/client"
 import { propertyFiltersSchema, propertyInputSchema } from "@/modules/property/schema"
 import type { PropertyImageInput } from "@/modules/property/types"
@@ -556,6 +557,63 @@ export async function trackPropertyView(id: string) {
 
 // Usado no formulário de propostas para localizar um imóvel pelo código
 // interno, sem precisar carregar a lista completa de imóveis num select.
+export type PropertyPickerOption = {
+  id: string
+  code: string
+  title: string
+  imageUrl: string | null
+  price: number
+  realtorId: string | null
+  location: string
+}
+
+// Busca de imóvel nos formulários (proposta, contrato): pelo código OU
+// pelo nome. Código exato vem primeiro; se o nome bater com vários, a
+// tela lista todos pra pessoa escolher. Mesma regra de lançamentos de
+// findPropertyByCode.
+export async function searchPropertiesForPicker(query: string): Promise<PropertyPickerOption[]> {
+  const session = await requireSession()
+  const q = query.trim()
+  if (q.length < 2) return []
+  const canViewAll = await can(session.user, "property.view.all")
+
+  const rows = await prisma.property.findMany({
+    where: {
+      deletedAt: null,
+      ...(canViewAll ? {} : { isLaunch: false }),
+      OR: [
+        { code: { contains: q, mode: "insensitive" } },
+        { title: { contains: q, mode: "insensitive" } },
+      ],
+    },
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      price: true,
+      realtorId: true,
+      neighborhood: { select: { name: true } },
+      city: { select: { name: true } },
+      images: { orderBy: [{ isCover: "desc" }, { order: "asc" }], select: { url: true }, take: 1 },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 12,
+  })
+
+  const exact = q.toLowerCase()
+  return rows
+    .sort((a, b) => Number(b.code.toLowerCase() === exact) - Number(a.code.toLowerCase() === exact))
+    .map((row) => ({
+      id: row.id,
+      code: row.code,
+      title: row.title,
+      imageUrl: row.images[0]?.url ?? null,
+      price: Number(row.price),
+      realtorId: row.realtorId,
+      location: [row.neighborhood?.name, row.city?.name].filter(Boolean).join(", "),
+    }))
+}
+
 export async function findPropertyByCode(code: string) {
   const session = await requireSession()
   // Sem o filtro de isLaunch, quem não tem property.view.all conseguia
