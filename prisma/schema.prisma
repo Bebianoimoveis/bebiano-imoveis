@@ -804,22 +804,43 @@ enum GoalScope {
 }
 
 // REVENUE: targetAmount é R$ (faturamento recebido no período).
+// SALES_VALUE: targetAmount é R$ em valor vendido (soma do valor dos
+// contratos ativos/concluídos no período — o "VGV").
 // SALES_COUNT: targetAmount guarda a quantidade de vendas (contratos
 // ativos/concluídos no período) — mesmo campo Decimal reaproveitado pra
 // não duplicar coluna só por causa da unidade; a UI formata cada um do
 // seu jeito.
 enum GoalMetric {
   REVENUE
+  SALES_VALUE
   SALES_COUNT
 }
 
-// month null = meta anual daquele ano. Sem @@unique: NULL não é único no
-// Postgres pra combinações de realtorId/cityId nulos — duplicidade é
-// evitada na camada de aplicação (poucas dezenas de metas, não escala).
+// MONTH: um mês. QUARTER: um trimestre. YEAR: o ano inteiro.
+// YEAR_TO_MONTH: acumulado de janeiro até o mês escolhido.
+// MONTHLY: a mesma meta repetida todo mês (de startDate até endDate) —
+// cada mês é acompanhado separadamente. CUSTOM: período livre (de/até).
+enum GoalPeriod {
+  MONTH
+  QUARTER
+  YEAR
+  YEAR_TO_MONTH
+  MONTHLY
+  CUSTOM
+}
+
+// Período real da meta em startDate/endDate (datas "só dia", meia-noite
+// UTC, ambas inclusivas). year/month ficam por compatibilidade: year é o
+// ano de início; month só é preenchido em metas de um mês (MONTH).
+// Várias metas podem coexistir pro mesmo escopo/período (sem @@unique).
 model Goal {
   id           String     @id @default(cuid())
+  title        String?
   scope        GoalScope  @default(COMPANY)
   metric       GoalMetric @default(REVENUE)
+  period       GoalPeriod @default(MONTH)
+  startDate    DateTime
+  endDate      DateTime
   year         Int
   month        Int?
   targetAmount Decimal    @db.Decimal(12, 2)
@@ -831,6 +852,7 @@ model Goal {
   updatedAt    DateTime   @updatedAt
 
   @@index([scope, year, month])
+  @@index([startDate, endDate])
 }
 
 // ---------------------------------------------------------------------------

@@ -69,7 +69,7 @@ export function FinancialAlertsBanner({
       icon: <CheckCircle2 className="size-4 shrink-0" />,
       message: `${goalsHit} meta${goalsHit > 1 ? "s" : ""} atingida${goalsHit > 1 ? "s" : ""} este ano.`,
       tone: "success",
-      href: "/admin/financeiro?tab=metas",
+      href: "/admin/metas",
     })
   }
 

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
+import { brazilDateOnly, brazilDayWindow } from "@/lib/date"
 
 const goalInclude = {
   realtor: { include: { user: true } },
@@ -8,105 +9,75 @@ const goalInclude = {
 
 export type GoalWithRefs = Prisma.GoalGetPayload<{ include: typeof goalInclude }>
 
-export async function listGoals(year: number): Promise<GoalWithRefs[]> {
+// Metas cujo período encosta em [from, to] (datas "só dia").
+export async function listGoalsOverlapping(from: Date, to: Date): Promise<GoalWithRefs[]> {
   return prisma.goal.findMany({
-    where: { year },
+    where: { startDate: { lte: to }, endDate: { gte: from } },
     include: goalInclude,
-    orderBy: [{ scope: "asc" }, { month: "asc" }],
+    orderBy: [{ scope: "asc" }, { startDate: "asc" }, { createdAt: "asc" }],
   })
 }
 
-// Evita duplicidade de meta pro mesmo escopo/período/alvo/métrica (ver
-// decisão no schema: sem @@unique porque NULL não é único no Postgres pra
-// realtorId/cityId — a checagem acontece aqui, na camada de aplicação).
-// metric entra na busca pra permitir meta de faturamento E de quantidade
-// de vendas coexistindo no mesmo escopo/período sem uma sobrescrever a
-// outra.
-export async function upsertGoal(data: {
+export type GoalWriteData = {
+  title: string | null
   scope: "COMPANY" | "REALTOR" | "CITY"
-  metric: "REVENUE" | "SALES_COUNT"
+  metric: "REVENUE" | "SALES_VALUE" | "SALES_COUNT"
+  period: "MONTH" | "QUARTER" | "YEAR" | "YEAR_TO_MONTH" | "MONTHLY" | "CUSTOM"
+  startDate: Date
+  endDate: Date
   year: number
-  month?: number
+  month: number | null
   targetAmount: number
-  realtorId?: string
-  cityId?: string
-}) {
-  const existing = await prisma.goal.findFirst({
-    where: {
-      scope: data.scope,
-      metric: data.metric,
-      year: data.year,
-      month: data.month ?? null,
-      realtorId: data.realtorId ?? null,
-      cityId: data.cityId ?? null,
-    },
-  })
+  realtorId: string | null
+  cityId: string | null
+}
 
-  if (existing) {
-    return prisma.goal.update({
-      where: { id: existing.id },
-      data: { targetAmount: data.targetAmount },
-      include: goalInclude,
-    })
-  }
+export async function createGoal(data: GoalWriteData) {
+  return prisma.goal.create({ data })
+}
 
-  return prisma.goal.create({
-    data: {
-      scope: data.scope,
-      metric: data.metric,
-      year: data.year,
-      month: data.month,
-      targetAmount: data.targetAmount,
-      realtorId: data.realtorId,
-      cityId: data.cityId,
-    },
-    include: goalInclude,
-  })
+export async function updateGoal(id: string, data: GoalWriteData) {
+  return prisma.goal.update({ where: { id }, data })
 }
 
 export async function deleteGoal(id: string) {
   return prisma.goal.delete({ where: { id } })
 }
 
-// Realizado no período da meta, no mesmo recorte de escopo — base da
-// barra de progresso. REVENUE soma receitas recebidas; SALES_COUNT conta
-// contratos ativos/concluídos (mesma definição de "venda" já usada no
-// dashboard, ver report/repository.ts sumSalesInPeriod).
-export async function getRealizedForGoal(goal: {
-  scope: "COMPANY" | "REALTOR" | "CITY"
-  metric: "REVENUE" | "SALES_COUNT"
-  year: number
-  month: number | null
-  realtorId: string | null
-  cityId: string | null
-}) {
-  const start = goal.month
-    ? new Date(Date.UTC(goal.year, goal.month - 1, 1))
-    : new Date(Date.UTC(goal.year, 0, 1))
-  const end = goal.month
-    ? new Date(Date.UTC(goal.year, goal.month, 1))
-    : new Date(Date.UTC(goal.year + 1, 0, 1))
+// "Eventos" que alimentam o realizado das metas, já com o dia (em
+// Brasília) em que contam. Buscados uma vez pro intervalo inteiro e
+// distribuídos em memória entre as metas — são poucas dezenas de
+// contratos/receitas por mês, não compensa uma consulta por meta/mês.
+export type GoalEvent = { day: Date; amount: number; realtorId: string | null; cityId: string | null }
 
-  if (goal.metric === "SALES_COUNT") {
-    const count = await prisma.contract.count({
-      where: {
-        status: { in: ["ACTIVE", "COMPLETED"] },
-        createdAt: { gte: start, lt: end },
-        realtorId: goal.scope === "REALTOR" ? (goal.realtorId ?? undefined) : undefined,
-        property: goal.scope === "CITY" ? { cityId: goal.cityId ?? undefined } : undefined,
-      },
-    })
-    return count
-  }
+// Venda = contrato ativo ou concluído, contado pela data de cadastro
+// (mesma definição do painel, ver report/repository.ts sumSalesInPeriod).
+export async function listSaleEvents(from: Date, to: Date): Promise<GoalEvent[]> {
+  const contracts = await prisma.contract.findMany({
+    where: {
+      status: { in: ["ACTIVE", "COMPLETED"] },
+      createdAt: { gte: brazilDayWindow(from).from, lte: brazilDayWindow(to).to },
+    },
+    select: { createdAt: true, value: true, realtorId: true, property: { select: { cityId: true } } },
+  })
+  return contracts.map((contract) => ({
+    day: brazilDateOnly(contract.createdAt),
+    amount: Number(contract.value),
+    realtorId: contract.realtorId,
+    cityId: contract.property.cityId,
+  }))
+}
 
-  const where: Prisma.FinancialEntryWhereInput = {
-    type: "INCOME",
-    status: "PAID",
-    dueDate: { gte: start, lt: end },
-    realtorId: goal.scope === "REALTOR" ? (goal.realtorId ?? undefined) : undefined,
-    property: goal.scope === "CITY" ? { cityId: goal.cityId ?? undefined } : undefined,
-  }
-
-  const result = await prisma.financialEntry.aggregate({ where, _sum: { amount: true } })
-  return Number(result._sum.amount ?? 0)
+// Faturamento = receita marcada como recebida, pelo vencimento.
+export async function listRevenueEvents(from: Date, to: Date): Promise<GoalEvent[]> {
+  const entries = await prisma.financialEntry.findMany({
+    where: { type: "INCOME", status: "PAID", dueDate: { gte: from, lte: to } },
+    select: { dueDate: true, amount: true, realtorId: true, property: { select: { cityId: true } } },
+  })
+  return entries.map((entry) => ({
+    day: entry.dueDate,
+    amount: Number(entry.amount),
+    realtorId: entry.realtorId,
+    cityId: entry.property?.cityId ?? null,
+  }))
 }

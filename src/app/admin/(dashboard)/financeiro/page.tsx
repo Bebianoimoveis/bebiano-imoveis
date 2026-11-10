@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 
 import { DashboardSection } from "@/components/admin/dashboard/dashboard-section"
@@ -12,7 +13,6 @@ import { FinancialDirectory } from "@/components/admin/financial/financial-direc
 import { FinancialEmptyState } from "@/components/admin/financial/financial-empty-state"
 import { FinancialOverviewTab } from "@/components/admin/financial/financial-overview-tab"
 import { FinancialCommissionsPanel } from "@/components/admin/financial/financial-commissions-panel"
-import { GoalsPanel } from "@/components/admin/financial/goals-panel"
 import { FinancialReportsPanel } from "@/components/admin/financial/financial-reports-panel"
 import { isEntryOverdue } from "@/components/admin/financial/financial-entry-status-badge"
 import {
@@ -27,7 +27,7 @@ import {
   getFinancialCommissionsByRealtor,
   getFinancialInsight,
 } from "@/modules/financial/actions"
-import { listAdminGoals } from "@/modules/goal/actions"
+import { listGoalViews } from "@/modules/goal/actions"
 import { listAdminProposals } from "@/modules/proposal/actions"
 import { listAdminClients } from "@/modules/client/actions"
 import { listAdminProperties } from "@/modules/property/actions"
@@ -63,6 +63,8 @@ export default async function AdminFinancialPage({
     to: paramString(params, "to"),
   }
   const tab = paramString(params, "tab") ?? "geral"
+  // Metas saíram daqui e ganharam página própria — link antigo continua valendo.
+  if (tab === "metas") redirect("/admin/metas")
   // Vindo do aviso "N lançamentos em atraso": só a lista de Lançamentos (e a
   // exportação) filtra — os gráficos e KPIs da Visão Geral seguem no total.
   const overdueOnly = paramString(params, "overdue") === "1"
@@ -112,7 +114,7 @@ export default async function AdminFinancialPage({
     getFinancialTopProperties(filters),
     getFinancialCashFlowTimeline(filters),
     getFinancialCommissionsByRealtor(),
-    listAdminGoals(currentYear),
+    listGoalViews(currentYear),
     listAdminProposals({}),
     listCities(),
     listRealtors(),
@@ -135,7 +137,7 @@ export default async function AdminFinancialPage({
   const potentialCommission = proposals
     .filter((p) => p.status === "ACCEPTED" || p.status === "COMPLETED")
     .reduce((sum, p) => sum + (Number(p.commissionPercent ?? 0) / 100) * Number(p.value), 0)
-  const goalsHit = goals.filter((g) => g.realized >= g.targetAmount).length
+  const goalsHit = goals.filter((g) => g.progress.status === "HIT").length
 
   if (allEntries.length === 0) {
     return (
@@ -187,7 +189,6 @@ export default async function AdminFinancialPage({
             <TabsTrigger value="geral">Visão Geral</TabsTrigger>
             <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
             <TabsTrigger value="comissoes">Comissões</TabsTrigger>
-            <TabsTrigger value="metas">Metas</TabsTrigger>
             <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
           </TabsList>
           <div className="flex flex-wrap items-center gap-2">
@@ -229,12 +230,6 @@ export default async function AdminFinancialPage({
         <TabsContent value="comissoes">
           <DashboardSection index={2}>
             <FinancialCommissionsPanel commissions={commissions} />
-          </DashboardSection>
-        </TabsContent>
-
-        <TabsContent value="metas">
-          <DashboardSection index={2}>
-            <GoalsPanel goals={goals} year={currentYear} realtors={realtorOptions} cities={cities} />
           </DashboardSection>
         </TabsContent>
 
