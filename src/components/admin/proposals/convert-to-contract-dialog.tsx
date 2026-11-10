@@ -19,10 +19,11 @@ import { uploadContractFile } from "@/modules/upload/client"
 import { fileViewUrl } from "@/lib/file-url"
 import { formatCurrency } from "@/lib/format"
 
-// Depois de enviada ao cliente (e não recusada/cancelada), a proposta
-// pode virar contrato.
+// Qualquer proposta que não foi recusada/cancelada pode virar contrato —
+// inclusive "Rascunho": quem manda a proposta pelo WhatsApp/PDF nem
+// sempre clica em "Enviar", e o status fica parado em rascunho.
 export function canConvertProposal(status: string) {
-  return ["SENT", "VIEWED", "NEGOTIATING", "ACCEPTED", "SIGNING", "COMPLETED"].includes(status)
+  return status !== "REJECTED" && status !== "CANCELED"
 }
 
 export type ConversionSummary = {
