@@ -46,6 +46,10 @@ export const proposalFiltersSchema = z.object({
   maxValue: z.coerce.number().nonnegative().optional(),
   createdFrom: z.coerce.date().optional(),
   createdTo: z.coerce.date().optional(),
+  // Propostas ainda em andamento com validade nos próximos N dias — mesmo
+  // critério do alerta "N propostas vencendo em até 2 dias" e do Radar de
+  // prazos do painel.
+  expiringDays: z.coerce.number().int().positive().max(30).optional(),
 })
 
 export type ProposalFilters = z.infer<typeof proposalFiltersSchema>

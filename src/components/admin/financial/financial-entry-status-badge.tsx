@@ -1,10 +1,14 @@
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import type { FinancialEntryStatus, FinancialEntryType } from "@/generated/prisma/client"
+import { brazilDateOnly } from "@/lib/date"
 
 export function isEntryOverdue(entry: { status: FinancialEntryStatus; dueDate: Date | string }) {
   if (entry.status !== "PENDING" && entry.status !== "SCHEDULED") return false
-  return new Date(entry.dueDate).getTime() < Date.now()
+  // dueDate é um dia puro (meia-noite UTC), não um instante: comparar com
+  // "agora" marcava como atrasado já no começo do próprio dia do vencimento.
+  // Atrasado = o dia do vencimento (em Brasília) já passou.
+  return new Date(entry.dueDate).getTime() < brazilDateOnly().getTime()
 }
 
 const STYLES: Record<FinancialEntryStatus, string> = {

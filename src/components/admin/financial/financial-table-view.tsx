@@ -7,6 +7,7 @@ import { FinancialEntryRowActions } from "@/components/admin/financial/financial
 import { ClientAvatar } from "@/components/admin/clients/client-avatar"
 import { formatCurrency } from "@/lib/format"
 import type { FinancialEntryListItem } from "@/modules/financial/repository"
+import { formatDateOnlyBR } from "@/lib/format"
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   PIX: "PIX",
@@ -75,7 +76,7 @@ export function FinancialTableView({
                 {entry.property ? `${entry.property.code} · ${entry.property.title}` : "—"}
               </td>
               <td className="px-4 py-3 font-medium">{formatCurrency(entry.amount.toString())}</td>
-              <td className="px-4 py-3 text-muted-foreground">{new Date(entry.dueDate).toLocaleDateString("pt-BR")}</td>
+              <td className="px-4 py-3 text-muted-foreground">{formatDateOnlyBR(entry.dueDate)}</td>
               <td className="px-4 py-3">
                 <FinancialEntryStatusBadge status={entry.status} type={entry.type} dueDate={entry.dueDate} />
               </td>

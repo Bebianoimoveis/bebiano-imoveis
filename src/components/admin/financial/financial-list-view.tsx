@@ -5,6 +5,7 @@ import { ArrowDownCircle, ArrowUpCircle } from "lucide-react"
 import { FinancialEntryStatusBadge } from "@/components/admin/financial/financial-entry-status-badge"
 import { formatCurrency } from "@/lib/format"
 import type { FinancialEntryListItem } from "@/modules/financial/repository"
+import { formatDateOnlyBR } from "@/lib/format"
 
 export function FinancialListView({
   entries,
@@ -34,7 +35,7 @@ export function FinancialListView({
             <p className="truncate text-xs text-muted-foreground">
               {entry.client?.name ?? entry.realtor?.user.name ?? "Sem vínculo"} · {formatCurrency(entry.amount.toString())}
             </p>
-            <p className="text-[11px] text-muted-foreground">{new Date(entry.dueDate).toLocaleDateString("pt-BR")}</p>
+            <p className="text-[11px] text-muted-foreground">{formatDateOnlyBR(entry.dueDate)}</p>
           </div>
           <FinancialEntryStatusBadge status={entry.status} type={entry.type} dueDate={entry.dueDate} />
         </button>

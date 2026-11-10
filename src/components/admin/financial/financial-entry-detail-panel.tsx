@@ -32,6 +32,7 @@ import {
   markFinancialEntryStatus,
 } from "@/modules/financial/actions"
 import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
+import { formatDateOnlyBR } from "@/lib/format"
 
 type FinancialEntryDetail = NonNullable<Awaited<ReturnType<typeof getAdminFinancialEntry>>>
 
@@ -234,7 +235,7 @@ export function FinancialEntryDetailPanel({
                     ) : null}
                     <div className="rounded-xl border border-border/60 p-3">
                       <p className="text-xs text-muted-foreground">Vencimento</p>
-                      <p className="font-medium">{new Date(entry.dueDate).toLocaleDateString("pt-BR")}</p>
+                      <p className="font-medium">{formatDateOnlyBR(entry.dueDate)}</p>
                     </div>
                     {entry.paidAt ? (
                       <div className="rounded-xl border border-border/60 p-3">

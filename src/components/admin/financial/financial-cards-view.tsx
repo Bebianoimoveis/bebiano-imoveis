@@ -6,6 +6,7 @@ import { FinancialEntryStatusBadge } from "@/components/admin/financial/financia
 import { FinancialEntryRowActions } from "@/components/admin/financial/financial-entry-row-actions"
 import { formatCurrency } from "@/lib/format"
 import type { FinancialEntryListItem } from "@/modules/financial/repository"
+import { formatDateOnlyBR } from "@/lib/format"
 
 export function FinancialCardsView({
   entries,
@@ -42,7 +43,7 @@ export function FinancialCardsView({
             {entry.client?.name ?? entry.realtor?.user.name ?? entry.property?.title ?? "Sem vínculo"}
           </p>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{new Date(entry.dueDate).toLocaleDateString("pt-BR")}</span>
+            <span className="text-xs text-muted-foreground">{formatDateOnlyBR(entry.dueDate)}</span>
             <FinancialEntryStatusBadge status={entry.status} type={entry.type} dueDate={entry.dueDate} />
           </div>
         </div>

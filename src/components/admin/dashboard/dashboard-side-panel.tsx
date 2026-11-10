@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 
 import { formatCurrency, formatTimeBR } from "@/lib/format"
+import { brazilDateOnly } from "@/lib/date"
 import { cn } from "@/lib/utils"
 import type { getDashboardSidePanel } from "@/modules/report/actions"
 
@@ -58,6 +59,7 @@ function EmptyRow({ label }: { label: string }) {
 
 export function DashboardSidePanel({ data }: { data: SidePanelData }) {
   const { todayAppointments, birthdays, expiringProposals, financialAlerts, alerts } = data
+  const today = brazilDateOnly().toISOString().slice(0, 10)
 
   return (
     <aside className="h-fit rounded-[20px] border border-border/60 bg-card shadow-sm">
@@ -99,7 +101,7 @@ export function DashboardSidePanel({ data }: { data: SidePanelData }) {
         )}
       </Section>
 
-      <Section icon={CircleAlert} title="Radar de prazos" href="/admin/propostas">
+      <Section icon={CircleAlert} title="Radar de prazos" href="/admin/propostas?expiringDays=7">
         {expiringProposals.length === 0 ? (
           <EmptyRow label="Sem prazos críticos" />
         ) : (
@@ -110,15 +112,20 @@ export function DashboardSidePanel({ data }: { data: SidePanelData }) {
                 : null
               return (
                 <li key={proposal.id} className="text-sm">
-                  <p className="truncate font-medium text-foreground">{proposal.client.name}</p>
-                  <p
-                    className={cn(
-                      "text-xs",
-                      daysUntil !== null && daysUntil <= 2 ? "text-destructive" : "text-muted-foreground"
-                    )}
+                  <Link
+                    href={`/admin/propostas?expiringDays=7&search=${encodeURIComponent(proposal.client.name)}`}
+                    className="block hover:text-primary"
                   >
-                    {daysUntil === 0 ? "Vence hoje" : `Vence em ${daysUntil} dia${daysUntil === 1 ? "" : "s"}`}
-                  </p>
+                    <p className="truncate font-medium text-foreground">{proposal.client.name}</p>
+                    <p
+                      className={cn(
+                        "text-xs",
+                        daysUntil !== null && daysUntil <= 2 ? "text-destructive" : "text-muted-foreground"
+                      )}
+                    >
+                      {daysUntil === 0 ? "Vence hoje" : `Vence em ${daysUntil} dia${daysUntil === 1 ? "" : "s"}`}
+                    </p>
+                  </Link>
                 </li>
               )
             })}
@@ -144,17 +151,22 @@ export function DashboardSidePanel({ data }: { data: SidePanelData }) {
       </Section>
 
       {financialAlerts ? (
-        <Section icon={Wallet} title="Vencimentos hoje" href="/admin/financeiro">
+        <Section icon={Wallet} title="Vencimentos hoje" href={`/admin/financeiro?tab=lancamentos&from=${today}&to=${today}`}>
           {financialAlerts.dueToday.length === 0 ? (
             <EmptyRow label="Nenhum vencimento" />
           ) : (
             <ul className="space-y-2">
               {financialAlerts.dueToday.slice(0, 4).map((entry) => (
-                <li key={entry.id} className="flex items-center justify-between text-sm">
-                  <span className="truncate font-medium text-foreground">{entry.category}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {formatCurrency(entry.amount.toString())}
-                  </span>
+                <li key={entry.id}>
+                  <Link
+                    href={`/admin/financeiro?tab=lancamentos&from=${today}&to=${today}`}
+                    className="flex items-center justify-between gap-2 text-sm hover:text-primary"
+                  >
+                    <span className="truncate font-medium text-foreground">{entry.category}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {formatCurrency(entry.amount.toString())}
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -144,14 +144,14 @@ export async function getDashboardSidePanel() {
       ? {
           id: "overdue-financial",
           label: `${financialAlerts.overdueCount} lançamento${financialAlerts.overdueCount > 1 ? "s" : ""} financeiro${financialAlerts.overdueCount > 1 ? "s" : ""} atrasado${financialAlerts.overdueCount > 1 ? "s" : ""}`,
-          href: "/admin/financeiro",
+          href: "/admin/financeiro?tab=lancamentos&overdue=1",
         }
       : null,
     urgentProposals.length > 0
       ? {
           id: "proposals-expiring",
           label: `${urgentProposals.length} proposta${urgentProposals.length > 1 ? "s" : ""} vencendo em até 2 dias`,
-          href: "/admin/propostas",
+          href: "/admin/propostas?expiringDays=2",
         }
       : null,
   ].filter((alert): alert is { id: string; label: string; href: string } => alert !== null)

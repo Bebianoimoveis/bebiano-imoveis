@@ -35,8 +35,13 @@ async function buildProposalScopeWhere(
 ): Promise<Prisma.ProposalWhereInput> {
   const canViewAll = await can(session.user, "proposal.view.all")
 
+  const expiringUntil = filters.expiringDays
+    ? new Date(Date.now() + filters.expiringDays * 24 * 60 * 60 * 1000)
+    : null
+
   return {
-    status: filters.status,
+    status: filters.status ?? (expiringUntil ? { notIn: ["ACCEPTED", "REJECTED", "COMPLETED", "CANCELED"] } : undefined),
+    validUntil: expiringUntil ? { gte: new Date(), lte: expiringUntil } : undefined,
     realtorId: canViewAll ? filters.realtorId : (session.user.realtorId ?? "__none__"),
     value:
       filters.minValue || filters.maxValue

@@ -95,7 +95,7 @@ export async function listEntriesDueSoon(days: number): Promise<FinancialEntryLi
 
 export async function countOverdueEntries(): Promise<number> {
   return prisma.financialEntry.count({
-    where: { status: { in: ["PENDING", "SCHEDULED"] }, dueDate: { lt: new Date() } },
+    where: { status: { in: ["PENDING", "SCHEDULED"] }, dueDate: { lt: brazilDateOnly() } },
   })
 }
 

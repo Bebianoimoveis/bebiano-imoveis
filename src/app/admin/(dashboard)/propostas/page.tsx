@@ -13,6 +13,7 @@ import { ProposalEmptyState } from "@/components/admin/proposals/proposal-empty-
 import { getProposalCrmStats, listAdminProposals } from "@/modules/proposal/actions"
 import { listCities } from "@/modules/taxonomy/actions"
 import { listRealtors } from "@/modules/realtor/actions"
+import { FilterNotice } from "@/components/admin/filter-notice"
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -36,6 +37,7 @@ export default async function AdminProposalsPage({
     maxValue: paramString(params, "maxValue"),
     createdFrom: paramString(params, "createdFrom"),
     createdTo: paramString(params, "createdTo"),
+    expiringDays: paramString(params, "expiringDays"),
   }
   const view = paramString(params, "view") === "pipeline" ? "pipeline" : "table"
 
@@ -45,6 +47,12 @@ export default async function AdminProposalsPage({
     listCities(),
     listRealtors(),
   ])
+
+  const clearParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === "string" && key !== "expiringDays") clearParams.set(key, value)
+  }
+  const clearQuery = clearParams.toString()
 
   function buildHref(overrides: { view?: "table" | "pipeline" }) {
     const search = new URLSearchParams()
@@ -90,7 +98,13 @@ export default async function AdminProposalsPage({
         <ProposalViewToggle view={view} buildHref={(v) => buildHref({ view: v })} />
       </DashboardSection>
 
-      <DashboardSection index={3}>
+      <DashboardSection index={3} className="space-y-4">
+        {filters.expiringDays ? (
+          <FilterNotice
+            message={`Mostrando só as propostas em andamento que vencem em até ${filters.expiringDays} dia${filters.expiringDays === "1" ? "" : "s"}.`}
+            clearHref={clearQuery ? `/admin/propostas?${clearQuery}` : "/admin/propostas"}
+          />
+        ) : null}
         {proposals.length === 0 ? (
           <ProposalEmptyState realtors={realtors} />
         ) : (

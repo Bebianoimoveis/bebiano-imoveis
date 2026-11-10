@@ -47,6 +47,10 @@ export const financialFiltersSchema = z.object({
   cityId: z.string().optional(),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
+  // "1" = só os atrasados (pendente/agendado com vencimento já passado) —
+  // mesma definição do aviso "N lançamentos em atraso". "Atrasado" não é
+  // um status guardado, é calculado, então não cabe no filtro `status`.
+  overdue: z.enum(["1"]).optional(),
 })
 
 export type FinancialFilters = z.infer<typeof financialFiltersSchema>

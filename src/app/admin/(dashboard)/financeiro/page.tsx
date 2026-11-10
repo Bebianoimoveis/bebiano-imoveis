@@ -33,6 +33,8 @@ import { listAdminClients } from "@/modules/client/actions"
 import { listAdminProperties } from "@/modules/property/actions"
 import { listCities } from "@/modules/taxonomy/actions"
 import { listRealtors } from "@/modules/realtor/actions"
+import { FilterNotice } from "@/components/admin/filter-notice"
+import { formatDateOnlyBR } from "@/lib/format"
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 
@@ -61,6 +63,21 @@ export default async function AdminFinancialPage({
     to: paramString(params, "to"),
   }
   const tab = paramString(params, "tab") ?? "geral"
+  // Vindo do aviso "N lançamentos em atraso": só a lista de Lançamentos (e a
+  // exportação) filtra — os gráficos e KPIs da Visão Geral seguem no total.
+  const overdueOnly = paramString(params, "overdue") === "1"
+  const listFilters = overdueOnly ? { ...filters, overdue: "1" } : filters
+  const singleDay = filters.from && filters.from === filters.to ? filters.from : null
+  const noticeMessage = overdueOnly
+    ? "Mostrando só os lançamentos em atraso."
+    : singleDay
+      ? `Mostrando os vencimentos de ${formatDateOnlyBR(singleDay)}.`
+      : null
+  const clearParams = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === "string" && !["overdue", "from", "to"].includes(key)) clearParams.set(key, value)
+  }
+  const clearHref = `/admin/financeiro?${clearParams.toString()}`
   const currentYear = new Date().getFullYear()
 
   const session = await auth()
@@ -85,7 +102,7 @@ export default async function AdminFinancialPage({
     canManageFinancial,
     insight,
   ] = await Promise.all([
-    listAdminFinancialEntries(filters),
+    listAdminFinancialEntries(listFilters),
     listAdminFinancialEntries({}),
     getFinancialKpis(filters),
     getFinancialMonthlySeries(filters),
@@ -176,7 +193,7 @@ export default async function AdminFinancialPage({
           <div className="flex flex-wrap items-center gap-2">
             <FinancialSearch />
             <FinancialFiltersSheet cities={cities} realtors={realtorOptions} />
-            <FinancialExportButton filters={filters as Record<string, string>} />
+            <FinancialExportButton filters={listFilters as Record<string, string>} />
           </div>
         </DashboardSection>
 
@@ -198,7 +215,8 @@ export default async function AdminFinancialPage({
         </TabsContent>
 
         <TabsContent value="lancamentos">
-          <DashboardSection index={2}>
+          <DashboardSection index={2} className="space-y-4">
+            {noticeMessage ? <FilterNotice message={noticeMessage} clearHref={clearHref} /> : null}
             <FinancialDirectory
               entries={entries}
               clients={clientOptions}

@@ -15,6 +15,7 @@ import {
   financialFiltersSchema,
 } from "@/modules/financial/schema"
 import * as financialRepository from "@/modules/financial/repository"
+import { brazilDateOnly } from "@/lib/date"
 
 async function requireSession() {
   const session = await auth()
@@ -41,14 +42,14 @@ async function requireFinancialManage() {
 function buildEntryWhere(filters: ReturnType<typeof financialFiltersSchema.parse>): Prisma.FinancialEntryWhereInput {
   return {
     type: filters.type,
-    status: filters.status,
+    status: filters.overdue ? { in: ["PENDING", "SCHEDULED"] } : filters.status,
     category: filters.category,
     paymentMethod: filters.paymentMethod,
     realtorId: filters.realtorId,
     property: filters.cityId ? { cityId: filters.cityId } : undefined,
     dueDate:
-      filters.from || filters.to
-        ? { gte: filters.from, lte: filters.to }
+      filters.from || filters.to || filters.overdue
+        ? { gte: filters.from, lte: filters.to, lt: filters.overdue ? brazilDateOnly() : undefined }
         : undefined,
     OR: filters.search
       ? [
