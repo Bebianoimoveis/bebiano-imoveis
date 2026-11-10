@@ -12,6 +12,8 @@ import * as contractRepository from "@/modules/contract/repository"
 import * as proposalRepository from "@/modules/proposal/repository"
 import { manualContractInputSchema, contractAttachmentInputSchema } from "@/modules/contract/schema"
 import { clientMatchWhere } from "@/modules/client/document-search"
+import { renderProposalPdf } from "@/modules/proposal/pdf-render"
+import { cloudinary } from "@/lib/cloudinary"
 
 async function requireSession() {
   const session = await auth()
@@ -62,6 +64,122 @@ export async function listAdminContracts(filters: ContractListFilters = {}) {
   }
 
   return contractRepository.listContracts(where)
+}
+
+// Envia o PDF gerado (Buffer) pro Cloudinary como arquivo "raw" na pasta
+// dos contratos — mesmo lugar dos contratos anexados à mão, aberto depois
+// pelo /api/arquivo.
+function uploadPdfToContracts(buffer: Buffer, fileName: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "raw",
+        folder: "bebiano-imoveis/contratos",
+        public_id: `${fileName.replace(/\.pdf$/i, "")}-${Date.now()}.pdf`,
+      },
+      (error, result) => {
+        if (error || !result) reject(error ?? new Error("Falha no envio do PDF."))
+        else resolve(result.secure_url)
+      }
+    )
+    stream.end(buffer)
+  })
+}
+
+export type ProposalConversionResult = {
+  contractId: string
+  alreadyExisted: boolean
+  proposalPdfAttached: boolean
+  // Quem não tem contract.manage (ex: corretor) converte, mas a
+  // assinatura é anexada pela gestão.
+  canAttach: boolean
+  attachments: { id: string; name: string; url: string }[]
+  contractStatus: ContractStatus
+}
+
+// "Converter em contrato" — um clique depois que o cliente aprova:
+// cria o contrato com os dados da proposta, anexa o PDF da proposta
+// aprovada e põe a proposta em "Assinando". Chamar de novo pra uma
+// proposta que já virou contrato só devolve o contrato existente.
+export async function convertProposalToContract(proposalId: string): Promise<ProposalConversionResult | { error: string }> {
+  const session = await requireSession()
+  const [canManageContracts, canManageProposals, canViewAllProposals] = await Promise.all([
+    can(session.user, "contract.manage"),
+    can(session.user, "proposal.manage"),
+    can(session.user, "proposal.view.all"),
+  ])
+
+  const proposal = await proposalRepository.findProposalById(proposalId)
+  if (!proposal) return { error: "Proposta não encontrada." }
+  const ownsProposal = canManageProposals && (canViewAllProposals || proposal.realtorId === session.user.realtorId)
+  if (!canManageContracts && !ownsProposal) return { error: "Sem permissão para converter esta proposta." }
+  if (proposal.status === "REJECTED" || proposal.status === "CANCELED") {
+    return { error: "Proposta recusada ou cancelada não vira contrato. Mude o status dela antes." }
+  }
+
+  const existing = await prisma.contract.findUnique({
+    where: { proposalId },
+    include: { attachments: { orderBy: { createdAt: "asc" } } },
+  })
+  if (existing) {
+    return {
+      contractId: existing.id,
+      alreadyExisted: true,
+      proposalPdfAttached: existing.attachments.some((a) => a.name.startsWith("Proposta aprovada")),
+      canAttach: canManageContracts,
+      attachments: existing.attachments.map((a) => ({ id: a.id, name: a.name, url: a.url })),
+      contractStatus: existing.status,
+    }
+  }
+
+  const contract = await contractRepository.createContract({
+    value: proposal.value,
+    status: proposal.status === "COMPLETED" ? "COMPLETED" : "DRAFT",
+    proposal: { connect: { id: proposal.id } },
+    property: { connect: { id: proposal.property.id } },
+    client: { connect: { id: proposal.client.id } },
+    realtor: { connect: { id: proposal.realtor.id } },
+  })
+
+  if (proposal.status !== "COMPLETED" && proposal.status !== "SIGNING") {
+    await proposalRepository.updateProposalStatus(proposal.id, "SIGNING")
+  }
+
+  // PDF da proposta aprovada vai junto como primeiro anexo do contrato.
+  // Se o envio falhar, o contrato continua criado — só avisa na tela.
+  let attachment: { id: string; name: string; url: string } | null = null
+  try {
+    const name = `Proposta aprovada - ${proposal.property.code}.pdf`
+    const url = await uploadPdfToContracts(await renderProposalPdf(proposal), `proposta-${proposal.property.code}`)
+    const created = await contractRepository.addContractAttachment({
+      contractId: contract.id,
+      url,
+      name,
+      uploadedById: session.user.id,
+    })
+    attachment = { id: created.id, name, url }
+  } catch (error) {
+    console.error("Falha ao anexar PDF da proposta ao contrato", error)
+  }
+
+  await logActivity({
+    userId: session.user.id,
+    action: "contract.create",
+    entityType: "Contract",
+    entityId: contract.id,
+    metadata: { proposalId, via: "convert" },
+  })
+
+  revalidatePath("/admin/contratos")
+  revalidatePath("/admin/propostas")
+  return {
+    contractId: contract.id,
+    alreadyExisted: false,
+    proposalPdfAttached: Boolean(attachment),
+    canAttach: canManageContracts,
+    attachments: attachment ? [attachment] : [],
+    contractStatus: contract.status,
+  }
 }
 
 // Um contrato só pode nascer de uma proposta aceita (ou já mais adiante
@@ -133,7 +251,17 @@ export async function createManualContract(input: unknown) {
 
 export async function updateContractStatus(id: string, status: ContractStatus) {
   const session = await requireContractManage()
-  await contractRepository.updateContractStatus(id, status)
+  const contract = await contractRepository.updateContractStatus(id, status)
+
+  // Contrato assinado (Ativo) ou Concluído encerra a proposta que deu
+  // origem a ele: ela passa pra "Concluída" sozinha.
+  if (contract.proposal && (status === "ACTIVE" || status === "COMPLETED")) {
+    await prisma.proposal.updateMany({
+      where: { id: contract.proposal.id, status: { not: "COMPLETED" } },
+      data: { status: "COMPLETED" },
+    })
+    revalidatePath("/admin/propostas")
+  }
 
   await logActivity({
     userId: session.user.id,

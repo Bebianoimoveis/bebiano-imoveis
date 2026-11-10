@@ -47,7 +47,7 @@ import { ProposalTimeline } from "@/components/admin/proposals/proposal-timeline
 import { ProposalInteractionForm } from "@/components/admin/proposals/proposal-interaction-form"
 import { ProposalEditSheet } from "@/components/admin/proposals/proposal-edit-sheet"
 import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
-import { generateContractFromProposal } from "@/modules/contract/actions"
+import { ConvertToContractDialog, canConvertProposal } from "@/components/admin/proposals/convert-to-contract-dialog"
 import {
   getAdminProposal,
   updateProposalStatus,
@@ -77,6 +77,7 @@ export function ProposalDetailPanel({
   const [loading, setLoading] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [editOpen, setEditOpen] = useState(false)
+  const [convertOpen, setConvertOpen] = useState(false)
 
   useEffect(() => {
     if (!proposalId) {
@@ -149,20 +150,6 @@ export function ProposalDetailPanel({
     })
   }
 
-  function handleGenerateContract() {
-    if (!proposalId) return
-    startTransition(async () => {
-      try {
-        await generateContractFromProposal(proposalId)
-        toast.success("Contrato gerado.")
-        refetch()
-        router.refresh()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao gerar contrato.")
-      }
-    })
-  }
-
   const shareUrl = proposal?.shareToken ? `${siteConfig.url}/proposta/${proposal.shareToken}` : null
   const cover = proposal?.property.images.find((i) => i.isCover)?.url ?? proposal?.property.images[0]?.url
   const whatsappMessage = proposal
@@ -207,6 +194,28 @@ export function ProposalDetailPanel({
               <div className="mt-3 flex flex-wrap gap-1.5">
                 <ProposalStatusBadge status={proposal.status} />
               </div>
+
+              {/* Próximo passo do negócio em destaque: aprovada → contrato. */}
+              {proposal.contract ? (
+                <button
+                  type="button"
+                  onClick={() => setConvertOpen(true)}
+                  className="mt-4 flex w-full items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-left text-sm transition-colors hover:border-emerald-500/60"
+                >
+                  <FileSignature className="size-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">Esta proposta já virou contrato</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Ver os arquivos e anexar o contrato assinado pelo cliente
+                    </span>
+                  </span>
+                  <ContractStatusBadge status={proposal.contract.status} />
+                </button>
+              ) : canConvertProposal(proposal.status) ? (
+                <Button className="mt-4 w-full gap-1.5" onClick={() => setConvertOpen(true)}>
+                  <FileSignature className="size-4" /> Cliente aprovou? Converter em contrato
+                </Button>
+              ) : null}
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditOpen(true)}>
@@ -417,10 +426,13 @@ export function ProposalDetailPanel({
                           </a>
                         </Button>
                       ) : null}
+                      <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setConvertOpen(true)}>
+                        <FileSignature className="size-3.5" /> Arquivos e assinatura
+                      </Button>
                     </div>
-                  ) : ["ACCEPTED", "SIGNING", "COMPLETED"].includes(proposal.status) ? (
-                    <Button className="w-full" onClick={handleGenerateContract} disabled={isPending}>
-                      Gerar contrato
+                  ) : canConvertProposal(proposal.status) ? (
+                    <Button className="w-full gap-1.5" onClick={() => setConvertOpen(true)}>
+                      <FileSignature className="size-4" /> Converter em contrato
                     </Button>
                   ) : (
                     <EmptyState
@@ -462,6 +474,25 @@ export function ProposalDetailPanel({
 
       {proposal ? (
         <ProposalEditSheet open={editOpen} onOpenChange={setEditOpen} proposal={proposal} onSuccess={refetch} />
+      ) : null}
+
+      {proposal ? (
+        <ConvertToContractDialog
+          proposalId={proposal.id}
+          hasContract={Boolean(proposal.contract)}
+          open={convertOpen}
+          onOpenChange={(next) => {
+            setConvertOpen(next)
+            if (!next) refetch()
+          }}
+          onConverted={refetch}
+          summary={{
+            clientName: proposal.client.name,
+            propertyLabel: `${proposal.property.code} · ${proposal.property.title}`,
+            value: Number(proposal.value),
+            realtorName: proposal.realtor.user.name,
+          }}
+        />
       ) : null}
     </>
   )

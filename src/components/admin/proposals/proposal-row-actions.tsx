@@ -1,8 +1,8 @@
 "use client"
 
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Copy, Eye, FileDown, Mail, MoreHorizontal, Share2, Trash2 } from "lucide-react"
+import { Copy, Eye, FileDown, FileSignature, Mail, MoreHorizontal, Share2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -29,6 +29,7 @@ import { duplicateProposal, deleteProposal, updateProposalStatus } from "@/modul
 import { formatCurrency } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 import type { ProposalListItem } from "@/modules/proposal/repository"
+import { ConvertToContractDialog, canConvertProposal } from "@/components/admin/proposals/convert-to-contract-dialog"
 
 export function ProposalRowActions({
   proposal,
@@ -39,6 +40,7 @@ export function ProposalRowActions({
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [convertOpen, setConvertOpen] = useState(false)
 
   function runAction(action: () => Promise<unknown>, message: string) {
     startTransition(async () => {
@@ -68,6 +70,15 @@ export function ProposalRowActions({
           <DropdownMenuItem onClick={onOpen}>
             <Eye /> Ver detalhes
           </DropdownMenuItem>
+          {proposal.contract ? (
+            <DropdownMenuItem onClick={() => setConvertOpen(true)}>
+              <FileSignature /> Ver contrato / anexar assinatura
+            </DropdownMenuItem>
+          ) : canConvertProposal(proposal.status) ? (
+            <DropdownMenuItem onClick={() => setConvertOpen(true)} className="font-medium text-primary">
+              <FileSignature /> Converter em contrato
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             onClick={() => runAction(() => duplicateProposal(proposal.id), "Proposta duplicada.")}
           >
@@ -137,6 +148,19 @@ export function ProposalRowActions({
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
+
+      <ConvertToContractDialog
+        proposalId={proposal.id}
+        hasContract={Boolean(proposal.contract)}
+        open={convertOpen}
+        onOpenChange={setConvertOpen}
+        summary={{
+          clientName: proposal.client.name,
+          propertyLabel: `${proposal.property.code} · ${proposal.property.title}`,
+          value: Number(proposal.value),
+          realtorName: proposal.realtor.user.name,
+        }}
+      />
     </AlertDialog>
   )
 }

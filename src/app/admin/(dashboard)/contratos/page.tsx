@@ -169,6 +169,7 @@ export default async function AdminContractsPage({ searchParams }: { searchParam
               contracts={rows}
               canManageFinancial={canManageFinancial}
               canManageContracts={canManageContracts}
+              initialOpenId={param(params, "contrato") ?? null}
             />
           )}
         </>

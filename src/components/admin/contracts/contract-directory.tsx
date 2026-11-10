@@ -49,12 +49,15 @@ export function ContractDirectory({
   contracts,
   canManageFinancial,
   canManageContracts,
+  initialOpenId = null,
 }: {
   contracts: ContractRow[]
   canManageFinancial: boolean
   canManageContracts: boolean
+  // ?contrato=<id> — vindo da conversão de uma proposta, já abre o contrato.
+  initialOpenId?: string | null
 }) {
-  const [openId, setOpenId] = useState<string | null>(null)
+  const [openId, setOpenId] = useState<string | null>(initialOpenId)
 
   const groups = useMemo(() => {
     const byRealtor = new Map<string, { realtor: ContractRow["realtor"]; contracts: ContractRow[] }>()
