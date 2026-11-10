@@ -39,6 +39,9 @@ export function ProposalEditSheet({
     proposal.validUntil ? new Date(proposal.validUntil).toISOString().slice(0, 10) : ""
   )
   const [notes, setNotes] = useState(proposal.notes ?? "")
+  // Financiado não tem parcelas com a imobiliária (campo de texto livre aqui,
+  // então compara sem acento/maiúscula).
+  const isFinanced = paymentMethod.trim().toLowerCase().startsWith("financ")
 
   async function handleSubmit() {
     setIsSubmitting(true)
@@ -52,8 +55,8 @@ export function ProposalEditSheet({
         downPayment: downPayment ? Number(downPayment) : undefined,
         financingValue: financingValue ? Number(financingValue) : undefined,
         fgtsValue: fgtsValue ? Number(fgtsValue) : undefined,
-        installments: installments ? Number(installments) : undefined,
-        installmentValue: installmentValue ? Number(installmentValue) : undefined,
+        installments: !isFinanced && installments ? Number(installments) : undefined,
+        installmentValue: !isFinanced && installmentValue ? Number(installmentValue) : undefined,
         commissionPercent: commissionPercent ? Number(commissionPercent) : undefined,
         paymentMethod,
         validUntil: validUntil ? new Date(validUntil) : undefined,
@@ -100,14 +103,18 @@ export function ProposalEditSheet({
             <Label>Comissão (%)</Label>
             <Input type="number" step="0.01" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} />
           </div>
-          <div className="space-y-1.5">
-            <Label>Parcelas (qtd.)</Label>
-            <Input type="number" value={installments} onChange={(e) => setInstallments(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Valor da parcela</Label>
-            <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
-          </div>
+          {isFinanced ? null : (
+            <>
+              <div className="space-y-1.5">
+                <Label>Parcelas (qtd.)</Label>
+                <Input type="number" value={installments} onChange={(e) => setInstallments(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Valor da parcela</Label>
+                <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
+              </div>
+            </>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">

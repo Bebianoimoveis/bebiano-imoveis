@@ -215,6 +215,7 @@ export function ProposalWizardSheet({
     }
   }
 
+  const isFinanced = paymentMethod.startsWith("Financiado")
   const numericValue = Number(value) || 0
   const numericOriginal = Number(originalValue) || 0
   const discount = numericOriginal > 0 ? numericOriginal - numericValue : 0
@@ -222,7 +223,7 @@ export function ProposalWizardSheet({
 
   const simulationTotal =
     (Number(downPayment) || 0) + (Number(financingValue) || 0) + (Number(fgtsValue) || 0) +
-    (Number(installments) || 0) * (Number(installmentValue) || 0)
+    (isFinanced ? 0 : (Number(installments) || 0) * (Number(installmentValue) || 0))
   const simulationDiff = numericValue > 0 ? simulationTotal - numericValue : 0
   const showSimulationWarning =
     simulationTotal > 0 && numericValue > 0 && Math.abs(simulationDiff) > 0.01
@@ -273,8 +274,8 @@ export function ProposalWizardSheet({
         downPayment: downPayment ? Number(downPayment) : undefined,
         financingValue: financingValue ? Number(financingValue) : undefined,
         fgtsValue: fgtsValue ? Number(fgtsValue) : undefined,
-        installments: installments ? Number(installments) : undefined,
-        installmentValue: installmentValue ? Number(installmentValue) : undefined,
+        installments: !isFinanced && installments ? Number(installments) : undefined,
+        installmentValue: !isFinanced && installmentValue ? Number(installmentValue) : undefined,
         commissionPercent: commissionPercent ? Number(commissionPercent) : undefined,
         paymentMethod,
         validUntil: validUntil ? new Date(validUntil) : undefined,
@@ -494,6 +495,22 @@ export function ProposalWizardSheet({
               </Select>
             </div>
 
+            <div className="space-y-1.5">
+              <Label>Forma de pagamento</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map((method) => (
+                    <SelectItem key={method} value={method}>
+                      {method}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Valor anunciado</Label>
@@ -528,14 +545,19 @@ export function ProposalWizardSheet({
                 <Label>Comissão (%)</Label>
                 <Input type="number" step="0.01" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} />
               </div>
-              <div className="space-y-1.5">
-                <Label>Parcelas (qtd.)</Label>
-                <Input type="number" value={installments} onChange={(e) => setInstallments(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Valor da parcela</Label>
-                <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
-              </div>
+              {/* Financiado não tem parcelas com a imobiliária — o banco cuida disso. */}
+              {isFinanced ? null : (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Parcelas (qtd.)</Label>
+                    <Input type="number" value={installments} onChange={(e) => setInstallments(e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Valor da parcela</Label>
+                    <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
+                  </div>
+                </>
+              )}
             </div>
 
             {simulationTotal > 0 ? (
@@ -565,26 +587,9 @@ export function ProposalWizardSheet({
         {step === 4 ? (
           <div className="space-y-4">
             <h3 className="font-heading text-base font-semibold">Condições</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Forma de pagamento</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_METHODS.map((method) => (
-                      <SelectItem key={method} value={method}>
-                        {method}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Validade da proposta</Label>
-                <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
-              </div>
+            <div className="space-y-1.5">
+              <Label>Validade da proposta</Label>
+              <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Observações</Label>
