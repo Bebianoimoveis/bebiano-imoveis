@@ -4,8 +4,10 @@ import { upsertLeadByPhone } from "@/modules/lead/repository"
 import type { LeadAttributionInput } from "@/modules/lead/repository"
 import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 
+// realtor.user só com id/nome — a lista vai pro navegador, e o User
+// completo levaria o hash de senha junto.
 const appointmentInclude = {
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   lead: { select: { id: true, name: true, phone: true } },
   client: { select: { id: true, name: true, phone: true } },
   property: { select: { id: true, title: true, code: true } },
@@ -117,18 +119,50 @@ export async function deleteAppointment(id: string) {
   return prisma.appointment.delete({ where: { id } })
 }
 
+type Db = Prisma.TransactionClient | typeof prisma
+
+// Trava a agenda de um corretor durante a transação (advisory lock do
+// Postgres, liberado sozinho no fim): dois agendamentos salvos ao mesmo
+// tempo pro mesmo corretor esperam um pelo outro, então a checagem de
+// conflito do segundo já enxerga o primeiro — sem isso, dois cliques
+// simultâneos podiam passar os dois pela checagem e gravar no mesmo horário.
+export async function withRealtorScheduleLock<T>(
+  realtorId: string,
+  fn: (tx: Prisma.TransactionClient) => Promise<T>
+): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`agenda:${realtorId}`}))`
+    return fn(tx)
+  })
+}
+
+export async function createAppointmentTx(tx: Prisma.TransactionClient, data: Prisma.AppointmentCreateInput) {
+  return tx.appointment.create({ data, include: appointmentInclude })
+}
+
+export async function updateAppointmentTx(
+  tx: Prisma.TransactionClient,
+  id: string,
+  data: Prisma.AppointmentUpdateInput
+) {
+  return tx.appointment.update({ where: { id }, data, include: appointmentInclude })
+}
+
 // Conflito = outro compromisso não cancelado do mesmo corretor cuja
 // janela [scheduledAt, scheduledAt+duration) se sobrepõe à nova janela.
-export async function findConflicts(input: {
-  realtorId: string
-  scheduledAt: Date
-  durationMinutes: number
-  excludeId?: string
-}) {
+export async function findConflicts(
+  input: {
+    realtorId: string
+    scheduledAt: Date
+    durationMinutes: number
+    excludeId?: string
+  },
+  db: Db = prisma
+) {
   const start = input.scheduledAt
   const end = new Date(start.getTime() + input.durationMinutes * 60000)
 
-  const candidates = await prisma.appointment.findMany({
+  const candidates = await db.appointment.findMany({
     where: {
       realtorId: input.realtorId,
       status: { notIn: ["CANCELED"] },

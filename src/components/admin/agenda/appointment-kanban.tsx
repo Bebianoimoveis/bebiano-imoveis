@@ -128,7 +128,14 @@ export function AppointmentKanban({
     )
 
     updateAppointmentStatus(appointment.id, newStatus)
-      .then(() => {
+      .then((result) => {
+        if (result.error) {
+          setAppointments((prev) =>
+            prev.map((a) => (a.id === appointment.id ? { ...a, status: previousStatus } : a))
+          )
+          toast.error(result.error, { duration: 8000 })
+          return
+        }
         toast.success("Status atualizado.")
         router.refresh()
       })

@@ -105,7 +105,15 @@ export function AppointmentBoard({
     )
 
     rescheduleAppointment(appointment.id, { scheduledAt: newDate })
-      .then(() => {
+      .then((result) => {
+        if (result.error) {
+          // Horário ocupado pro mesmo corretor: volta o card pro lugar.
+          setAppointments((prev) =>
+            prev.map((a) => (a.id === appointment.id ? { ...a, scheduledAt: previous } : a))
+          )
+          toast.error(result.error, { duration: 8000 })
+          return
+        }
         toast.success("Compromisso reagendado.")
         router.refresh()
       })

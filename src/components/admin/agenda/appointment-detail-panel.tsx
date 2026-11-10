@@ -63,7 +63,11 @@ export function AppointmentDetailPanel({
     if (!appointment) return
     startTransition(async () => {
       try {
-        await updateAppointmentStatus(appointment.id, status)
+        const result = await updateAppointmentStatus(appointment.id, status)
+        if (result.error) {
+          toast.error(result.error, { duration: 8000 })
+          return
+        }
         toast.success("Status atualizado.")
         router.refresh()
       } catch (error) {

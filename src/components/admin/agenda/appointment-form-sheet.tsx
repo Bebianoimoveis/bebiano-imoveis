@@ -268,12 +268,22 @@ export function AppointmentFormSheet({
       }
 
       if (isEditing) {
-        await updateAppointment(appointment.id, payload)
+        const result = await updateAppointment(appointment.id, payload)
+        if (result.error) {
+          toast.error(result.error, { duration: 8000 })
+          return
+        }
         toast.success("Compromisso atualizado.")
         onOpenChange(false)
         router.refresh()
       } else {
-        const created = await createAppointment(payload)
+        const result = await createAppointment(payload)
+        // Mesmo corretor com horário já ocupado: o servidor recusa.
+        if (result.error || !result.appointment) {
+          toast.error(result.error ?? "Erro ao salvar compromisso.", { duration: 8000 })
+          return
+        }
+        const created = result.appointment
         toast.success("Compromisso agendado.")
         router.refresh()
 
@@ -416,15 +426,16 @@ export function AppointmentFormSheet({
         </div>
 
         {conflicts.length > 0 ? (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
             <div>
-              <p className="font-medium">Conflito de horário com este corretor:</p>
+              <p className="font-medium">Horário ocupado — este corretor já tem compromisso nesse horário:</p>
               {conflicts.map((conflict) => (
                 <p key={conflict.id}>
                   {conflict.label} · {conflict.time}
                 </p>
               ))}
+              <p className="mt-1 font-medium">Escolha outro horário ou outro corretor para salvar.</p>
             </div>
           </div>
         ) : null}
@@ -493,7 +504,15 @@ export function AppointmentFormSheet({
       </div>
 
       <div className="border-t border-border/60 p-4">
-        <Button className="w-full" onClick={handleSubmit} disabled={isSubmitting}>
+        <Button
+          className="w-full"
+          onClick={handleSubmit}
+          disabled={
+            isSubmitting ||
+            // Cancelado/realizado não ocupa agenda, então pode ser editado.
+            (conflicts.length > 0 && (!isEditing || ["SCHEDULED", "CONFIRMED"].includes(appointment.status)))
+          }
+        >
           {isSubmitting ? "Salvando..." : isEditing ? "Salvar alterações" : "Agendar compromisso"}
         </Button>
       </div>

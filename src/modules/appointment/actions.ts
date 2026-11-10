@@ -131,8 +131,36 @@ export async function getAppointmentStats(rawFilters: unknown) {
   return appointmentRepository.getAppointmentStats(where)
 }
 
-// Checagem de conflito usada pelo Sheet de criação/edição e pelo
-// drag-and-drop antes de confirmar — só avisa, nunca bloqueia.
+// Mesmo corretor não pode ter dois compromissos com horário cruzado —
+// bloqueado aqui no servidor (criar, editar, arrastar, reativar), não só
+// avisado na tela. Corretores diferentes no mesmo horário podem.
+const ACTIVE_STATUSES: AppointmentStatus[] = ["SCHEDULED", "CONFIRMED"]
+
+function brazilTime(date: Date) {
+  return date.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" })
+}
+
+function conflictMessage(conflict: appointmentRepository.AppointmentListItem) {
+  const start = conflict.scheduledAt
+  const end = new Date(start.getTime() + conflict.durationMinutes * 60000)
+  const day = start.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
+  const who = conflict.lead?.name ?? conflict.client?.name
+  return (
+    `Horário indisponível: ${conflict.realtor.user.name} já tem um compromisso${who ? ` com ${who}` : ""} ` +
+    `em ${day}, das ${brazilTime(start)} às ${brazilTime(end)}. Escolha outro horário ou outro corretor.`
+  )
+}
+
+async function findBlockingConflict(
+  tx: Prisma.TransactionClient,
+  input: { realtorId: string; scheduledAt: Date; durationMinutes: number; excludeId?: string }
+) {
+  const conflicts = await appointmentRepository.findConflicts(input, tx)
+  return conflicts[0] ? conflictMessage(conflicts[0]) : null
+}
+
+// Checagem de conflito usada pelo Sheet de criação/edição pra avisar
+// enquanto a pessoa escolhe o horário (o bloqueio de verdade é no salvar).
 export async function checkAppointmentConflict(input: {
   realtorId: string
   scheduledAt: Date | string
@@ -187,17 +215,29 @@ export async function createAppointment(input: unknown) {
     }
   }
 
-  const appointment = await appointmentRepository.createAppointment({
-    scheduledAt: data.scheduledAt,
-    durationMinutes: data.durationMinutes,
-    type: data.type,
-    typeLabel: data.type === "OTHER" ? data.typeLabel || null : null,
-    notes: data.notes,
-    realtor: { connect: { id: realtorId } },
-    lead: data.leadId ? { connect: { id: data.leadId } } : undefined,
-    client: data.clientId ? { connect: { id: data.clientId } } : undefined,
-    property: data.propertyId ? { connect: { id: data.propertyId } } : undefined,
+  const result = await appointmentRepository.withRealtorScheduleLock(realtorId, async (tx) => {
+    const conflict = await findBlockingConflict(tx, {
+      realtorId,
+      scheduledAt: data.scheduledAt,
+      durationMinutes: data.durationMinutes,
+    })
+    if (conflict) return { error: conflict }
+    return {
+      appointment: await appointmentRepository.createAppointmentTx(tx, {
+        scheduledAt: data.scheduledAt,
+        durationMinutes: data.durationMinutes,
+        type: data.type,
+        typeLabel: data.type === "OTHER" ? data.typeLabel || null : null,
+        notes: data.notes,
+        realtor: { connect: { id: realtorId } },
+        lead: data.leadId ? { connect: { id: data.leadId } } : undefined,
+        client: data.clientId ? { connect: { id: data.clientId } } : undefined,
+        property: data.propertyId ? { connect: { id: data.propertyId } } : undefined,
+      }),
+    }
   })
+  if ("error" in result) return { error: result.error as string }
+  const { appointment } = result
 
   await logActivity({
     userId: session.user.id,
@@ -225,7 +265,7 @@ export async function createAppointment(input: unknown) {
 
   revalidatePath("/admin/agenda")
   if (data.leadId) revalidatePath(`/admin/leads/${data.leadId}`)
-  return appointment
+  return { appointment }
 }
 
 export async function updateAppointment(id: string, input: unknown) {
@@ -233,17 +273,34 @@ export async function updateAppointment(id: string, input: unknown) {
   await assertCanManageAppointment(session, id)
   const data = appointmentInputSchema.parse(input)
 
-  const appointment = await appointmentRepository.updateAppointment(id, {
-    scheduledAt: data.scheduledAt,
-    durationMinutes: data.durationMinutes,
-    type: data.type,
-    typeLabel: data.type === "OTHER" ? data.typeLabel || null : null,
-    notes: data.notes,
-    realtor: { connect: { id: data.realtorId } },
-    lead: data.leadId ? { connect: { id: data.leadId } } : { disconnect: true },
-    client: data.clientId ? { connect: { id: data.clientId } } : { disconnect: true },
-    property: data.propertyId ? { connect: { id: data.propertyId } } : { disconnect: true },
+  const current = await appointmentRepository.findAppointmentById(id)
+  const result = await appointmentRepository.withRealtorScheduleLock(data.realtorId, async (tx) => {
+    // Cancelado/realizado não ocupa a agenda — só checa se ele está ativo.
+    if (current && ACTIVE_STATUSES.includes(current.status)) {
+      const conflict = await findBlockingConflict(tx, {
+        realtorId: data.realtorId,
+        scheduledAt: data.scheduledAt,
+        durationMinutes: data.durationMinutes,
+        excludeId: id,
+      })
+      if (conflict) return { error: conflict }
+    }
+    return {
+      appointment: await appointmentRepository.updateAppointmentTx(tx, id, {
+        scheduledAt: data.scheduledAt,
+        durationMinutes: data.durationMinutes,
+        type: data.type,
+        typeLabel: data.type === "OTHER" ? data.typeLabel || null : null,
+        notes: data.notes,
+        realtor: { connect: { id: data.realtorId } },
+        lead: data.leadId ? { connect: { id: data.leadId } } : { disconnect: true },
+        client: data.clientId ? { connect: { id: data.clientId } } : { disconnect: true },
+        property: data.propertyId ? { connect: { id: data.propertyId } } : { disconnect: true },
+      }),
+    }
   })
+  if ("error" in result) return { error: result.error as string }
+  const { appointment } = result
 
   await logActivity({
     userId: session.user.id,
@@ -253,7 +310,7 @@ export async function updateAppointment(id: string, input: unknown) {
   })
 
   revalidatePath("/admin/agenda")
-  return appointment
+  return { appointment }
 }
 
 // Reagendamento via drag-and-drop — atalho pra não exigir o formulário
@@ -263,9 +320,22 @@ export async function rescheduleAppointment(id: string, input: unknown) {
   await assertCanManageAppointment(session, id)
   const data = appointmentRescheduleSchema.parse(input)
 
-  const appointment = await appointmentRepository.updateAppointment(id, {
-    scheduledAt: data.scheduledAt,
+  const current = await appointmentRepository.findAppointmentById(id)
+  if (!current) return { error: "Compromisso não encontrado." }
+  const result = await appointmentRepository.withRealtorScheduleLock(current.realtorId, async (tx) => {
+    if (ACTIVE_STATUSES.includes(current.status)) {
+      const conflict = await findBlockingConflict(tx, {
+        realtorId: current.realtorId,
+        scheduledAt: data.scheduledAt,
+        durationMinutes: current.durationMinutes,
+        excludeId: id,
+      })
+      if (conflict) return { error: conflict }
+    }
+    return { appointment: await appointmentRepository.updateAppointmentTx(tx, id, { scheduledAt: data.scheduledAt }) }
   })
+  if ("error" in result) return { error: result.error as string }
+  const { appointment } = result
 
   await logActivity({
     userId: session.user.id,
@@ -275,7 +345,7 @@ export async function rescheduleAppointment(id: string, input: unknown) {
   })
 
   revalidatePath("/admin/agenda")
-  return appointment
+  return { appointment }
 }
 
 export async function updateAppointmentStatus(
@@ -284,7 +354,25 @@ export async function updateAppointmentStatus(
 ) {
   const session = await requireAppointmentManage()
   await assertCanManageAppointment(session, id)
-  const appointment = await appointmentRepository.updateAppointmentStatus(id, status)
+
+  // Voltar um cancelado/realizado pra Agendado/Confirmado (ou confirmar
+  // um pedido de visita do site) volta a ocupar a agenda — checa o horário.
+  const current = await appointmentRepository.findAppointmentById(id)
+  if (!current) return { error: "Compromisso não encontrado." }
+  const result = await appointmentRepository.withRealtorScheduleLock(current.realtorId, async (tx) => {
+    if (ACTIVE_STATUSES.includes(status)) {
+      const conflict = await findBlockingConflict(tx, {
+        realtorId: current.realtorId,
+        scheduledAt: current.scheduledAt,
+        durationMinutes: current.durationMinutes,
+        excludeId: id,
+      })
+      if (conflict) return { error: conflict }
+    }
+    return { appointment: await appointmentRepository.updateAppointmentTx(tx, id, { status }) }
+  })
+  if ("error" in result) return { error: result.error as string }
+  const { appointment } = result
 
   await logActivity({
     userId: session.user.id,
@@ -294,7 +382,7 @@ export async function updateAppointmentStatus(
   })
 
   revalidatePath("/admin/agenda")
-  return appointment
+  return { appointment }
 }
 
 export async function deleteAppointment(id: string) {
