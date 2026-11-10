@@ -24,6 +24,7 @@ import { formatCurrency, formatDateOnlyBR } from "@/lib/format"
 import { createProposalWizard } from "@/modules/proposal/actions"
 import { suggestClients, createClientManually, getClientDealContext } from "@/modules/client/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
+import { PAYMENT_METHODS, paymentFields } from "@/modules/proposal/payment"
 import { PropertyPicker } from "@/components/admin/property-picker"
 import type { PropertyListItem } from "@/modules/property/repository"
 
@@ -38,7 +39,6 @@ const CONTRACT_STATUS_TEXT: Record<string, string> = {
   CANCELED: "cancelado",
 }
 
-const PAYMENT_METHODS = ["À vista", "Financiado", "Financiado + FGTS", "Parcelado com a imobiliária"]
 
 const STEPS = ["Cliente", "Imóvel", "Valores", "Condições", "Resumo"] as const
 
@@ -127,7 +127,7 @@ export function ProposalWizardSheet({
   const [commissionPercent, setCommissionPercent] = useState("")
 
   // Passo 4 — Condições
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0])
+  const [paymentMethod, setPaymentMethod] = useState<string>(PAYMENT_METHODS[0])
   const [validUntil, setValidUntil] = useState("")
   const [notes, setNotes] = useState("")
 
@@ -215,18 +215,39 @@ export function ProposalWizardSheet({
     }
   }
 
-  const isFinanced = paymentMethod.startsWith("Financiado")
+  // Cada forma de pagamento pede só os campos que fazem sentido: à vista
+  // não tem entrada/financiamento/parcelas, é o valor total.
+  const fields = paymentFields(paymentMethod)
+  const isCash = !fields.downPayment && !fields.financing && !fields.fgts && !fields.installments
   const numericValue = Number(value) || 0
   const numericOriginal = Number(originalValue) || 0
   const discount = numericOriginal > 0 ? numericOriginal - numericValue : 0
   const discountPercent = numericOriginal > 0 ? (discount / numericOriginal) * 100 : 0
 
-  const simulationTotal =
-    (Number(downPayment) || 0) + (Number(financingValue) || 0) + (Number(fgtsValue) || 0) +
-    (isFinanced ? 0 : (Number(installments) || 0) * (Number(installmentValue) || 0))
+  const numDown = fields.downPayment ? Number(downPayment) || 0 : 0
+  const numFinancing = fields.financing ? Number(financingValue) || 0 : 0
+  const numFgts = fields.fgts ? Number(fgtsValue) || 0 : 0
+  const numInstallments = fields.installments ? Number(installments) || 0 : 0
+  const numInstallmentValue = fields.installments ? Number(installmentValue) || 0 : 0
+  const installmentsTotal = numInstallments * numInstallmentValue
+  const simulationTotal = numDown + numFinancing + numFgts + installmentsTotal
   const simulationDiff = numericValue > 0 ? simulationTotal - numericValue : 0
   const showSimulationWarning =
     simulationTotal > 0 && numericValue > 0 && Math.abs(simulationDiff) > 0.01
+  // O que ainda falta cobrir do valor ofertado — base dos botões de atalho.
+  const remaining = numericValue > 0 ? Math.max(0, numericValue - simulationTotal) : 0
+  const roundMoney = (n: number) => Math.round(n * 100) / 100
+
+  function fillFinancingWithRemaining() {
+    setFinancingValue(String(roundMoney(numFinancing + remaining)))
+  }
+
+  // Parcela = o que falta cobrir (antes das parcelas) dividido pela quantidade.
+  function calculateInstallmentValue() {
+    if (numInstallments <= 0) return
+    const toCover = Math.max(0, numericValue - numDown - numFinancing - numFgts)
+    setInstallmentValue(String(roundMoney(toCover / numInstallments)))
+  }
 
   function canAdvance() {
     if (step === 1) return !!client
@@ -271,11 +292,12 @@ export function ProposalWizardSheet({
         leadId,
         value: numericValue,
         originalValue: numericOriginal || undefined,
-        downPayment: downPayment ? Number(downPayment) : undefined,
-        financingValue: financingValue ? Number(financingValue) : undefined,
-        fgtsValue: fgtsValue ? Number(fgtsValue) : undefined,
-        installments: !isFinanced && installments ? Number(installments) : undefined,
-        installmentValue: !isFinanced && installmentValue ? Number(installmentValue) : undefined,
+        // Só vai o que a forma de pagamento escolhida usa.
+        downPayment: numDown || undefined,
+        financingValue: numFinancing || undefined,
+        fgtsValue: numFgts || undefined,
+        installments: numInstallments || undefined,
+        installmentValue: numInstallmentValue || undefined,
         commissionPercent: commissionPercent ? Number(commissionPercent) : undefined,
         paymentMethod,
         validUntil: validUntil ? new Date(validUntil) : undefined,
@@ -528,36 +550,71 @@ export function ProposalWizardSheet({
               </p>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Entrada</Label>
-                <CurrencyInput value={downPayment} onChange={(v) => setDownPayment(v ? v.toString() : "")} />
+            {isCash ? (
+              <p className="rounded-lg bg-secondary/60 px-3 py-2.5 text-sm text-muted-foreground">
+                Pagamento à vista: o cliente paga o valor ofertado de uma vez
+                {numericValue > 0 ? <> ({formatCurrency(numericValue)})</> : null}. Sem entrada, financiamento ou
+                parcelas.
+              </p>
+            ) : (
+              <div className="space-y-3 rounded-xl border border-border/60 p-4">
+                <p className="text-sm font-medium">Como o valor será pago</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {fields.downPayment ? (
+                    <div className="space-y-1.5">
+                      <Label>Entrada</Label>
+                      <CurrencyInput value={downPayment} onChange={(v) => setDownPayment(v ? v.toString() : "")} />
+                    </div>
+                  ) : null}
+                  {fields.fgts ? (
+                    <div className="space-y-1.5">
+                      <Label>FGTS</Label>
+                      <CurrencyInput value={fgtsValue} onChange={(v) => setFgtsValue(v ? v.toString() : "")} />
+                    </div>
+                  ) : null}
+                  {fields.financing ? (
+                    <div className="col-span-2 space-y-1.5">
+                      <Label>Valor financiado (banco)</Label>
+                      <CurrencyInput value={financingValue} onChange={(v) => setFinancingValue(v ? v.toString() : "")} />
+                      {remaining > 0.01 ? (
+                        <button
+                          type="button"
+                          onClick={fillFinancingWithRemaining}
+                          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                        >
+                          Financiar o restante ({formatCurrency(remaining)})
+                        </button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {fields.installments ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <Label>Parcelas com a imobiliária (qtd.)</Label>
+                        <Input type="number" min={1} value={installments} onChange={(e) => setInstallments(e.target.value)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Valor de cada parcela</Label>
+                        <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
+                        {numInstallments > 0 && numericValue > 0 ? (
+                          <button
+                            type="button"
+                            onClick={calculateInstallmentValue}
+                            className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                          >
+                            Calcular com o que falta
+                          </button>
+                        ) : null}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Financiamento</Label>
-                <CurrencyInput value={financingValue} onChange={(v) => setFinancingValue(v ? v.toString() : "")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>FGTS</Label>
-                <CurrencyInput value={fgtsValue} onChange={(v) => setFgtsValue(v ? v.toString() : "")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Comissão (%)</Label>
-                <Input type="number" step="0.01" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} />
-              </div>
-              {/* Financiado não tem parcelas com a imobiliária — o banco cuida disso. */}
-              {isFinanced ? null : (
-                <>
-                  <div className="space-y-1.5">
-                    <Label>Parcelas (qtd.)</Label>
-                    <Input type="number" value={installments} onChange={(e) => setInstallments(e.target.value)} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Valor da parcela</Label>
-                    <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
-                  </div>
-                </>
-              )}
+            )}
+
+            <div className="space-y-1.5">
+              <Label>Comissão (%)</Label>
+              <Input type="number" step="0.01" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} />
             </div>
 
             {simulationTotal > 0 ? (

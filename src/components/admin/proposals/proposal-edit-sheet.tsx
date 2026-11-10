@@ -10,6 +10,14 @@ import { Input } from "@/components/ui/input"
 import { CurrencyInput } from "@/components/ui/currency-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { PAYMENT_METHODS, paymentFields } from "@/modules/proposal/payment"
 import { updateProposal } from "@/modules/proposal/actions"
 import type { AdminProposalDetail } from "@/modules/proposal/actions"
 
@@ -39,9 +47,11 @@ export function ProposalEditSheet({
     proposal.validUntil ? new Date(proposal.validUntil).toISOString().slice(0, 10) : ""
   )
   const [notes, setNotes] = useState(proposal.notes ?? "")
-  // Financiado não tem parcelas com a imobiliária (campo de texto livre aqui,
-  // então compara sem acento/maiúscula).
-  const isFinanced = paymentMethod.trim().toLowerCase().startsWith("financ")
+  const fields = paymentFields(paymentMethod)
+  const isCash = !fields.downPayment && !fields.financing && !fields.fgts && !fields.installments
+  // Forma de pagamento antiga em texto livre continua na lista pra não sumir.
+  const methodOptions: string[] = [...PAYMENT_METHODS]
+  if (paymentMethod && !methodOptions.includes(paymentMethod)) methodOptions.push(paymentMethod)
 
   async function handleSubmit() {
     setIsSubmitting(true)
@@ -52,11 +62,12 @@ export function ProposalEditSheet({
         realtorId: proposal.realtorId,
         value: Number(value),
         originalValue: originalValue ? Number(originalValue) : undefined,
-        downPayment: downPayment ? Number(downPayment) : undefined,
-        financingValue: financingValue ? Number(financingValue) : undefined,
-        fgtsValue: fgtsValue ? Number(fgtsValue) : undefined,
-        installments: !isFinanced && installments ? Number(installments) : undefined,
-        installmentValue: !isFinanced && installmentValue ? Number(installmentValue) : undefined,
+        // Só vai o que a forma de pagamento escolhida usa.
+        downPayment: fields.downPayment && downPayment ? Number(downPayment) : undefined,
+        financingValue: fields.financing && financingValue ? Number(financingValue) : undefined,
+        fgtsValue: fields.fgts && fgtsValue ? Number(fgtsValue) : undefined,
+        installments: fields.installments && installments ? Number(installments) : undefined,
+        installmentValue: fields.installments && installmentValue ? Number(installmentValue) : undefined,
         commissionPercent: commissionPercent ? Number(commissionPercent) : undefined,
         paymentMethod,
         validUntil: validUntil ? new Date(validUntil) : undefined,
@@ -86,40 +97,65 @@ export function ProposalEditSheet({
             <CurrencyInput value={value} onChange={(v) => setValue(v ? v.toString() : "")} />
           </div>
         </div>
+        <div className="space-y-1.5">
+          <Label>Forma de pagamento</Label>
+          <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              {methodOptions.map((method) => (
+                <SelectItem key={method} value={method}>
+                  {method}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {isCash ? (
+          <p className="rounded-lg bg-secondary/60 px-3 py-2.5 text-sm text-muted-foreground">
+            Pagamento à vista: o valor ofertado é pago de uma vez, sem entrada, financiamento ou parcelas.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 rounded-xl border border-border/60 p-4">
+            {fields.downPayment ? (
+              <div className="space-y-1.5">
+                <Label>Entrada</Label>
+                <CurrencyInput value={downPayment} onChange={(v) => setDownPayment(v ? v.toString() : "")} />
+              </div>
+            ) : null}
+            {fields.fgts ? (
+              <div className="space-y-1.5">
+                <Label>FGTS</Label>
+                <CurrencyInput value={fgtsValue} onChange={(v) => setFgtsValue(v ? v.toString() : "")} />
+              </div>
+            ) : null}
+            {fields.financing ? (
+              <div className="col-span-2 space-y-1.5">
+                <Label>Valor financiado (banco)</Label>
+                <CurrencyInput value={financingValue} onChange={(v) => setFinancingValue(v ? v.toString() : "")} />
+              </div>
+            ) : null}
+            {fields.installments ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label>Parcelas com a imobiliária (qtd.)</Label>
+                  <Input type="number" min={1} value={installments} onChange={(e) => setInstallments(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Valor de cada parcela</Label>
+                  <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
+                </div>
+              </>
+            ) : null}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label>Entrada</Label>
-            <CurrencyInput value={downPayment} onChange={(v) => setDownPayment(v ? v.toString() : "")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Financiamento</Label>
-            <CurrencyInput value={financingValue} onChange={(v) => setFinancingValue(v ? v.toString() : "")} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>FGTS</Label>
-            <CurrencyInput value={fgtsValue} onChange={(v) => setFgtsValue(v ? v.toString() : "")} />
-          </div>
           <div className="space-y-1.5">
             <Label>Comissão (%)</Label>
             <Input type="number" step="0.01" value={commissionPercent} onChange={(e) => setCommissionPercent(e.target.value)} />
-          </div>
-          {isFinanced ? null : (
-            <>
-              <div className="space-y-1.5">
-                <Label>Parcelas (qtd.)</Label>
-                <Input type="number" value={installments} onChange={(e) => setInstallments(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Valor da parcela</Label>
-                <CurrencyInput value={installmentValue} onChange={(v) => setInstallmentValue(v ? v.toString() : "")} />
-              </div>
-            </>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label>Forma de pagamento</Label>
-            <Input value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label>Validade</Label>
