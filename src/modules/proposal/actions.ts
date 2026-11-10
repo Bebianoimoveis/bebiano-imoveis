@@ -14,6 +14,7 @@ import {
 } from "@/modules/proposal/schema"
 import * as proposalRepository from "@/modules/proposal/repository"
 import * as contractRepository from "@/modules/contract/repository"
+import { brazilDayWindow } from "@/lib/date"
 
 async function requireSession() {
   const session = await auth()
@@ -47,9 +48,16 @@ async function buildProposalScopeWhere(
       filters.minValue || filters.maxValue
         ? { gte: filters.minValue, lte: filters.maxValue }
         : undefined,
+    // createdFrom/createdTo vêm de <input type="date"> (dia puro, meia-noite
+    // UTC); createdAt tem hora de verdade. Converte pro dia inteiro em
+    // Brasília — senão "até 31/10" deixava de fora tudo criado no próprio dia
+    // 31 e "de 01/11" puxava as últimas 3h de 31/10.
     createdAt:
       filters.createdFrom || filters.createdTo
-        ? { gte: filters.createdFrom, lte: filters.createdTo }
+        ? {
+            gte: filters.createdFrom ? brazilDayWindow(filters.createdFrom).from : undefined,
+            lte: filters.createdTo ? brazilDayWindow(filters.createdTo).to : undefined,
+          }
         : undefined,
     property: filters.cityId ? { cityId: filters.cityId } : undefined,
     OR: filters.search

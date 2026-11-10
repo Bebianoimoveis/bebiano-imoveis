@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react"
 
 import { DashboardSection } from "@/components/admin/dashboard/dashboard-section"
 import { ProposalKpis } from "@/components/admin/proposals/proposal-kpis"
+import { ProposalPeriodFilter } from "@/components/admin/proposals/proposal-period-filter"
 import { ProposalSearch } from "@/components/admin/proposals/proposal-search"
 import { ProposalFiltersSheet } from "@/components/admin/proposals/proposal-filters-sheet"
 import { ProposalExportButton } from "@/components/admin/proposals/proposal-export-button"
@@ -86,7 +87,8 @@ export default async function AdminProposalsPage({
         </div>
       </DashboardSection>
 
-      <DashboardSection index={1}>
+      <DashboardSection index={1} className="space-y-3">
+        <ProposalPeriodFilter />
         <ProposalKpis stats={stats} />
       </DashboardSection>
 

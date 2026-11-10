@@ -127,11 +127,11 @@ export function ProposalFiltersSheet({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Criada de</Label>
-              <Input type="date" defaultValue={searchParams.get("createdFrom") ?? ""} onChange={(e) => updateField("createdFrom", e.target.value)} />
+              <Input key={searchParams.get("createdFrom") ?? "from"} type="date" defaultValue={searchParams.get("createdFrom") ?? ""} onChange={(e) => updateField("createdFrom", e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Criada até</Label>
-              <Input type="date" defaultValue={searchParams.get("createdTo") ?? ""} onChange={(e) => updateField("createdTo", e.target.value)} />
+              <Input key={searchParams.get("createdTo") ?? "to"} type="date" defaultValue={searchParams.get("createdTo") ?? ""} onChange={(e) => updateField("createdTo", e.target.value)} />
             </div>
           </div>
         </div>
