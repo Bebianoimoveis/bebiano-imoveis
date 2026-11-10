@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
+import { ContractStatusMenu } from "@/components/admin/contracts/contract-status-menu"
 import { ContractRowActions } from "@/components/admin/contracts/contract-row-actions"
 import { ContractDetailPanel } from "@/components/admin/contracts/contract-detail-panel"
 import { FinancialEntryFormDialog } from "@/components/admin/financial/financial-entry-form-dialog"
@@ -48,9 +48,11 @@ function formatDay(iso: string) {
 export function ContractDirectory({
   contracts,
   canManageFinancial,
+  canManageContracts,
 }: {
   contracts: ContractRow[]
   canManageFinancial: boolean
+  canManageContracts: boolean
 }) {
   const [openId, setOpenId] = useState<string | null>(null)
 
@@ -138,8 +140,12 @@ export function ContractDirectory({
                         ) : null}
                       </TableCell>
                       <TableCell className="text-sm font-medium whitespace-nowrap">{formatCurrency(contract.value)}</TableCell>
-                      <TableCell>
-                        <ContractStatusBadge status={contract.status} />
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <ContractStatusMenu
+                          contractId={contract.id}
+                          status={contract.status}
+                          canManage={canManageContracts}
+                        />
                       </TableCell>
                       <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                         {formatDay(contract.createdAt)}

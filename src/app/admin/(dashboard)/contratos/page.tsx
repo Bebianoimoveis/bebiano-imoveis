@@ -165,7 +165,11 @@ export default async function AdminContractsPage({ searchParams }: { searchParam
           {rows.length === 0 ? (
             <ContractNoResults />
           ) : (
-            <ContractDirectory contracts={rows} canManageFinancial={canManageFinancial} />
+            <ContractDirectory
+              contracts={rows}
+              canManageFinancial={canManageFinancial}
+              canManageContracts={canManageContracts}
+            />
           )}
         </>
       )}

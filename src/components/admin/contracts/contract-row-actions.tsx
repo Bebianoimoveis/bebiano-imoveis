@@ -27,21 +27,20 @@ import { Button } from "@/components/ui/button"
 import { updateContractStatus, deleteContract } from "@/modules/contract/actions"
 import type { ContractStatus } from "@/generated/prisma/client"
 
-const OPTIONS: Partial<Record<ContractStatus, { status: ContractStatus; label: string }[]>> = {
-  DRAFT: [
-    { status: "ACTIVE", label: "Marcar como assinado/ativo" },
-    { status: "CANCELED", label: "Cancelar" },
-  ],
-  ACTIVE: [
-    { status: "COMPLETED", label: "Marcar como concluído" },
-    { status: "CANCELED", label: "Cancelar" },
-  ],
-}
+// Qualquer status pode ir pra qualquer outro — inclusive voltar atrás
+// (ex: Concluído → Ativo, se marcou errado).
+const ALL_OPTIONS: { status: ContractStatus; label: string }[] = [
+  { status: "DRAFT", label: "Voltar para rascunho" },
+  { status: "ACTIVE", label: "Marcar como assinado/ativo" },
+  { status: "COMPLETED", label: "Marcar como concluído" },
+  { status: "CANCELED", label: "Cancelar contrato" },
+]
 
 export function ContractRowActions({
   contractId,
   status,
   onDeleted,
+  onStatusChanged,
 }: {
   contractId: string
   status: ContractStatus
@@ -49,6 +48,7 @@ export function ContractRowActions({
   // listagem (linha da tabela) fica undefined, só o router.refresh()
   // já resolve.
   onDeleted?: () => void
+  onStatusChanged?: () => void
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -58,6 +58,7 @@ export function ContractRowActions({
       try {
         await updateContractStatus(contractId, nextStatus)
         toast.success("Status atualizado.")
+        onStatusChanged?.()
         router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
@@ -78,7 +79,7 @@ export function ContractRowActions({
     })
   }
 
-  const options = OPTIONS[status] ?? []
+  const options = ALL_OPTIONS.filter((option) => option.status !== status)
 
   return (
     <AlertDialog>

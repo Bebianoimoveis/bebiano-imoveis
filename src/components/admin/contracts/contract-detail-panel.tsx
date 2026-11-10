@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ContractStatusBadge } from "@/components/admin/contracts/contract-status-badge"
+import { ContractStatusMenu } from "@/components/admin/contracts/contract-status-menu"
 import { ContractRowActions } from "@/components/admin/contracts/contract-row-actions"
 import {
   getAdminContract,
@@ -134,8 +134,13 @@ export function ContractDetailPanel({
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <ContractStatusBadge status={contract.status} />
-              <ContractRowActions contractId={contract.id} status={contract.status} onDeleted={onClose} />
+              <ContractStatusMenu contractId={contract.id} status={contract.status} onChanged={refetch} />
+              <ContractRowActions
+                contractId={contract.id}
+                status={contract.status}
+                onDeleted={onClose}
+                onStatusChanged={refetch}
+              />
             </div>
           </div>
 

@@ -72,12 +72,21 @@ export async function createContract(data: Prisma.ContractCreateInput) {
   return prisma.contract.create({ data, include: contractInclude })
 }
 
+// signedAt guarda quando foi assinado pela primeira vez — trocar o status
+// de novo (ex: Concluído → Ativo, corrigindo um clique errado) não
+// sobrescreve a data original. Voltar pra rascunho limpa a assinatura.
 export async function updateContractStatus(id: string, status: ContractStatus) {
+  const current = await prisma.contract.findUnique({ where: { id }, select: { signedAt: true } })
   return prisma.contract.update({
     where: { id },
     data: {
       status,
-      signedAt: status === "ACTIVE" ? new Date() : undefined,
+      signedAt:
+        status === "DRAFT"
+          ? null
+          : (status === "ACTIVE" || status === "COMPLETED") && !current?.signedAt
+            ? new Date()
+            : undefined,
     },
     include: contractInclude,
   })
