@@ -33,6 +33,7 @@ import { getClientInterestedProperties } from "@/modules/client/actions"
 import { createContractFileUploadSignature } from "@/modules/upload/actions"
 import { uploadContractFile } from "@/modules/upload/client"
 import type { ContractStatus } from "@/generated/prisma/client"
+import { fileViewUrl } from "@/lib/file-url"
 
 type RealtorOption = { id: string; user: { name: string } }
 type PropertyOption = { id: string; code: string; title: string; imageUrl?: string | null }
@@ -310,7 +311,7 @@ export function ManualContractFormDialog({
             {fileUrl ? (
               <div className="flex items-center gap-2 rounded-lg border border-border/60 p-2 text-sm">
                 <Paperclip className="size-4 shrink-0 text-muted-foreground" />
-                <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary">
+                <a href={fileViewUrl(fileUrl)} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary">
                   {fileName ?? "Ver arquivo"}
                 </a>
                 <button

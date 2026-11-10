@@ -59,6 +59,7 @@ import { formatCurrency, getDisplayAddress, formatDateTimeBR, formatDateOnlyBR }
 import { siteConfig } from "@/config/site"
 import type { AdminProposalDetail } from "@/modules/proposal/actions"
 import type { ProposalStatus } from "@/generated/prisma/client"
+import { fileViewUrl } from "@/lib/file-url"
 
 type RealtorOption = { id: string; user: { name: string } }
 
@@ -411,7 +412,7 @@ export function ProposalDetailPanel({
                       <p className="text-muted-foreground">{formatCurrency(proposal.contract.value.toString())}</p>
                       {proposal.contract.fileUrl ? (
                         <Button asChild size="sm" variant="outline">
-                          <a href={proposal.contract.fileUrl} target="_blank" rel="noopener noreferrer">
+                          <a href={fileViewUrl(proposal.contract.fileUrl)} target="_blank" rel="noopener noreferrer">
                             Baixar contrato assinado
                           </a>
                         </Button>

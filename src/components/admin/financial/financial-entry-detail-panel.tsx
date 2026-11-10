@@ -33,6 +33,7 @@ import {
 } from "@/modules/financial/actions"
 import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
 import { formatDateOnlyBR } from "@/lib/format"
+import { fileViewUrl } from "@/lib/file-url"
 
 type FinancialEntryDetail = NonNullable<Awaited<ReturnType<typeof getAdminFinancialEntry>>>
 
@@ -308,7 +309,7 @@ export function FinancialEntryDetailPanel({
                       <Paperclip className="size-4 shrink-0 text-muted-foreground" />
                       <span className="flex-1 truncate">{entry.attachmentName ?? "Comprovante"}</span>
                       <Button asChild size="sm" variant="outline">
-                        <a href={entry.attachmentUrl} target="_blank" rel="noopener noreferrer">
+                        <a href={fileViewUrl(entry.attachmentUrl)} target="_blank" rel="noopener noreferrer">
                           Baixar
                         </a>
                       </Button>

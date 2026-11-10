@@ -29,6 +29,7 @@ import {
   type SubmissionDetail,
 } from "@/modules/submission/actions"
 import { formatCurrency } from "@/lib/format"
+import { fileViewUrl } from "@/lib/file-url"
 
 type PropertyOption = { id: string; code: string; title: string }
 
@@ -317,7 +318,7 @@ export function SubmissionDetailPanel({
                   {documents.map((file) => (
                     <li key={file.id}>
                       <a
-                        href={file.url}
+                        href={fileViewUrl(file.url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex min-w-0 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm transition-colors hover:border-primary"

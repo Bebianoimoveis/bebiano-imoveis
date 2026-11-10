@@ -30,6 +30,7 @@ import {
 import { createContractFileUploadSignature } from "@/modules/upload/actions"
 import { uploadContractFile } from "@/modules/upload/client"
 import { formatCurrency, formatDateBR } from "@/lib/format"
+import { fileViewUrl } from "@/lib/file-url"
 
 type ContractDetail = NonNullable<Awaited<ReturnType<typeof getAdminContract>>>
 
@@ -173,7 +174,7 @@ export function ContractDetailPanel({
                   <div className="space-y-1 text-sm">
                     <p className="text-muted-foreground">Arquivo do cadastro</p>
                     <a
-                      href={contract.fileUrl}
+                      href={fileViewUrl(contract.fileUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 rounded-xl border border-border/60 p-3 text-primary hover:bg-secondary/40"
@@ -220,7 +221,7 @@ export function ContractDetailPanel({
                       >
                         <Paperclip className="size-4 shrink-0 text-muted-foreground" />
                         <a
-                          href={attachment.url}
+                          href={fileViewUrl(attachment.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 truncate text-primary hover:underline"

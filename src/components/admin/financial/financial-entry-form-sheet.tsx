@@ -38,6 +38,8 @@ import {
   type FinancialEntryFormValues,
   type FinancialEntryInput,
 } from "@/modules/financial/schema"
+import { fileViewUrl } from "@/lib/file-url"
+
 type ClientOption = { id: string; name: string }
 type RealtorOption = { id: string; user: { name: string } }
 type PropertyOption = { id: string; code: string; title: string }
@@ -510,7 +512,7 @@ export function FinancialEntryFormSheet({
               {attachmentUrl ? (
                 <div className="flex items-center gap-2 rounded-lg border border-border/60 p-2 text-sm">
                   <Paperclip className="size-4 shrink-0 text-muted-foreground" />
-                  <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary">
+                  <a href={fileViewUrl(attachmentUrl)} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary">
                     {attachmentName ?? "Ver comprovante"}
                   </a>
                   <button
