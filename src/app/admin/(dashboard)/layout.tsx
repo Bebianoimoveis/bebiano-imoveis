@@ -17,7 +17,11 @@ export default async function AdminDashboardLayout({
     redirect("/admin/login")
   }
 
-  const permissions = await getPermissions(session.user)
+  // Cópia (o Set original é cache por perfil): "goal.view" não existe no
+  // banco — libera o menu Metas pra gestão (financial.view) e pra quem é
+  // corretor (que lá só enxerga as próprias metas).
+  const permissions = new Set(await getPermissions(session.user))
+  if (permissions.has("financial.view") || session.user.realtorId) permissions.add("goal.view")
 
   return (
     <AdminShell user={session.user} permissions={permissions}>

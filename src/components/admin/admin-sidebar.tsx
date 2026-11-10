@@ -42,7 +42,8 @@ type NavItem = {
   label: string
   href: string
   icon: typeof LayoutDashboard
-  permission?: PermissionKey
+  // "goal.view" é calculado no layout (gestão ou corretor), não vem do banco.
+  permission?: PermissionKey | "goal.view"
 }
 
 type NavGroup = {
@@ -74,7 +75,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: "Propostas", href: "/admin/propostas", icon: FileText, permission: "proposal.manage" },
       { label: "Contratos", href: "/admin/contratos", icon: FileSignature, permission: "contract.manage" },
       { label: "Gestão Financeira", href: "/admin/financeiro", icon: Wallet, permission: "financial.view" },
-      { label: "Metas", href: "/admin/metas", icon: Target, permission: "financial.view" },
+      { label: "Metas", href: "/admin/metas", icon: Target, permission: "goal.view" },
     ],
   },
   {

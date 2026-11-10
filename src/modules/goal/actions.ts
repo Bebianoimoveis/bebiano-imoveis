@@ -32,13 +32,25 @@ async function requireFinancialManage() {
   return session
 }
 
-async function requireFinancialView() {
+// Quem vê o quê: com financial.view (gestão), todas as metas. Corretor
+// sem essa permissão, só as metas individuais dele — nunca as da
+// empresa nem as dos colegas. O recorte é aplicado na consulta, não só
+// escondido na tela.
+export type GoalAccess =
+  | { mode: "all"; canManage: boolean }
+  | { mode: "own"; realtorId: string; canManage: false }
+  | { mode: "none" }
+
+export async function getGoalAccess(): Promise<GoalAccess> {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
-  if (!(await can(session.user, "financial.view"))) {
-    throw new Error("Sem permissão para acessar metas.")
-  }
-  return session
+  if (!session?.user) return { mode: "none" }
+  const [canView, canManage] = await Promise.all([
+    can(session.user, "financial.view"),
+    can(session.user, "financial.manage"),
+  ])
+  if (canView) return { mode: "all", canManage }
+  if (session.user.realtorId) return { mode: "own", realtorId: session.user.realtorId, canManage: false }
+  return { mode: "none" }
 }
 
 export type GoalMonthBreakdown = {
@@ -215,34 +227,47 @@ async function buildGoalViews(goals: goalRepository.GoalWithRefs[]): Promise<Goa
 
 // Todas as metas que tocam o ano escolhido, já com o realizado.
 export async function listGoalViews(year: number): Promise<GoalView[]> {
-  await requireFinancialView()
+  const access = await getGoalAccess()
+  if (access.mode === "none") throw new Error("Sem permissão para acessar metas.")
   const goals = await goalRepository.listGoalsOverlapping(
     new Date(Date.UTC(year, 0, 1)),
-    new Date(Date.UTC(year, 11, 31))
+    new Date(Date.UTC(year, 11, 31)),
+    access.mode === "own" ? access.realtorId : undefined
   )
   return buildGoalViews(goals)
 }
 
-// Card "Meta do mês" do painel: a meta da empresa valendo hoje, dando
-// preferência às mensais (um mês / todo mês), depois às mais curtas.
-export async function getDashboardGoal(): Promise<{ goal: GoalView | null; activeCount: number; onTrackCount: number } | null> {
-  const session = await auth()
-  if (!session?.user || !(await can(session.user, "financial.view"))) return null
+// Card "Meta do mês" do painel: a meta valendo hoje, dando preferência
+// às mensais (um mês / todo mês), depois às mais curtas. Gestão vê a da
+// empresa; corretor vê a dele.
+export async function getDashboardGoal(): Promise<{
+  goal: GoalView | null
+  activeCount: number
+  onTrackCount: number
+  personal: boolean
+  canManage: boolean
+} | null> {
+  const access = await getGoalAccess()
+  if (access.mode === "none") return null
 
   const today = brazilDateOnly()
-  const goals = await buildGoalViews(await goalRepository.listGoalsOverlapping(today, today))
+  const goals = await buildGoalViews(
+    await goalRepository.listGoalsOverlapping(today, today, access.mode === "own" ? access.realtorId : undefined)
+  )
   const rank = (goal: GoalView) =>
     goal.period === "MONTH" || goal.period === "MONTHLY" ? 0 : goal.period === "QUARTER" ? 1 : 2
   const metricRank = (goal: GoalView) => (goal.metric === "SALES_VALUE" ? 0 : goal.metric === "REVENUE" ? 1 : 2)
-  const company = goals
-    .filter((goal) => goal.scope === "COMPANY")
+  const candidates = goals
+    .filter((goal) => (access.mode === "own" ? true : goal.scope === "COMPANY"))
     .sort((a, b) => rank(a) - rank(b) || metricRank(a) - metricRank(b))
 
   const onTrack: GoalStatus[] = ["HIT", "ON_TRACK"]
   return {
-    goal: company[0] ?? null,
+    goal: candidates[0] ?? null,
     activeCount: goals.length,
     onTrackCount: goals.filter((goal) => onTrack.includes(goal.progress.status)).length,
+    personal: access.mode === "own",
+    canManage: access.canManage,
   }
 }
 

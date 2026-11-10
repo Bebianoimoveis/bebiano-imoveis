@@ -346,12 +346,15 @@ export function GoalsBoard({
   realtors,
   cities,
   canManage,
+  personal = false,
 }: {
   goals: GoalView[]
   year: number
   realtors: RealtorOption[]
   cities: CityOption[]
   canManage: boolean
+  // Visão do próprio corretor: só as metas dele, sem filtros/ranking.
+  personal?: boolean
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -447,6 +450,29 @@ export function GoalsBoard({
         ))}
       </div>
 
+      {personal ? (
+        goals.length === 0 ? (
+          <EmptyState
+            icon={Target}
+            title={`Nenhuma meta definida para você em ${year}`}
+            description="Quando a Bebiano definir uma meta para você, ela aparece aqui com o seu progresso."
+          />
+        ) : (
+          <div className={grid}>
+            {goals.map((goal) => (
+              <GoalCard
+                key={goal.id}
+                goal={goal}
+                canManage={false}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+                isPending={isPending}
+              />
+            ))}
+          </div>
+        )
+      ) : (
+      <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-1.5">
           {filters.map((item) => (
@@ -575,7 +601,10 @@ export function GoalsBoard({
       {filter !== "ALL" && goals.length > 0 && filters.find((f) => f.value === filter)?.count === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma meta nesse grupo em {year}.</p>
       ) : null}
+      </>
+      )}
 
+      {canManage ? (
       <GoalFormSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
@@ -584,6 +613,7 @@ export function GoalsBoard({
         realtors={realtors}
         cities={cities}
       />
+      ) : null}
     </div>
   )
 }

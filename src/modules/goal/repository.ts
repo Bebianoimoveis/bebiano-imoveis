@@ -10,9 +10,19 @@ const goalInclude = {
 export type GoalWithRefs = Prisma.GoalGetPayload<{ include: typeof goalInclude }>
 
 // Metas cujo período encosta em [from, to] (datas "só dia").
-export async function listGoalsOverlapping(from: Date, to: Date): Promise<GoalWithRefs[]> {
+// `onlyRealtorId`: só as metas individuais daquele corretor (visão do
+// próprio corretor — nada da empresa nem dos colegas).
+export async function listGoalsOverlapping(
+  from: Date,
+  to: Date,
+  onlyRealtorId?: string
+): Promise<GoalWithRefs[]> {
   return prisma.goal.findMany({
-    where: { startDate: { lte: to }, endDate: { gte: from } },
+    where: {
+      startDate: { lte: to },
+      endDate: { gte: from },
+      ...(onlyRealtorId ? { scope: "REALTOR" as const, realtorId: onlyRealtorId } : {}),
+    },
     include: goalInclude,
     orderBy: [{ scope: "asc" }, { startDate: "asc" }, { createdAt: "asc" }],
   })

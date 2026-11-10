@@ -3,11 +3,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { DashboardSection } from "@/components/admin/dashboard/dashboard-section"
 import { GoalsBoard } from "@/components/admin/goals/goals-board"
-import { listGoalViews } from "@/modules/goal/actions"
+import { getGoalAccess, listGoalViews } from "@/modules/goal/actions"
 import { listCities } from "@/modules/taxonomy/actions"
 import { listRealtors } from "@/modules/realtor/actions"
-import { auth } from "@/lib/auth"
-import { can } from "@/lib/permissions"
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -17,17 +15,19 @@ export default async function AdminGoalsPage({ searchParams }: { searchParams: P
   const yearParam = typeof params.ano === "string" ? Number(params.ano) : NaN
   const year = Number.isInteger(yearParam) && yearParam >= 2020 && yearParam <= 2100 ? yearParam : currentYear
 
-  const session = await auth()
-  const [canView, canManage] = await Promise.all([
-    can(session?.user, "financial.view"),
-    can(session?.user, "financial.manage"),
-  ])
-
-  if (!canView) {
+  const access = await getGoalAccess()
+  if (access.mode === "none") {
     return <p className="text-sm text-muted-foreground">Você não tem permissão para ver as metas.</p>
   }
+  // Corretor: só as metas dele (o filtro é feito em listGoalViews).
+  const personal = access.mode === "own"
+  const canManage = access.canManage
 
-  const [goals, realtors, cities] = await Promise.all([listGoalViews(year), listRealtors(), listCities()])
+  const [goals, realtors, cities] = await Promise.all([
+    listGoalViews(year),
+    canManage ? listRealtors() : Promise.resolve([]),
+    canManage ? listCities() : Promise.resolve([]),
+  ])
   const realtorOptions = realtors
     .filter((realtor) => realtor.active)
     .map((realtor) => ({ id: realtor.id, user: { name: realtor.user.name } }))
@@ -42,11 +42,13 @@ export default async function AdminGoalsPage({ searchParams }: { searchParams: P
               Visão Geral
             </Link>
             <ChevronRight className="size-3" />
-            <span>Metas</span>
+            <span>{personal ? "Minhas metas" : "Metas"}</span>
           </div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Metas</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">{personal ? "Minhas metas" : "Metas"}</h1>
           <p className="text-sm text-muted-foreground">
-            Acompanhe se as metas da empresa e de cada corretor estão sendo batidas.
+            {personal
+              ? "Acompanhe as metas definidas para você e se está no ritmo para batê-las."
+              : "Acompanhe se as metas da empresa e de cada corretor estão sendo batidas."}
           </p>
         </div>
 
@@ -75,6 +77,7 @@ export default async function AdminGoalsPage({ searchParams }: { searchParams: P
         realtors={realtorOptions}
         cities={cityOptions}
         canManage={canManage}
+        personal={personal}
       />
     </div>
   )

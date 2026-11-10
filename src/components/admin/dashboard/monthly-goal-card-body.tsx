@@ -21,12 +21,16 @@ export function MonthlyGoalCardBody({
   goal,
   activeCount,
   onTrackCount,
+  personal,
+  canManage,
   realtors,
   cities,
 }: {
   goal: GoalView | null
   activeCount: number
   onTrackCount: number
+  personal: boolean
+  canManage: boolean
   realtors: RealtorOption[]
   cities: CityOption[]
 }) {
@@ -39,7 +43,11 @@ export function MonthlyGoalCardBody({
     <div className="rounded-[20px] border border-border/60 bg-card p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-heading text-base font-semibold">
-          {!goal || goal.period === "MONTH" || goal.period === "MONTHLY" ? "Meta do mês" : "Meta da empresa"}
+          {personal
+            ? "Minha meta"
+            : !goal || goal.period === "MONTH" || goal.period === "MONTHLY"
+              ? "Meta do mês"
+              : "Meta da empresa"}
         </h2>
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary admin-light:bg-[linear-gradient(145deg,#8F1238,#650923)] admin-light:text-white admin-light:shadow-sm">
           <Target className="size-4" />
@@ -48,10 +56,14 @@ export function MonthlyGoalCardBody({
 
       {!goal ? (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <p className="text-sm text-muted-foreground">Nenhuma meta da empresa valendo agora.</p>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setOpen(true)}>
-            <Plus className="size-3.5" /> Cadastrar meta
-          </Button>
+          <p className="text-sm text-muted-foreground">
+            {personal ? "Nenhuma meta definida para você agora." : "Nenhuma meta da empresa valendo agora."}
+          </p>
+          {canManage ? (
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setOpen(true)}>
+              <Plus className="size-3.5" /> Cadastrar meta
+            </Button>
+          ) : null}
         </div>
       ) : (
         <div className="space-y-2">
@@ -81,12 +93,14 @@ export function MonthlyGoalCardBody({
         <span>
           {activeCount > 0
             ? `${onTrackCount} de ${activeCount} meta${activeCount === 1 ? "" : "s"} no ritmo`
-            : "Ver todas as metas"}
+            : personal
+              ? "Ver minhas metas"
+              : "Ver todas as metas"}
         </span>
         <ArrowRight className="size-3.5" />
       </Link>
 
-      <GoalFormSheet open={open} onOpenChange={setOpen} realtors={realtors} cities={cities} />
+      {canManage ? <GoalFormSheet open={open} onOpenChange={setOpen} realtors={realtors} cities={cities} /> : null}
     </div>
   )
 }
