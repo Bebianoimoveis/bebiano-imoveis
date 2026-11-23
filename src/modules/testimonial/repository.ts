@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client"
 
 export async function listAllTestimonials() {
   return prisma.testimonial.findMany({
-    include: { realtor: { include: { user: true } } },
+    include: { realtor: { include: { user: { select: { id: true, name: true } } } } },
     orderBy: [{ order: "asc" }, { createdAt: "desc" }],
   })
 }
@@ -13,7 +13,7 @@ export async function listAllTestimonials() {
 export async function listRealtorsWithTestimonialCounts() {
   const realtors = await prisma.realtor.findMany({
     where: { active: true, deletedAt: null },
-    include: { user: true, _count: { select: { testimonials: true } } },
+    include: { user: { select: { id: true, name: true } }, _count: { select: { testimonials: true } } },
     orderBy: { user: { name: "asc" } },
   })
   return realtors
@@ -42,6 +42,6 @@ export async function deleteTestimonial(id: string) {
 export async function findActiveRealtorBySlug(slug: string) {
   return prisma.realtor.findFirst({
     where: { slug, active: true, deletedAt: null },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   })
 }

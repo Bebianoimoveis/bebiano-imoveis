@@ -16,7 +16,7 @@ const proposalListInclude = {
     },
   },
   client: { select: { id: true, name: true, phone: true, email: true, code: true } },
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   contract: { select: { id: true } },
 } satisfies Prisma.ProposalInclude
 
@@ -34,7 +34,7 @@ const proposalDetailInclude = {
   contract: true,
   interactions: {
     orderBy: { createdAt: "desc" as const },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   },
 } satisfies Prisma.ProposalInclude
 
@@ -180,5 +180,5 @@ export async function createProposalInteraction(input: {
   type: "CALL" | "WHATSAPP" | "EMAIL" | "VISIT" | "NOTE"
   description: string
 }) {
-  return prisma.proposalInteraction.create({ data: input, include: { user: true } })
+  return prisma.proposalInteraction.create({ data: input, include: { user: { select: { id: true, name: true } } } })
 }

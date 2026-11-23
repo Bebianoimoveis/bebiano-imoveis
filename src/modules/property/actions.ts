@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
@@ -493,15 +494,16 @@ export async function listPublicPropertySlugs() {
 // Uso público — sem autenticação. Favoritos são guardados no localStorage
 // do visitante (sem conta), então a página de favoritos manda os ids que
 // tem aí e a gente busca os imóveis correspondentes (só publicados).
+//
+// Chamada direto do navegador por qualquer visitante: devolve só os campos
+// do cartão (ver PropertyCardData). Nunca o registro completo, que leva
+// endereço oculto e dados internos do corretor. Entrada validada porque
+// vem de fora.
 export async function listPropertiesByIds(ids: string[]) {
-  if (ids.length === 0) return []
+  const parsed = z.array(z.string().min(1).max(64)).max(200).safeParse(ids)
+  if (!parsed.success || parsed.data.length === 0) return []
 
-  const { items } = await propertyRepository.listProperties({
-    where: { id: { in: ids }, status: "PUBLISHED", type: { active: true } },
-    skip: 0,
-    take: ids.length,
-  })
-  return items
+  return propertyRepository.listPublicPropertyCards(parsed.data)
 }
 
 export async function listFeaturedProperties(limit = 6) {

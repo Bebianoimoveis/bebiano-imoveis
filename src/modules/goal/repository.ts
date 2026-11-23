@@ -3,7 +3,7 @@ import type { Prisma } from "@/generated/prisma/client"
 import { brazilDateOnly, brazilDayWindow } from "@/lib/date"
 
 const goalInclude = {
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   city: true,
 } satisfies Prisma.GoalInclude
 

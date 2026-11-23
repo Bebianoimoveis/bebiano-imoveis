@@ -6,14 +6,13 @@ import { Heart } from "lucide-react"
 import { Reveal } from "@/components/motion/reveal"
 import { BackButton } from "@/components/shared/back-button"
 import { EmptyState } from "@/components/shared/empty-state"
-import { PropertyCard } from "@/components/public/property-card"
+import { PropertyCard, type PropertyCardData } from "@/components/public/property-card"
 import { useFavorites } from "@/hooks/use-favorites"
 import { listPropertiesByIds } from "@/modules/property/actions"
-import type { PropertyListItem } from "@/modules/property/repository"
 
 export default function FavoritesPage() {
   const { favoriteIds } = useFavorites()
-  const [properties, setProperties] = useState<PropertyListItem[] | null>(null)
+  const [properties, setProperties] = useState<PropertyCardData[] | null>(null)
 
   useEffect(() => {
     let cancelled = false

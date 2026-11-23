@@ -148,8 +148,9 @@ export async function updateAppointmentTx(
   return tx.appointment.update({ where: { id }, data, include: appointmentInclude })
 }
 
-// Conflito = outro compromisso não cancelado do mesmo corretor cuja
-// janela [scheduledAt, scheduledAt+duration) se sobrepõe à nova janela.
+// Conflito = outro compromisso ativo (Agendado/Confirmado) do mesmo
+// corretor cuja janela [scheduledAt, scheduledAt+duration) se sobrepõe à
+// nova janela. Cancelado, realizado e "não compareceu" não ocupam agenda.
 export async function findConflicts(
   input: {
     realtorId: string
@@ -165,7 +166,7 @@ export async function findConflicts(
   const candidates = await db.appointment.findMany({
     where: {
       realtorId: input.realtorId,
-      status: { notIn: ["CANCELED"] },
+      status: { in: ["SCHEDULED", "CONFIRMED"] },
       id: input.excludeId ? { not: input.excludeId } : undefined,
       // Janela generosa (±6h) pra reduzir candidatos antes do filtro
       // preciso em memória (Postgres não compara facilmente contra uma

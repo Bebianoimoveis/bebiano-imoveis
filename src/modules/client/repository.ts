@@ -5,18 +5,18 @@ type TransactionClient = Prisma.TransactionClient
 
 const clientListInclude = {
   city: { select: { id: true, name: true, state: true } },
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   _count: { select: { leads: true, proposals: true } },
 } satisfies Prisma.ClientInclude
 
 const clientDetailInclude = {
   city: { select: { id: true, name: true, state: true } },
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   leads: { orderBy: { createdAt: "desc" as const } },
   appointments: { orderBy: { scheduledAt: "desc" as const } },
   proposals: { orderBy: { createdAt: "desc" as const }, include: { property: true } },
   contracts: { orderBy: { createdAt: "desc" as const }, include: { property: true } },
-  interactions: { orderBy: { createdAt: "desc" as const }, include: { user: true } },
+  interactions: { orderBy: { createdAt: "desc" as const }, include: { user: { select: { id: true, name: true } } } },
   preference: {
     include: { propertyType: true, city: true, neighborhood: true },
   },
@@ -170,7 +170,7 @@ export async function createClientInteraction(input: {
   description: string
 }) {
   return prisma.$transaction([
-    prisma.clientInteraction.create({ data: input, include: { user: true } }),
+    prisma.clientInteraction.create({ data: input, include: { user: { select: { id: true, name: true } } } }),
     prisma.client.update({
       where: { id: input.clientId },
       data: { lastInteractionAt: new Date() },

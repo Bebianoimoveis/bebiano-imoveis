@@ -16,7 +16,7 @@ const leadListInclude = {
       city: { select: { name: true } },
     },
   },
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   client: true,
 } satisfies Prisma.LeadInclude
 
@@ -24,7 +24,7 @@ const leadDetailInclude = {
   ...leadListInclude,
   interactions: {
     orderBy: { createdAt: "desc" as const },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   },
   appointments: {
     orderBy: { scheduledAt: "desc" as const },

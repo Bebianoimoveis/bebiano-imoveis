@@ -5,7 +5,7 @@ const adminListInclude = {
   type: true,
   city: true,
   neighborhood: true,
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   images: { orderBy: { order: "asc" as const } },
 } satisfies Prisma.PropertyInclude
 
@@ -354,6 +354,35 @@ const PUBLIC_WHERE = {
   deletedAt: null,
   type: { active: true },
 } satisfies Prisma.PropertyWhereInput
+
+// Cartões públicos por id (favoritos do visitante), só com os campos
+// exibidos. select explícito de propósito: campo novo no Property não
+// passa a ser público sozinho.
+export async function listPublicPropertyCards(ids: string[]) {
+  const rows = await prisma.property.findMany({
+    where: { ...PUBLIC_WHERE, id: { in: ids } },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      purpose: true,
+      featured: true,
+      bedrooms: true,
+      bathrooms: true,
+      parkingSpots: true,
+      pool: true,
+      availableUnits: true,
+      publishedAt: true,
+      createdAt: true,
+      price: true,
+      city: { select: { name: true } },
+      neighborhood: { select: { name: true } },
+      images: { orderBy: { order: "asc" }, select: { url: true, isCover: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+  return rows.map((row) => ({ ...row, price: row.price.toString() }))
+}
 
 export async function listFeaturedProperties(
   take: number

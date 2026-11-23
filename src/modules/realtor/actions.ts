@@ -27,7 +27,7 @@ export async function listRealtors() {
 
   return prisma.realtor.findMany({
     where: { active: true, deletedAt: null },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
     orderBy: { user: { name: "asc" } },
   })
 }
@@ -59,7 +59,7 @@ export async function getCurrentUserRealtorShareInfo() {
 export async function listPublicRealtors() {
   const realtors = await prisma.realtor.findMany({
     where: { active: true, deletedAt: null },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
     orderBy: { user: { name: "asc" } },
   })
 
@@ -74,7 +74,7 @@ export async function listPublicRealtors() {
 export async function getPublicRealtorBySlug(slug: string) {
   const realtor = await prisma.realtor.findUnique({
     where: { slug },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   })
   if (!realtor || !realtor.active || realtor.deletedAt) return null
 
@@ -96,7 +96,7 @@ export async function listAdminRealtors() {
   await requireRealtorManage()
   return prisma.realtor.findMany({
     where: { deletedAt: null },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true, email: true } } },
     orderBy: { user: { name: "asc" } },
   })
 }
@@ -146,7 +146,7 @@ export async function createRealtor(
         },
       },
     },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   })
 
   await ensureRealtorSlug(realtor.id, realtor.user.name)

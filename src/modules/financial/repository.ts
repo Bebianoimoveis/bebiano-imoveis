@@ -11,7 +11,7 @@ const entryListInclude = {
     },
   },
   client: { select: { id: true, name: true, code: true } },
-  realtor: { include: { user: true } },
+  realtor: { include: { user: { select: { id: true, name: true } } } },
   property: { select: { id: true, code: true, title: true, city: { select: { name: true, state: true } } } },
 } satisfies Prisma.FinancialEntryInclude
 
@@ -19,7 +19,7 @@ const entryDetailInclude = {
   ...entryListInclude,
   interactions: {
     orderBy: { createdAt: "desc" as const },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   },
 } satisfies Prisma.FinancialEntryInclude
 
@@ -150,7 +150,7 @@ export async function createEntryInteraction(input: {
   type: "CALL" | "WHATSAPP" | "EMAIL" | "VISIT" | "NOTE"
   description: string
 }) {
-  return prisma.financialEntryInteraction.create({ data: input, include: { user: true } })
+  return prisma.financialEntryInteraction.create({ data: input, include: { user: { select: { id: true, name: true } } } })
 }
 
 // ---------------------------------------------------------------------------
@@ -272,7 +272,7 @@ export async function getIncomeByRealtor(where: Prisma.FinancialEntryWhereInput)
   const realtorIds = rows.map((row) => row.realtorId).filter((id): id is string => Boolean(id))
   const realtors = await prisma.realtor.findMany({
     where: { id: { in: realtorIds } },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   })
   const nameById = new Map(realtors.map((r) => [r.id, r.user.name]))
   return rows
@@ -364,7 +364,7 @@ export async function getCashFlowTimeline(where: Prisma.FinancialEntryWhereInput
 export async function getCommissionsByRealtor() {
   const realtors = await prisma.realtor.findMany({
     where: { active: true },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true } } },
   })
 
   const [soldContracts, commissionEntries, pendingCommissionEntries] = await Promise.all([

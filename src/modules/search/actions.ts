@@ -26,10 +26,11 @@ export async function globalSearch(query: string): Promise<GlobalSearchResult[]>
   if (q.length < 2) return []
 
   const realtorScope = session.user.realtorId ?? "__none__"
-  const [canViewAllProperties, canViewAllLeads, canManageClients] = await Promise.all([
+  const [canViewAllProperties, canViewAllLeads, canManageClients, canViewAllClients] = await Promise.all([
     can(session.user, "property.view.all"),
     can(session.user, "lead.view.all"),
     can(session.user, "client.manage"),
+    can(session.user, "client.view.all"),
   ])
 
   const [properties, leads, clients] = await Promise.all([
@@ -60,7 +61,13 @@ export async function globalSearch(query: string): Promise<GlobalSearchResult[]>
     canManageClients
       ? clientMatchWhere(q).then((where) =>
           prisma.client.findMany({
-            where: { ...where, deletedAt: null },
+            // Sem client.view.all, só os clientes do próprio corretor: o
+            // resultado mostra CPF e RG.
+            where: {
+              ...where,
+              deletedAt: null,
+              ...(canViewAllClients ? {} : { realtorId: realtorScope }),
+            },
             select: { id: true, name: true, phone: true, cpf: true, rg: true },
             take: 6,
           })

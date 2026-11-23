@@ -15,14 +15,38 @@ const PURPOSE_LABEL: Record<string, string> = {
 
 const NEW_THRESHOLD_DAYS = 21
 
-function isRecent(property: PropertyListItem) {
+// Só o que o cartão mostra. Na página de favoritos estes dados vão pro
+// navegador de qualquer visitante, então nada de corretor, usuário ou
+// endereço aqui (ver listPropertiesByIds).
+export type PropertyCardData = Pick<
+  PropertyListItem,
+  | "id"
+  | "slug"
+  | "title"
+  | "purpose"
+  | "featured"
+  | "bedrooms"
+  | "bathrooms"
+  | "parkingSpots"
+  | "pool"
+  | "availableUnits"
+  | "publishedAt"
+  | "createdAt"
+> & {
+  price: { toString(): string }
+  city: { name: string }
+  neighborhood: { name: string }
+  images: { url: string; isCover: boolean }[]
+}
+
+function isRecent(property: PropertyCardData) {
   const referenceDate = property.publishedAt ?? property.createdAt
   if (!referenceDate) return false
   const days = (Date.now() - new Date(referenceDate).getTime()) / (1000 * 60 * 60 * 24)
   return days <= NEW_THRESHOLD_DAYS
 }
 
-export function PropertyCard({ property }: { property: PropertyListItem }) {
+export function PropertyCard({ property }: { property: PropertyCardData }) {
   const cover = property.images.find((image) => image.isCover) ?? property.images[0]
   const showNew = isRecent(property)
 

@@ -12,6 +12,7 @@ import {
   proposalInputSchema,
   proposalInteractionSchema,
 } from "@/modules/proposal/schema"
+import { paymentFields } from "@/modules/proposal/payment"
 import * as proposalRepository from "@/modules/proposal/repository"
 import * as contractRepository from "@/modules/contract/repository"
 import { brazilDayWindow } from "@/lib/date"
@@ -130,6 +131,28 @@ export async function exportProposalsCsv(rawFilters: unknown = {}) {
   return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
 }
 
+// Só os campos que a forma de pagamento usa; o resto vai como null.
+// Mesma regra da tela (paymentFields), garantida no servidor.
+function paymentData(
+  method: string,
+  data: {
+    downPayment?: number
+    financingValue?: number
+    fgtsValue?: number
+    installments?: number
+    installmentValue?: number
+  }
+) {
+  const fields = paymentFields(method)
+  return {
+    downPayment: fields.downPayment ? (data.downPayment ?? null) : null,
+    financingValue: fields.financing ? (data.financingValue ?? null) : null,
+    fgtsValue: fields.fgts ? (data.fgtsValue ?? null) : null,
+    installments: fields.installments ? (data.installments ?? null) : null,
+    installmentValue: fields.installments ? (data.installmentValue ?? null) : null,
+  }
+}
+
 export async function createProposalWizard(input: unknown) {
   const session = await requireProposalManage()
   const data = proposalInputSchema.parse(input)
@@ -137,11 +160,7 @@ export async function createProposalWizard(input: unknown) {
   const proposal = await proposalRepository.createProposal({
     value: data.value,
     originalValue: data.originalValue,
-    downPayment: data.downPayment,
-    financingValue: data.financingValue,
-    fgtsValue: data.fgtsValue,
-    installments: data.installments,
-    installmentValue: data.installmentValue,
+    ...paymentData(data.paymentMethod ?? "", data),
     commissionPercent: data.commissionPercent,
     paymentMethod: data.paymentMethod,
     validUntil: data.validUntil,
@@ -210,17 +229,21 @@ export async function updateProposal(id: string, input: unknown) {
   await assertCanManageProposal(session, id)
 
   const data = proposalInputSchema.partial().parse(input)
+  // O formulário de edição manda sempre o conjunto inteiro, e campo vazio
+  // chega como undefined. No update do Prisma, undefined mantém o valor
+  // antigo (trocar de Financiado pra À vista deixava a entrada gravada),
+  // por isso aqui vazio vira null.
   await proposalRepository.updateProposal(id, {
     value: data.value,
-    originalValue: data.originalValue,
-    downPayment: data.downPayment,
-    financingValue: data.financingValue,
-    fgtsValue: data.fgtsValue,
-    installments: data.installments,
-    installmentValue: data.installmentValue,
-    commissionPercent: data.commissionPercent,
-    paymentMethod: data.paymentMethod,
-    validUntil: data.validUntil,
+    ...(data.paymentMethod === undefined
+      ? {}
+      : {
+          ...paymentData(data.paymentMethod, data),
+          paymentMethod: data.paymentMethod,
+          originalValue: data.originalValue ?? null,
+          commissionPercent: data.commissionPercent ?? null,
+          validUntil: data.validUntil ?? null,
+        }),
     notes: data.notes,
   })
 
