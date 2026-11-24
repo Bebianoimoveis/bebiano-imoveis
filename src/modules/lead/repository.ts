@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"
-import type { Prisma, LeadStage } from "@/generated/prisma/client"
+import { Prisma, type LeadStage } from "@/generated/prisma/client"
+import { formatDateTimeBR } from "@/lib/format"
+import { normalizePhone } from "@/lib/phone"
 import { LEAD_STAGES } from "@/modules/lead/schema"
 import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 
@@ -85,6 +87,18 @@ type UpsertLeadByPhoneInput = {
   attribution: LeadAttributionInput
 }
 
+// Compara só os dígitos e sem o 55 (ver lib/phone.ts): o cadastro manual
+// guarda "(11) 99999-0000" e o site pode mandar "5511999990000".
+const PHONE_DIGITS = Prisma.sql`regexp_replace(regexp_replace("phone", '[^0-9]', '', 'g'), '^55([0-9]{10,11})$', '\\1')`
+
+async function findLeadIdsByPhone(tx: TransactionClient, digits: string): Promise<string[]> {
+  const rows = await tx.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "Lead"
+    WHERE "deletedAt" IS NULL AND ${PHONE_DIGITS} = ${digits}
+    ORDER BY "createdAt" DESC LIMIT 1`
+  return rows.map((row) => row.id)
+}
+
 // Núcleo da deduplicação de leads: qualquer formulário público (contato,
 // visita) passa por aqui em vez de criar um Lead direto. Sem isso, a
 // mesma pessoa preenchendo dois formulários diferentes (ou o mesmo duas
@@ -95,13 +109,14 @@ export async function upsertLeadByPhone(
   tx: TransactionClient,
   input: UpsertLeadByPhoneInput
 ) {
-  const digits = input.phone.replace(/\D/g, "")
-  const existing = digits
-    ? await tx.lead.findFirst({
-        where: { phone: { contains: digits }, deletedAt: null },
-        orderBy: { createdAt: "desc" },
-      })
-    : null
+  const digits = normalizePhone(input.phone)
+  if (digits) {
+    // Duas mensagens ao mesmo tempo do mesmo telefone: a segunda espera a
+    // primeira gravar e cai no lead já criado.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`lead:${digits}`}))`
+  }
+  const [existingId] = digits ? await findLeadIdsByPhone(tx, digits) : []
+  const existing = existingId ? await tx.lead.findUnique({ where: { id: existingId } }) : null
 
   if (!existing) {
     const lead = await tx.lead.create({
@@ -146,20 +161,15 @@ export async function upsertLeadByPhone(
 // com o imóvel certo. Isso reconstrói a lista completa a partir de lá,
 // pra não perder o interesse nos imóveis seguintes.
 export async function listOtherPropertyInterests(phone: string, excludePropertyId: string | null) {
-  const digits = phone.replace(/\D/g, "")
+  const digits = normalizePhone(phone)
   if (!digits) return []
 
-  const requests = await prisma.contactRequest.findMany({
-    where: {
-      phone: { contains: digits },
-      propertyId: { not: null },
-      ...(excludePropertyId ? { propertyId: { not: excludePropertyId } } : {}),
-    },
-    select: { propertyId: true, createdAt: true },
-    orderBy: { createdAt: "desc" },
-  })
+  const requests = await prisma.$queryRaw<{ propertyId: string }[]>`
+    SELECT "propertyId" FROM "ContactRequest"
+    WHERE "propertyId" IS NOT NULL AND ${PHONE_DIGITS} = ${digits}
+    ORDER BY "createdAt" DESC`
 
-  const propertyIds = [...new Set(requests.map((r) => r.propertyId!))]
+  const propertyIds = [...new Set(requests.map((r) => r.propertyId))].filter((id) => id !== excludePropertyId)
   if (propertyIds.length === 0) return []
 
   const properties = await prisma.property.findMany({
@@ -199,7 +209,7 @@ export async function createContactRequestWithLead(
       },
     })
 
-    const now = new Date().toLocaleString("pt-BR")
+    const now = formatDateTimeBR(new Date())
     const { lead, isNew } = await upsertLeadByPhone(tx, {
       name: input.name,
       phone: input.phone,
@@ -257,6 +267,7 @@ type CreateLeadManuallyInput = {
   origin: string
   propertyId?: string
   realtorId?: string
+  stage: LeadStage
   temperature: "HOT" | "WARM" | "COLD"
   vip: boolean
   createdById: string
@@ -271,6 +282,7 @@ export async function createLeadManually(input: CreateLeadManuallyInput) {
       origin: input.origin,
       propertyId: input.propertyId,
       realtorId: input.realtorId,
+      stage: input.stage,
       temperature: input.temperature,
       vip: input.vip,
       createdById: input.createdById,
@@ -298,12 +310,14 @@ export async function suggestLeads(where: Prisma.LeadWhereInput, take: number) {
   })
 }
 
-// Contrato ligado ao lead via a proposta aceita (um lead pode ter várias
-// propostas — só a aceita tem contrato de verdade).
-export async function findAcceptedContractByLead(leadId: string) {
+// Contrato ligado ao lead por uma das propostas. Converter em contrato
+// leva a proposta pra Assinando/Concluída, então o status dela não entra
+// no filtro.
+export async function findContractByLead(leadId: string) {
   return prisma.contract.findFirst({
-    where: { proposal: { leadId, status: "ACCEPTED" } },
+    where: { proposal: { leadId } },
     include: { proposal: true },
+    orderBy: { createdAt: "desc" },
   })
 }
 
@@ -376,10 +390,11 @@ export async function createLeadInteraction(input: {
   ])
 }
 
-export async function updateLeadInteraction(id: string, description: string) {
-  return prisma.leadInteraction.update({ where: { id }, data: { description } })
+// leadId no filtro: sem ele dava pra mexer na interação de outro lead.
+export async function updateLeadInteraction(leadId: string, id: string, description: string) {
+  return prisma.leadInteraction.updateMany({ where: { id, leadId }, data: { description } })
 }
 
-export async function deleteLeadInteraction(id: string) {
-  return prisma.leadInteraction.delete({ where: { id } })
+export async function deleteLeadInteraction(leadId: string, id: string) {
+  return prisma.leadInteraction.deleteMany({ where: { id, leadId } })
 }

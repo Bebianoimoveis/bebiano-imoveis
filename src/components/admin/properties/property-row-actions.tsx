@@ -45,6 +45,7 @@ import {
 import { getCurrentUserRealtorShareInfo } from "@/modules/realtor/actions"
 import { siteConfig } from "@/config/site"
 import type { PropertyStatus } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type PropertyRowActionsProps = {
   propertyId: string
@@ -93,7 +94,7 @@ export function PropertyRowActions({ propertyId, status, slug, title }: Property
         toast.success(successMessage)
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro inesperado.")
+        toast.error(actionErrorMessage(error, "Erro inesperado."))
       }
     })
   }

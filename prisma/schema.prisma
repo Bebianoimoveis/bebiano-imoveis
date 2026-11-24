@@ -642,6 +642,9 @@ model Proposal {
   updatedAt  DateTime       @updatedAt
 
   @@index([propertyId])
+  @@index([realtorId, status])
+  @@index([clientId])
+  @@index([createdAt])
 }
 
 // Timeline/notas da proposta — espelha ClientInteraction/LeadInteraction,
@@ -687,6 +690,11 @@ model Contract {
   attachments      ContractAttachment[]
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+
+  @@index([realtorId, status])
+  @@index([clientId])
+  @@index([propertyId])
+  @@index([createdAt])
 }
 
 // Anexos do contrato (documentos assinados pelo cliente, aditivos etc.) —
@@ -1030,6 +1038,16 @@ model ActivityLog {
   createdAt  DateTime @default(now())
 
   @@index([entityType, entityId])
+}
+
+// Contador de tentativas por janela (login, formulários públicos, IA),
+// compartilhado entre instâncias. key é um hash: sem e-mail nem IP legível.
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
 }
 
 enum LeadDistributionMode {

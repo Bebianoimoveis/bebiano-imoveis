@@ -2,6 +2,7 @@
 
 import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
+import { whatsappNumber } from "@/lib/phone"
 
 // Componente-folha separado do resto do Footer (que é Server Component)
 // só pra isolar o uso do hook client-side — mantém o footer estático,
@@ -12,7 +13,7 @@ export function FooterWhatsappLink({ className }: { className: string }) {
 
   return (
     <a
-      href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+      href={`https://wa.me/${whatsappNumber(phone)}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Falar no WhatsApp"

@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { createCity } from "@/modules/taxonomy/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function CityFormDialog({ trigger }: { trigger: React.ReactNode }) {
   const router = useRouter()
@@ -35,7 +36,7 @@ export function CityFormDialog({ trigger }: { trigger: React.ReactNode }) {
       setState("")
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar cidade.")
+      toast.error(actionErrorMessage(error, "Erro ao cadastrar cidade."))
     } finally {
       setIsSubmitting(false)
     }

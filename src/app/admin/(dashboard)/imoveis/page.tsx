@@ -15,6 +15,8 @@ import { PropertyHeaderActions } from "@/components/admin/properties/property-he
 import { getPropertyPortfolioStats, listAdminProperties } from "@/modules/property/actions"
 import { listCities, listPropertyTypes } from "@/modules/taxonomy/actions"
 import { listRealtors } from "@/modules/realtor/actions"
+import { auth } from "@/lib/auth"
+import { can } from "@/lib/permissions"
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -62,6 +64,8 @@ export default async function AdminPropertiesPage({
     listPropertyTypes(),
     listRealtors(),
   ])
+
+  const canReassign = await can((await auth())?.user, "property.view.all")
 
   function buildHref(page: number, overrides?: { view?: "list" | "grid" }) {
     const search = new URLSearchParams()
@@ -130,7 +134,7 @@ export default async function AdminPropertiesPage({
           />
         ) : (
           <div className="space-y-6">
-            <PropertyPortfolio properties={items} view={view} realtors={realtors} />
+            <PropertyPortfolio properties={items} view={view} realtors={realtors} canReassign={canReassign} />
             <PropertyPagination page={filters.page} pageSize={filters.pageSize} total={total} />
           </div>
         )}

@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { createPropertyType, updatePropertyType } from "@/modules/taxonomy/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type PropertyTypeFormDialogProps = {
   trigger: React.ReactNode
@@ -50,7 +51,7 @@ export function PropertyTypeFormDialog({
       setOpen(false)
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar tipo de imóvel.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar tipo de imóvel."))
     } finally {
       setIsSubmitting(false)
     }

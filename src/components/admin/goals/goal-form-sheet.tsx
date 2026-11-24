@@ -29,6 +29,7 @@ import {
   type GoalScopeType,
 } from "@/modules/goal/period"
 import { cn } from "@/lib/utils"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 type CityOption = { id: string; name: string; state: string }
@@ -222,7 +223,7 @@ export function GoalFormSheet({
       onOpenChange(false)
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar meta.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar meta."))
     } finally {
       setIsSubmitting(false)
     }

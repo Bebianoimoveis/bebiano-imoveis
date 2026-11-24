@@ -34,6 +34,7 @@ import {
 import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
 import { formatDateOnlyBR } from "@/lib/format"
 import { fileViewUrl } from "@/lib/file-url"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type FinancialEntryDetail = NonNullable<Awaited<ReturnType<typeof getAdminFinancialEntry>>>
 
@@ -93,7 +94,7 @@ export function FinancialEntryDetailPanel({
         refetch()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar."))
       }
     })
   }
@@ -107,7 +108,7 @@ export function FinancialEntryDetailPanel({
         onClose()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir."))
       }
     })
   }

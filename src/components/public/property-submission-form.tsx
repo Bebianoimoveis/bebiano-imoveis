@@ -32,6 +32,7 @@ import {
   SUBMISSION_FEATURES,
   type SubmissionFeature,
 } from "@/modules/submission/features"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type City = { id: string; name: string; state: string }
 type PropertyType = { id: string; name: string }
@@ -178,7 +179,7 @@ export function PropertySubmissionForm({
       const uploaded = await Promise.all(files.map((file) => uploadPropertyImage(file, signature)))
       setImages((prev) => [...prev, ...uploaded.map((image) => ({ url: image.url }))])
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao enviar fotos.")
+      toast.error(actionErrorMessage(error, "Falha ao enviar fotos."))
     } finally {
       setIsUploading(false)
       if (inputRef.current) inputRef.current.value = ""
@@ -206,7 +207,7 @@ export function PropertySubmissionForm({
       const setter = kind === "video" ? setVideos : setDocuments
       setter((prev) => [...prev, ...uploaded])
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao enviar arquivo.")
+      toast.error(actionErrorMessage(error, "Falha ao enviar arquivo."))
     } finally {
       setUploadingKind(null)
       input.value = ""
@@ -228,7 +229,7 @@ export function PropertySubmissionForm({
       })
       setSubmitted(true)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar seu imóvel. Tente novamente.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar seu imóvel. Tente novamente."))
     } finally {
       setIsSubmitting(false)
     }
@@ -251,6 +252,12 @@ export function PropertySubmissionForm({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 rounded-[20px] border border-border/60 bg-card p-5 sm:p-8">
+      {/* Campo-armadilha: só robô de formulário preenche. */}
+      <div className="hidden" aria-hidden="true">
+        <Label htmlFor="company">Empresa</Label>
+        <Input id="company" tabIndex={-1} autoComplete="off" {...form.register("company")} />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="name">Nome</Label>

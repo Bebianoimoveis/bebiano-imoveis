@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { exportBusinessReportCsv } from "@/modules/report/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 function downloadCsv(csv: string, filename: string) {
   const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" })
@@ -26,7 +27,7 @@ export function ReportExportButton({ months = 6 }: { months?: number }) {
       const csv = await exportBusinessReportCsv(months)
       downloadCsv(csv, `vendas-por-mes-${Date.now()}.csv`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao exportar.")
+      toast.error(actionErrorMessage(error, "Erro ao exportar."))
     } finally {
       setIsExporting(false)
     }

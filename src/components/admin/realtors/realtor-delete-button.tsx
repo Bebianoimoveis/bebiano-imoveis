@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteRealtor } from "@/modules/realtor/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function RealtorDeleteButton({ id, name }: { id: string; name: string }) {
   const router = useRouter()
@@ -32,7 +33,7 @@ export function RealtorDeleteButton({ id, name }: { id: string; name: string }) 
         setOpen(false)
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir corretor.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir corretor."))
       }
     })
   }

@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
-import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
+import { brazilDateOnly, brazilMonthWindow, startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 import { getGeminiClient, isGeminiConfigured, GEMINI_MODEL, withGeminiRetry } from "@/lib/gemini"
 import * as reportRepository from "@/modules/report/repository"
 import { listAdminAppointments } from "@/modules/appointment/actions"
@@ -14,10 +14,13 @@ import {
 } from "@/modules/financial/actions"
 import { getFinancialForecast } from "@/modules/assistant/tools"
 import { listAdminProposalsExpiringSoon } from "@/modules/proposal/actions"
+import { UserError } from "@/lib/user-error"
+import { toCsvValue } from "@/lib/csv"
+import { isRateLimited } from "@/lib/rate-limit"
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
@@ -59,8 +62,8 @@ export async function getDashboardMetrics(periodDays = 30) {
   const previousFrom = new Date(periodFrom)
   previousFrom.setDate(previousFrom.getDate() - periodDays)
 
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+  const today = brazilDateOnly(now)
+  const { from: monthStart, to: monthEnd } = brazilMonthWindow(today.getUTCFullYear(), today.getUTCMonth() + 1)
 
   const canViewReports = await can(session.user, "report.view")
 
@@ -167,7 +170,7 @@ export async function getDashboardSidePanel() {
 
 async function requireReportView(session: Awaited<ReturnType<typeof requireSession>>) {
   if (!(await can(session.user, "report.view"))) {
-    throw new Error("Sem permissão para acessar relatórios.")
+    throw new UserError("Sem permissão para acessar relatórios.")
   }
 }
 
@@ -185,11 +188,10 @@ export async function canViewRealtorBreakdown() {
 export async function getNewLeadsAndClientsByRealtor(month: number, year: number) {
   const session = await requireSession()
   if (!(await can(session.user, "user.manage"))) {
-    throw new Error("Sem permissão para ver o levantamento por corretor.")
+    throw new UserError("Sem permissão para ver o levantamento por corretor.")
   }
 
-  const monthStart = new Date(year, month - 1, 1)
-  const monthEnd = new Date(year, month, 0, 23, 59, 59, 999)
+  const { from: monthStart, to: monthEnd } = brazilMonthWindow(year, month)
 
   return reportRepository.countNewLeadsAndClientsByRealtor(monthStart, monthEnd)
 }
@@ -204,8 +206,8 @@ export async function getBusinessReport(months = 6) {
   const scopes = await buildScopes(session)
 
   const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+  const today = brazilDateOnly(now)
+  const { from: monthStart, to: monthEnd } = brazilMonthWindow(today.getUTCFullYear(), today.getUTCMonth() + 1)
   const periodFrom = new Date(now)
   periodFrom.setDate(periodFrom.getDate() - 30)
   const previousFrom = new Date(periodFrom)
@@ -252,11 +254,6 @@ export async function getBusinessReport(months = 6) {
   }
 }
 
-function toCsvValue(value: string | number) {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-}
-
 export async function exportBusinessReportCsv(months = 6) {
   const session = await requireSession()
   await requireReportView(session)
@@ -298,6 +295,10 @@ export async function generateBusinessInsights(): Promise<{ text: string } | { e
       error:
         "A IA ainda não foi configurada neste sistema. Peça para o administrador adicionar a chave GEMINI_API_KEY nas variáveis de ambiente do projeto.",
     }
+  }
+
+  if (await isRateLimited(`insights:${session.user.id}`, { maxAttempts: 10, windowMs: 10 * 60 * 1000 })) {
+    return { error: "Muitas análises em pouco tempo. Aguarde alguns minutos." }
   }
 
   const [business, canSeeRealtors] = await Promise.all([getBusinessReport(12), canViewRealtorBreakdown()])

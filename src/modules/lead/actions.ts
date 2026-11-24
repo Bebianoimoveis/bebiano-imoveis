@@ -1,6 +1,5 @@
 "use server"
 
-import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 
 import { auth } from "@/lib/auth"
@@ -21,6 +20,11 @@ import * as leadService from "@/modules/lead/service"
 import { SpamRejectedError } from "@/modules/lead/service"
 import * as notificationService from "@/modules/notification/service"
 import * as clientRepository from "@/modules/client/repository"
+import { UserError } from "@/lib/user-error"
+import { toCsvValue } from "@/lib/csv"
+import { formatDateBR } from "@/lib/format"
+import { getClientIp } from "@/lib/client-ip"
+import { brazilDateRange } from "@/lib/date"
 
 const GENERIC_SUCCESS_MESSAGE =
   "Recebemos seu contato! Em breve um corretor falará com você."
@@ -30,12 +34,6 @@ export type SubmitContactState = {
   message?: string
 }
 
-async function getClientIp() {
-  const headerList = await headers()
-  const forwardedFor = headerList.get("x-forwarded-for")
-  return forwardedFor?.split(",")[0]?.trim() ?? "unknown"
-}
-
 // Uso público — sem autenticação. Protegido por honeypot/time-trap
 // (ver lead/service.ts) e por rate limit por IP.
 export async function submitContactRequest(
@@ -43,7 +41,7 @@ export async function submitContactRequest(
 ): Promise<SubmitContactState> {
   const ip = await getClientIp()
 
-  if (isRateLimited(`contact:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
+  if (await isRateLimited(`contact:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
     return {
       status: "error",
       message: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
@@ -75,7 +73,7 @@ export async function submitContactRequest(
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
@@ -94,14 +92,8 @@ async function buildLeadScopeWhere(
       : (session.user.realtorId ?? "__none__"),
     temperature: filters.temperature,
     origin: filters.origin,
-    createdAt:
-      filters.createdFrom || filters.createdTo
-        ? { gte: filters.createdFrom, lte: filters.createdTo }
-        : undefined,
-    lastInteractionAt:
-      filters.lastInteractionFrom || filters.lastInteractionTo
-        ? { gte: filters.lastInteractionFrom, lte: filters.lastInteractionTo }
-        : undefined,
+    createdAt: brazilDateRange(filters.createdFrom, filters.createdTo),
+    lastInteractionAt: brazilDateRange(filters.lastInteractionFrom, filters.lastInteractionTo),
     property:
       filters.minValue || filters.maxValue || filters.cityId
         ? {
@@ -170,11 +162,6 @@ export async function getLeadCrmStats(rawFilters: unknown, periodDays = 30) {
   return leadRepository.getLeadStats(where, periodFrom, appointmentWhere)
 }
 
-function toCsvValue(value: string | number) {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-}
-
 export async function exportLeadsCsv(rawFilters: unknown) {
   const session = await requireSession()
   const filters = leadFiltersSchema.parse(rawFilters ?? {})
@@ -191,7 +178,7 @@ export async function exportLeadsCsv(rawFilters: unknown) {
     lead.stage,
     lead.property?.title ?? "",
     lead.realtor?.user.name ?? "",
-    lead.createdAt.toLocaleDateString("pt-BR"),
+    formatDateBR(lead.createdAt),
   ])
 
   return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
@@ -200,12 +187,15 @@ export async function exportLeadsCsv(rawFilters: unknown) {
 export async function createLeadManually(input: unknown) {
   const session = await requireSession()
   if (!(await can(session.user, "lead.manage"))) {
-    throw new Error("Sem permissão para cadastrar leads.")
+    throw new UserError("Sem permissão para cadastrar leads.")
   }
 
   const data = leadCreateSchema.parse(input)
+  const canViewAll = await can(session.user, "lead.view.all")
   const lead = await leadRepository.createLeadManually({
     ...data,
+    // Quem não vê tudo cadastra sempre em nome próprio.
+    realtorId: canViewAll ? data.realtorId : (session.user.realtorId ?? undefined),
     createdById: session.user.id,
   })
 
@@ -222,7 +212,7 @@ export async function createLeadManually(input: unknown) {
   )
 
   revalidatePath("/admin/leads")
-  return lead
+  return { id: lead.id }
 }
 
 export async function deleteLead(leadId: string) {
@@ -244,7 +234,8 @@ export async function deleteLead(leadId: string) {
 export async function getLeadContract(leadId: string) {
   const session = await requireSession()
   await assertCanManageLead(session, leadId)
-  return leadRepository.findAcceptedContractByLead(leadId)
+  const contract = await leadRepository.findContractByLead(leadId)
+  return contract ? serializeDecimals(contract) : null
 }
 
 export async function getAdminLead(id: string) {
@@ -254,7 +245,7 @@ export async function getAdminLead(id: string) {
 
   const canViewAll = await can(session.user, "lead.view.all")
   if (!canViewAll && lead.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para visualizar este lead.")
+    throw new UserError("Sem permissão para visualizar este lead.")
   }
 
   const otherPropertyInterests = await leadRepository.listOtherPropertyInterests(
@@ -274,7 +265,7 @@ async function assertCanManageLead(
   leadId: string
 ) {
   if (!(await can(session.user, "lead.manage"))) {
-    throw new Error("Sem permissão para gerenciar leads.")
+    throw new UserError("Sem permissão para gerenciar leads.")
   }
 
   const canViewAll = await can(session.user, "lead.view.all")
@@ -282,7 +273,7 @@ async function assertCanManageLead(
 
   const lead = await leadRepository.findLeadById(leadId)
   if (!lead || lead.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para gerenciar este lead.")
+    throw new UserError("Sem permissão para gerenciar este lead.")
   }
 }
 
@@ -290,7 +281,7 @@ export async function updateLeadStage(leadId: string, stage: LeadStage) {
   const session = await requireSession()
   await assertCanManageLead(session, leadId)
 
-  const lead = await leadRepository.updateLeadStage(leadId, stage)
+  await leadRepository.updateLeadStage(leadId, stage)
 
   await logActivity({
     userId: session.user.id,
@@ -300,7 +291,6 @@ export async function updateLeadStage(leadId: string, stage: LeadStage) {
   })
 
   revalidatePath("/admin/leads")
-  return lead
 }
 
 export async function updateLead(leadId: string, input: unknown) {
@@ -308,7 +298,7 @@ export async function updateLead(leadId: string, input: unknown) {
   await assertCanManageLead(session, leadId)
 
   const data = leadUpdateSchema.parse(input)
-  const lead = await leadRepository.updateLead(leadId, {
+  await leadRepository.updateLead(leadId, {
     notes: data.notes,
     nextActionAt: data.nextActionAt,
     temperature: data.temperature,
@@ -327,7 +317,6 @@ export async function updateLead(leadId: string, input: unknown) {
 
   revalidatePath("/admin/leads")
   revalidatePath(`/admin/leads/${leadId}`)
-  return lead
 }
 
 export async function addLeadInteraction(leadId: string, input: unknown) {
@@ -349,8 +338,9 @@ export async function updateLeadInteraction(leadId: string, interactionId: strin
   const session = await requireSession()
   await assertCanManageLead(session, leadId)
 
-  if (!description.trim()) throw new Error("Descreva a interação.")
-  await leadRepository.updateLeadInteraction(interactionId, description)
+  if (!description.trim()) throw new UserError("Descreva a interação.")
+  const { count } = await leadRepository.updateLeadInteraction(leadId, interactionId, description)
+  if (count === 0) throw new UserError("Interação não encontrada.")
 
   revalidatePath(`/admin/leads/${leadId}`)
 }
@@ -359,7 +349,8 @@ export async function deleteLeadInteraction(leadId: string, interactionId: strin
   const session = await requireSession()
   await assertCanManageLead(session, leadId)
 
-  await leadRepository.deleteLeadInteraction(interactionId)
+  const { count } = await leadRepository.deleteLeadInteraction(leadId, interactionId)
+  if (count === 0) throw new UserError("Interação não encontrada.")
 
   revalidatePath(`/admin/leads/${leadId}`)
 }
@@ -369,22 +360,30 @@ export async function convertLeadToClient(leadId: string) {
   await assertCanManageLead(session, leadId)
 
   if (!(await can(session.user, "client.manage"))) {
-    throw new Error("Sem permissão para gerenciar clientes.")
+    throw new UserError("Sem permissão para gerenciar clientes.")
   }
 
   const lead = await leadRepository.findLeadById(leadId)
-  if (!lead) throw new Error("Lead não encontrado.")
-  if (lead.clientId) return lead
+  if (!lead) throw new UserError("Lead não encontrado.")
+  if (lead.clientId) return
 
-  const client = await clientRepository.createClient({
-    name: lead.name,
-    phone: lead.phone,
-    email: lead.email,
-    origin: lead.origin,
-    realtorId: lead.realtorId,
-  })
+  // Telefone já cadastrado como cliente: liga nele em vez de duplicar.
+  // Cliente de outro corretor não conta, pra não dar acesso ao cadastro dele.
+  const canViewAllClients = await can(session.user, "client.view.all")
+  const client =
+    (await clientRepository.findClientByPhone(
+      lead.phone,
+      canViewAllClients ? undefined : (session.user.realtorId ?? "__none__")
+    )) ??
+    (await clientRepository.createClient({
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email,
+      origin: lead.origin,
+      realtorId: lead.realtorId,
+    }))
 
-  const updated = await leadRepository.updateLead(leadId, {
+  await leadRepository.updateLead(leadId, {
     client: { connect: { id: client.id } },
   })
 
@@ -398,5 +397,4 @@ export async function convertLeadToClient(leadId: string) {
 
   revalidatePath(`/admin/leads/${leadId}`)
   revalidatePath("/admin/clientes")
-  return updated
 }

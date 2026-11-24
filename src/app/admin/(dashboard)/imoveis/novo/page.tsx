@@ -1,6 +1,8 @@
 import { PropertyForm } from "@/components/admin/properties/property-form"
 import { listCities, listPropertyTypes, listPropertyFeatures } from "@/modules/taxonomy/actions"
 import { listRealtors } from "@/modules/realtor/actions"
+import { auth } from "@/lib/auth"
+import { can } from "@/lib/permissions"
 import { getAdminSubmission } from "@/modules/submission/actions"
 import type { PropertyInput } from "@/modules/property/schema"
 import { matchCatalogFeatureIds } from "@/modules/submission/features"
@@ -37,6 +39,8 @@ export default async function NewPropertyPage({
   searchParams: Promise<{ fromSubmissionId?: string }>
 }) {
   const { fromSubmissionId } = await searchParams
+  const session = await auth()
+  const canReassign = await can(session?.user, "property.view.all")
 
   const [cities, propertyTypes, features, realtors, submission] = await Promise.all([
     listCities(),
@@ -50,7 +54,7 @@ export default async function NewPropertyPage({
   // no nosso catálogo, então não existe Neighborhood/FK) — em vez de
   // perder essa informação, ela entra no início da descrição para a
   // equipe não precisar voltar na captação pra descobrir o bairro.
-  const defaultValues: PropertyInput = submission
+  const initialValues: PropertyInput = submission
     ? {
         ...baseDefaultValues,
         description: submission.neighborhoodText
@@ -74,6 +78,10 @@ export default async function NewPropertyPage({
         featureIds: matchCatalogFeatureIds(submission.features, features),
       }
     : baseDefaultValues
+  // Quem não vê tudo cadastra sempre em nome próprio.
+  const defaultValues = canReassign
+    ? initialValues
+    : { ...initialValues, realtorId: session?.user.realtorId ?? undefined }
 
   return (
     <div className="space-y-6">
@@ -98,6 +106,7 @@ export default async function NewPropertyPage({
 
       <PropertyForm
         mode="create"
+        canReassign={canReassign}
         defaultValues={defaultValues}
         cities={cities}
         initialNeighborhoods={[]}

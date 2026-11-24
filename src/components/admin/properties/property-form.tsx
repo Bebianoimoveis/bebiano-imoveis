@@ -36,6 +36,7 @@ import {
   type PropertyFormValues,
   type PropertyInput,
 } from "@/modules/property/schema"
+import { actionErrorMessage } from "@/lib/action-error"
 
 // Campos numéricos usam z.coerce, cujo tipo de entrada é "unknown" — os
 // inputs precisam de um valor string/number explícito para o React controlar.
@@ -86,6 +87,9 @@ type PropertyFormProps = {
   features: Option[]
   realtors: RealtorOption[]
   images?: ImageItem[]
+  readOnly?: boolean
+  // Só quem vê tudo escolhe o corretor responsável.
+  canReassign?: boolean
 }
 
 export function PropertyForm({
@@ -98,6 +102,8 @@ export function PropertyForm({
   features,
   realtors,
   images,
+  readOnly = false,
+  canReassign = true,
 }: PropertyFormProps) {
   const router = useRouter()
   const [neighborhoods, setNeighborhoods] = useState(initialNeighborhoods)
@@ -256,7 +262,7 @@ export function PropertyForm({
         router.refresh()
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar imóvel.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar imóvel."))
     } finally {
       setIsSubmitting(false)
     }
@@ -275,6 +281,7 @@ export function PropertyForm({
             </TabsTrigger>
           </TabsList>
 
+          <fieldset disabled={readOnly} className="contents">
           <TabsContent value="dados" className="space-y-4">
             <FormField
               control={form.control}
@@ -389,7 +396,7 @@ export function PropertyForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Corretor responsável</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <Select onValueChange={field.onChange} value={field.value ?? ""} disabled={!canReassign}>
                     <FormControl>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Nenhum" />
@@ -794,13 +801,16 @@ export function PropertyForm({
               />
             ) : null}
           </TabsContent>
+          </fieldset>
         </Tabs>
 
-        <div className="flex justify-end gap-3 border-t border-border/60 pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Salvando..." : "Salvar"}
-          </Button>
-        </div>
+        {readOnly ? null : (
+          <div className="flex justify-end gap-3 border-t border-border/60 pt-4">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   )

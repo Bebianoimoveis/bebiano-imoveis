@@ -14,6 +14,7 @@ import {
   removePropertyImage,
   setCoverImage,
 } from "@/modules/property/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type PropertyImage = {
   id: string
@@ -54,7 +55,7 @@ export function PropertyImageUploader({
       router.refresh()
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Falha ao enviar imagens."
+        actionErrorMessage(error, "Falha ao enviar imagens.")
       )
     } finally {
       setIsUploading(false)
@@ -69,7 +70,7 @@ export function PropertyImageUploader({
         toast.success("Imagem removida.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao remover.")
+        toast.error(actionErrorMessage(error, "Erro ao remover."))
       }
     })
   }
@@ -81,7 +82,7 @@ export function PropertyImageUploader({
         toast.success("Imagem principal definida.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao definir capa.")
+        toast.error(actionErrorMessage(error, "Erro ao definir capa."))
       }
     })
   }

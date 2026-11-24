@@ -8,12 +8,15 @@ import { logActivity } from "@/lib/activity-log"
 import { ensureRealtorSlug } from "@/modules/realtor/service"
 import { testimonialInputSchema, testimonialReviewInputSchema } from "@/modules/testimonial/schema"
 import * as testimonialRepository from "@/modules/testimonial/repository"
+import { UserError } from "@/lib/user-error"
+import { getClientIp } from "@/lib/client-ip"
+import { isRateLimited } from "@/lib/rate-limit"
 
 async function requireTestimonialManage() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "testimonial.manage"))) {
-    throw new Error("Sem permissão para gerenciar depoimentos.")
+    throw new UserError("Sem permissão para gerenciar depoimentos.")
   }
   return session
 }
@@ -56,6 +59,11 @@ export async function getRealtorForReview(slug: string) {
 // cria oculto (published: false); a Bebiano decide o que publicar em
 // /admin/depoimentos.
 export async function submitTestimonialReview(input: unknown) {
+  const ip = await getClientIp()
+  if (await isRateLimited(`review:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
+    throw new UserError("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
+  }
+
   const data = testimonialReviewInputSchema.parse(input)
 
   // Honeypot: bot preencheu o campo invisível — finge sucesso sem
@@ -65,7 +73,7 @@ export async function submitTestimonialReview(input: unknown) {
   }
 
   const realtor = await testimonialRepository.findActiveRealtorBySlug(data.realtorSlug)
-  if (!realtor) throw new Error("Link de avaliação inválido.")
+  if (!realtor) throw new UserError("Link de avaliação inválido.")
 
   const testimonial = await testimonialRepository.createTestimonial({
     name: data.name,

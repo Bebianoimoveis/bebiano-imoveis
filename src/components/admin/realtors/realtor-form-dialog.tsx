@@ -24,6 +24,7 @@ import { PhotoCropDialog } from "@/components/admin/realtors/photo-crop-dialog"
 import { createRealtor, updateRealtor } from "@/modules/realtor/actions"
 import { createRealtorPhotoUploadSignature } from "@/modules/upload/actions"
 import { uploadPropertyImage } from "@/modules/upload/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type FormValues = {
   name: string
@@ -90,7 +91,7 @@ export function RealtorFormDialog({
       const uploaded = await uploadPropertyImage(croppedFile, signature)
       form.setValue("photoUrl", uploaded.url)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar foto.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar foto."))
     } finally {
       setIsUploading(false)
     }
@@ -125,7 +126,7 @@ export function RealtorFormDialog({
       if (mode === "create") form.reset()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar corretor.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar corretor."))
     } finally {
       setIsSubmitting(false)
     }

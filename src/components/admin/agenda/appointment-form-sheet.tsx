@@ -30,6 +30,7 @@ import { suggestClients } from "@/modules/client/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
 import type { AppointmentType } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 type LinkedItem = { id: string; label: string }
@@ -302,7 +303,7 @@ export function AppointmentFormSheet({
         }
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar compromisso.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar compromisso."))
     } finally {
       setIsSubmitting(false)
     }

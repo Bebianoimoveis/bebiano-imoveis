@@ -20,8 +20,9 @@ import {
 import { CLIENT_TYPE_OPTIONS } from "@/components/admin/clients/client-type-badge"
 import { CLIENT_STATUS_OPTIONS } from "@/components/admin/clients/client-status-badge"
 import { updateClient } from "@/modules/client/actions"
-import type { ClientDetail } from "@/modules/client/repository"
+import type { AdminClientDetail as ClientDetail } from "@/modules/client/actions"
 import type { ClientStatus, ClientType } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 type CityOption = { id: string; name: string; state: string }
@@ -131,7 +132,7 @@ export function ClientDetailsForm({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar cliente.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar cliente."))
       }
     })
   }

@@ -3,6 +3,8 @@ import type { Prisma, AppointmentStatus } from "@/generated/prisma/client"
 import { upsertLeadByPhone } from "@/modules/lead/repository"
 import type { LeadAttributionInput } from "@/modules/lead/repository"
 import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
+import { UserError } from "@/lib/user-error"
+import { formatDateTimeBR } from "@/lib/format"
 
 // realtor.user só com id/nome — a lista vai pro navegador, e o User
 // completo levaria o hash de senha junto.
@@ -57,7 +59,7 @@ type CreateVisitRequestInput = {
 // mais antigo encontrar um corretor ativo, não há como agendar.
 export async function createVisitRequestWithLead(input: CreateVisitRequestInput) {
   return prisma.$transaction(async (tx) => {
-    const now = new Date().toLocaleString("pt-BR")
+    const now = formatDateTimeBR(new Date())
     const { lead, isNew: isNewLead } = await upsertLeadByPhone(tx, {
       name: input.name,
       phone: input.phone,
@@ -73,7 +75,7 @@ export async function createVisitRequestWithLead(input: CreateVisitRequestInput)
     // realtorId já atribuído, então lead.realtorId é a fonte de verdade.
     const realtorId = lead.realtorId
     if (!realtorId) {
-      throw new Error("Nenhum corretor disponível para atribuir a visita.")
+      throw new UserError("Nenhum corretor disponível para atribuir a visita.")
     }
 
     const appointment = await tx.appointment.create({
@@ -168,12 +170,12 @@ export async function findConflicts(
       realtorId: input.realtorId,
       status: { in: ["SCHEDULED", "CONFIRMED"] },
       id: input.excludeId ? { not: input.excludeId } : undefined,
-      // Janela generosa (±6h) pra reduzir candidatos antes do filtro
-      // preciso em memória (Postgres não compara facilmente contra uma
-      // expressão calculada de fim sem uma coluna gerada).
+      // Começa antes do fim do novo e, no máximo, 24h antes do início dele
+      // (cobre compromisso longo, tipo plantão). O filtro preciso vem depois,
+      // em memória.
       scheduledAt: {
-        gte: new Date(start.getTime() - 6 * 60 * 60000),
-        lte: new Date(end.getTime() + 6 * 60 * 60000),
+        gt: new Date(start.getTime() - 24 * 60 * 60000),
+        lt: end,
       },
     },
     include: appointmentInclude,

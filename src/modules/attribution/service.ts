@@ -2,13 +2,13 @@ import { randomUUID } from "node:crypto"
 import { cache } from "react"
 import { cookies } from "next/headers"
 
-import { siteConfig } from "@/config/site"
 import * as attributionRepository from "@/modules/attribution/repository"
 import {
   REFERRAL_COOKIE_MAX_AGE_SECONDS,
   REFERRAL_COOKIE_NAME,
 } from "@/modules/attribution/constants"
 import type { AttributedRealtor } from "@/modules/attribution/repository"
+import { getPublicWhatsapp } from "@/modules/settings/whatsapp"
 
 export type AttributedRealtorView = {
   id: string
@@ -87,7 +87,7 @@ export const resolveAttributedRealtor = cache(
 export const resolveWhatsappTarget = cache(async () => {
   const realtor = await resolveAttributedRealtor()
   return {
-    phone: realtor?.phone || siteConfig.whatsapp,
+    phone: realtor?.phone || (await getPublicWhatsapp()),
     realtorName: realtor?.name ?? null,
   }
 })

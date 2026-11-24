@@ -24,16 +24,41 @@ export type PropertyDetail = Prisma.PropertyGetPayload<{
 
 // O código é gerado a partir do último imóvel criado (incluindo os
 // excluídos logicamente, para nunca reutilizar um código já emitido).
+// Pelo maior número, não pelo mais recente: um código cadastrado fora de
+// ordem fazia o próximo repetir um já usado.
 export async function getNextPropertyCode(): Promise<string> {
-  const last = await prisma.property.findFirst({
-    orderBy: { createdAt: "desc" },
-    select: { code: true },
+  const [row] = await prisma.$queryRaw<{ last: number | null }[]>`
+    SELECT MAX(CAST(SUBSTRING("code" FROM 4) AS INTEGER)) AS last
+    FROM "Property" WHERE "code" ~ '^BB-[0-9]{1,9}$'`
+  return `BB-${(row?.last ?? 1000) + 1}`
+}
+
+// Dois cadastros ao mesmo tempo podem calcular o mesmo código; o banco
+// recusa o segundo (código único) e ele tenta de novo com o seguinte.
+export async function withNextPropertyCode<T>(create: (code: string) => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await create(await getNextPropertyCode())
+    } catch (error) {
+      if (attempt >= 5 || (error as { code?: string }).code !== "P2002") throw error
+    }
+  }
+}
+
+export async function findPropertyOwnership(id: string) {
+  return prisma.property.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, realtorId: true, createdById: true, isLaunch: true },
   })
+}
 
-  const lastNumber = last ? Number(last.code.replace(/\D/g, "")) : 1000
-  const nextNumber = Number.isFinite(lastNumber) ? lastNumber + 1 : 1001
+export async function findCodesByIds(ids: string[]) {
+  const rows = await prisma.property.findMany({ where: { id: { in: ids } }, select: { id: true, code: true } })
+  return new Map(rows.map((row) => [row.id, row.code]))
+}
 
-  return `BB-${nextNumber}`
+export async function countImagesByPublicId(publicId: string) {
+  return prisma.propertyImage.count({ where: { publicId } })
 }
 
 export async function createProperty(
@@ -220,17 +245,6 @@ export async function lastVisitByProperty(propertyIds: string[]) {
 
 // Ações em massa — a mesma checagem de permissão do chamador (actions.ts)
 // já decide quem pode chegar aqui; este módulo só executa.
-export async function bulkUpdateStatus(ids: string[], status: Prisma.PropertyUpdateManyMutationInput["status"]) {
-  return prisma.property.updateMany({ where: { id: { in: ids } }, data: { status } })
-}
-
-export async function bulkArchive(ids: string[]) {
-  return prisma.property.updateMany({
-    where: { id: { in: ids } },
-    data: { deletedAt: new Date(), status: "ARCHIVED" },
-  })
-}
-
 export async function bulkReassignRealtor(ids: string[], realtorId: string | null) {
   return prisma.property.updateMany({ where: { id: { in: ids } }, data: { realtorId } })
 }

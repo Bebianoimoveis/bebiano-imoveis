@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { deleteClient } from "@/modules/client/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function ClientRowActions({ clientId, onOpen }: { clientId: string; onOpen: () => void }) {
   const router = useRouter()
@@ -37,7 +38,7 @@ export function ClientRowActions({ clientId, onOpen }: { clientId: string; onOpe
         toast.success("Cliente arquivado.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao arquivar.")
+        toast.error(actionErrorMessage(error, "Erro ao arquivar."))
       }
     })
   }

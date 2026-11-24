@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { setRealtorActive } from "@/modules/realtor/actions"
 import { cn } from "@/lib/utils"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function RealtorActiveToggle({ id, active }: { id: string; active: boolean }) {
   const router = useRouter()
@@ -15,10 +16,10 @@ export function RealtorActiveToggle({ id, active }: { id: string; active: boolea
     startTransition(async () => {
       try {
         await setRealtorActive(id, !active)
-        toast.success(!active ? "Corretor ativado — visível no site." : "Corretor desativado — some da equipe pública.")
+        toast.success(!active ? "Corretor ativado — visível no site." : "Corretor desativado: sai do site e, se a conta for só de corretor, perde o acesso.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar corretor.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar corretor."))
       }
     })
   }

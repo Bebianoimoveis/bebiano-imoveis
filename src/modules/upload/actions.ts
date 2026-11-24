@@ -1,17 +1,12 @@
 "use server"
 
-import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { cloudinary } from "@/lib/cloudinary"
 import { isRateLimited } from "@/lib/rate-limit"
-
-async function getClientIp() {
-  const headerList = await headers()
-  const forwardedFor = headerList.get("x-forwarded-for")
-  return forwardedFor?.split(",")[0]?.trim() ?? "unknown"
-}
+import { UserError } from "@/lib/user-error"
+import { getClientIp } from "@/lib/client-ip"
 
 const ALLOWED_FORMATS = "jpg,jpeg,png,webp"
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024 // 8MB
@@ -32,10 +27,10 @@ export type UploadSignature = {
 export async function createPropertyImageUploadSignature(): Promise<UploadSignature> {
   const session = await auth()
   if (!session?.user) {
-    throw new Error("Não autenticado.")
+    throw new UserError("Não autenticado.")
   }
   if (!(await can(session.user, "property.edit"))) {
-    throw new Error("Sem permissão para editar imagens de imóvel.")
+    throw new UserError("Sem permissão para editar imagens de imóvel.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -72,10 +67,10 @@ const ATTACHMENT_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 export async function createFinancialAttachmentUploadSignature(): Promise<UploadSignature> {
   const session = await auth()
   if (!session?.user) {
-    throw new Error("Não autenticado.")
+    throw new UserError("Não autenticado.")
   }
   if (!(await can(session.user, "financial.manage"))) {
-    throw new Error("Sem permissão para gerenciar o financeiro.")
+    throw new UserError("Sem permissão para gerenciar o financeiro.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -108,10 +103,10 @@ export async function createFinancialAttachmentUploadSignature(): Promise<Upload
 export async function createRealtorPhotoUploadSignature(): Promise<UploadSignature> {
   const session = await auth()
   if (!session?.user) {
-    throw new Error("Não autenticado.")
+    throw new UserError("Não autenticado.")
   }
   if (!(await can(session.user, "realtor.manage"))) {
-    throw new Error("Sem permissão para gerenciar corretores.")
+    throw new UserError("Sem permissão para gerenciar corretores.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -145,10 +140,10 @@ export async function createRealtorPhotoUploadSignature(): Promise<UploadSignatu
 export async function createSiteImageUploadSignature(): Promise<UploadSignature> {
   const session = await auth()
   if (!session?.user) {
-    throw new Error("Não autenticado.")
+    throw new UserError("Não autenticado.")
   }
   if (!(await can(session.user, "settings.manage"))) {
-    throw new Error("Sem permissão para gerenciar configurações do site.")
+    throw new UserError("Sem permissão para gerenciar configurações do site.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -181,10 +176,10 @@ export async function createSiteImageUploadSignature(): Promise<UploadSignature>
 export async function createSegmentImageUploadSignature(): Promise<UploadSignature> {
   const session = await auth()
   if (!session?.user) {
-    throw new Error("Não autenticado.")
+    throw new UserError("Não autenticado.")
   }
   if (!(await can(session.user, "segment.manage"))) {
-    throw new Error("Sem permissão para gerenciar segmentos.")
+    throw new UserError("Sem permissão para gerenciar segmentos.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -217,10 +212,10 @@ export async function createSegmentImageUploadSignature(): Promise<UploadSignatu
 export async function createTestimonialPhotoUploadSignature(): Promise<UploadSignature> {
   const session = await auth()
   if (!session?.user) {
-    throw new Error("Não autenticado.")
+    throw new UserError("Não autenticado.")
   }
   if (!(await can(session.user, "testimonial.manage"))) {
-    throw new Error("Sem permissão para gerenciar depoimentos.")
+    throw new UserError("Sem permissão para gerenciar depoimentos.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -256,10 +251,10 @@ const CONTRACT_MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 export async function createContractFileUploadSignature(): Promise<UploadSignature> {
   const session = await auth()
   if (!session?.user) {
-    throw new Error("Não autenticado.")
+    throw new UserError("Não autenticado.")
   }
   if (!(await can(session.user, "contract.manage"))) {
-    throw new Error("Sem permissão para gerenciar contratos.")
+    throw new UserError("Sem permissão para gerenciar contratos.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)
@@ -331,8 +326,8 @@ async function createPublicSubmissionSignature(
   maxFileSize: number
 ): Promise<UploadSignature> {
   const ip = await getClientIp()
-  if (isRateLimited(`submission-upload:${ip}`, { maxAttempts: 30, windowMs: 10 * 60 * 1000 })) {
-    throw new Error("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
+  if (await isRateLimited(`submission-upload:${ip}`, { maxAttempts: 30, windowMs: 10 * 60 * 1000 })) {
+    throw new UserError("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
   }
 
   const timestamp = Math.round(Date.now() / 1000)

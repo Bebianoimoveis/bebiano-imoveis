@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto"
 
 import { prisma } from "@/lib/prisma"
+import { brazilDateOnly } from "@/lib/date"
 import type { Prisma, ProposalStatus } from "@/generated/prisma/client"
 
 const proposalListInclude = {
@@ -140,7 +141,7 @@ export async function getProposalStats(where: Prisma.ProposalWhereInput) {
     prisma.proposal.count({
       where: {
         ...base,
-        validUntil: { lt: new Date() },
+        validUntil: { lt: brazilDateOnly() },
         status: { notIn: ["ACCEPTED", "REJECTED", "COMPLETED", "CANCELED"] },
       },
     }),

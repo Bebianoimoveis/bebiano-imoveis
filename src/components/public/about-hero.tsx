@@ -9,6 +9,7 @@ import { Parallax } from "@/components/motion/parallax"
 import { HeroBackground } from "@/components/public/hero-background"
 import { AccentWord } from "@/components/public/accent-word"
 import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
+import { whatsappNumber } from "@/lib/phone"
 
 const container = {
   hidden: {},
@@ -104,7 +105,7 @@ export function AboutHero({
                 className="h-10 w-full px-5 text-sm border-white/30 bg-white/5 text-white backdrop-blur-md hover:bg-white/15 hover:text-white sm:h-11 sm:w-auto sm:px-6 sm:text-base"
               >
                 <a
-                  href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${whatsappNumber(phone)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

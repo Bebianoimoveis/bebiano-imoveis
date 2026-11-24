@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { headers } from "next/headers"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
@@ -10,18 +9,15 @@ import { isRateLimited } from "@/lib/rate-limit"
 import { submissionFiltersSchema, submissionInputSchema } from "@/modules/submission/schema"
 import * as submissionRepository from "@/modules/submission/repository"
 import type { SubmissionWithRefs } from "@/modules/submission/repository"
-
-async function getClientIp() {
-  const headerList = await headers()
-  const forwardedFor = headerList.get("x-forwarded-for")
-  return forwardedFor?.split(",")[0]?.trim() ?? "unknown"
-}
+import { UserError } from "@/lib/user-error"
+import { getClientIp } from "@/lib/client-ip"
+import { assertOwnFileUrl } from "@/lib/own-file"
 
 async function requireSubmissionManage() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "submission.manage"))) {
-    throw new Error("Sem permissão para gerenciar captações.")
+    throw new UserError("Sem permissão para gerenciar captações.")
   }
   return session
 }
@@ -29,11 +25,15 @@ async function requireSubmissionManage() {
 // Uso público — formulário "Quero vender meu imóvel", sem autenticação.
 export async function createPropertySubmission(input: unknown) {
   const ip = await getClientIp()
-  if (isRateLimited(`submission:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
-    throw new Error("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
+  if (await isRateLimited(`submission:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
+    throw new UserError("Muitos envios em pouco tempo. Aguarde alguns minutos e tente novamente.")
   }
 
   const data = submissionInputSchema.parse(input)
+  if (data.company) return { id: "ok" }
+  for (const url of [...data.images, ...[...data.documents, ...data.videos].map((file) => file.url)]) {
+    assertOwnFileUrl(url)
+  }
 
   const submission = await submissionRepository.createSubmission({
     name: data.name,

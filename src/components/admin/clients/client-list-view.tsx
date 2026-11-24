@@ -10,6 +10,7 @@ import { PropertyRealtor } from "@/components/admin/properties/property-realtor"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatRelativeTime } from "@/lib/format"
 import type { ClientListItem } from "@/modules/client/repository"
+import { whatsappNumber } from "@/lib/phone"
 
 // A última coluna (ações) é de largura fixa (32px, igual ao botão "...")
 // em vez de "auto" nos dois grids — com "auto" o cabeçalho (que não tem
@@ -40,7 +41,7 @@ function HeaderHint({ label, hint }: { label: string; hint: string }) {
 function ClientWhatsappLink({ phone }: { phone: string }) {
   return (
     <a
-      href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+      href={`https://wa.me/${whatsappNumber(phone)}`}
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}

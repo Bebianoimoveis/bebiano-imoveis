@@ -60,6 +60,8 @@ import { siteConfig } from "@/config/site"
 import type { AdminProposalDetail } from "@/modules/proposal/actions"
 import type { ProposalStatus } from "@/generated/prisma/client"
 import { fileViewUrl } from "@/lib/file-url"
+import { actionErrorMessage } from "@/lib/action-error"
+import { whatsappNumber } from "@/lib/phone"
 
 type RealtorOption = { id: string; user: { name: string } }
 
@@ -104,7 +106,7 @@ export function ProposalDetailPanel({
         refetch()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar."))
       }
     })
   }
@@ -118,7 +120,7 @@ export function ProposalDetailPanel({
         refetch()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao enviar.")
+        toast.error(actionErrorMessage(error, "Erro ao enviar."))
       }
     })
   }
@@ -131,7 +133,7 @@ export function ProposalDetailPanel({
         toast.success("Proposta duplicada.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao duplicar.")
+        toast.error(actionErrorMessage(error, "Erro ao duplicar."))
       }
     })
   }
@@ -145,7 +147,7 @@ export function ProposalDetailPanel({
         onClose()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir."))
       }
     })
   }
@@ -231,7 +233,8 @@ export function ProposalDetailPanel({
                 </Button>
                 <Button asChild size="sm" variant="outline" className="gap-1.5">
                   <a
-                    href={`https://wa.me/${proposal.client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMessage)}`}
+                    href={`https://wa.me/${whatsappNumber(proposal.client.phone)}?text=${encodeURIComponent(whatsappMessage)}`}
+                    onClick={proposal.status === "DRAFT" ? handleSend : undefined}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

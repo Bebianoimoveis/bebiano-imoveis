@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
+import { normalizePhone } from "@/lib/phone"
+import { brazilDateOnly } from "@/lib/date"
 
 type TransactionClient = Prisma.TransactionClient
 
@@ -29,12 +31,13 @@ export type ClientDetail = Prisma.ClientGetPayload<{ include: typeof clientDetai
 // transação de criação pra evitar corrida entre dois cadastros
 // simultâneos (mesmo cuidado dado a outros contadores do projeto).
 async function nextClientCode(tx: TransactionClient) {
-  const last = await tx.client.findFirst({
-    orderBy: { code: "desc" },
-    select: { code: true },
-  })
-  const lastNumber = last ? Number(last.code.replace("CL-", "")) || 0 : 0
-  return `CL-${String(lastNumber + 1).padStart(4, "0")}`
+  // Trava até o fim da transação: dois cadastros simultâneos liam o mesmo
+  // último código. MAX numérico porque, por texto, CL-9999 > CL-10000.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('client-code'))`
+  const [row] = await tx.$queryRaw<{ last: number | null }[]>`
+    SELECT MAX(CAST(SUBSTRING("code" FROM 4) AS INTEGER)) AS last
+    FROM "Client" WHERE "code" ~ '^CL-[0-9]{1,9}$'`
+  return `CL-${String((row?.last ?? 0) + 1).padStart(4, "0")}`
 }
 
 export async function listClients(where: Prisma.ClientWhereInput): Promise<ClientListItem[]> {
@@ -52,6 +55,19 @@ export async function findClientById(id: string): Promise<ClientDetail | null> {
   })
 }
 
+// realtorId undefined = qualquer corretor.
+export async function findClientByPhone(phone: string, realtorId?: string) {
+  const digits = normalizePhone(phone)
+  if (!digits) return null
+  const [row] = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "Client"
+    WHERE "deletedAt" IS NULL
+      AND regexp_replace(regexp_replace("phone", '[^0-9]', '', 'g'), '^55([0-9]{10,11})$', '\\1') = ${digits}
+      AND (${realtorId ?? null}::text IS NULL OR "realtorId" = ${realtorId ?? null})
+    ORDER BY "createdAt" DESC LIMIT 1`
+  return row ?? null
+}
+
 export type UpcomingBirthday = { id: string; name: string; phone: string; birthDate: Date; daysUntil: number }
 
 // Sem suporte nativo do Prisma pra "mês/dia, ignorando o ano" — busca só
@@ -66,8 +82,9 @@ export async function listUpcomingBirthdays(
     select: { id: true, name: true, phone: true, birthDate: true },
   })
 
-  const now = new Date()
-  const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  // Hoje em Brasília: em UTC, depois das 21h já era amanhã.
+  const now = brazilDateOnly()
+  const todayUTC = now.getTime()
 
   return clients
     .map((client) => {
@@ -178,12 +195,13 @@ export async function createClientInteraction(input: {
   ])
 }
 
-export async function updateClientInteraction(id: string, description: string) {
-  return prisma.clientInteraction.update({ where: { id }, data: { description } })
+// clientId no filtro: sem ele dava pra mexer na interação de outro cliente.
+export async function updateClientInteraction(clientId: string, id: string, description: string) {
+  return prisma.clientInteraction.updateMany({ where: { id, clientId }, data: { description } })
 }
 
-export async function deleteClientInteraction(id: string) {
-  return prisma.clientInteraction.delete({ where: { id } })
+export async function deleteClientInteraction(clientId: string, id: string) {
+  return prisma.clientInteraction.deleteMany({ where: { id, clientId } })
 }
 
 export async function upsertClientPreference(

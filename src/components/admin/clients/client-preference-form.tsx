@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/select"
 import { saveClientPreference } from "@/modules/client/actions"
 import { listNeighborhoods } from "@/modules/taxonomy/actions"
-import type { ClientDetail } from "@/modules/client/repository"
+import type { AdminClientDetail as ClientDetail } from "@/modules/client/actions"
 import type { Purpose } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type CityOption = { id: string; name: string; state: string }
 type PropertyTypeOption = { id: string; name: string }
@@ -85,7 +86,7 @@ export function ClientPreferenceForm({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao salvar preferências.")
+        toast.error(actionErrorMessage(error, "Erro ao salvar preferências."))
       }
     })
   }

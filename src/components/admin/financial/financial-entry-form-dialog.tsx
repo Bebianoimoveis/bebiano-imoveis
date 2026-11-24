@@ -38,6 +38,7 @@ import {
   type FinancialEntryFormValues,
   type FinancialEntryInput,
 } from "@/modules/financial/schema"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type ContractOption = {
   id: string
@@ -84,7 +85,7 @@ export function FinancialEntryFormDialog({
       form.reset()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao criar lançamento.")
+      toast.error(actionErrorMessage(error, "Erro ao criar lançamento."))
     } finally {
       setIsSubmitting(false)
     }

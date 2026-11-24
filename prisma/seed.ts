@@ -192,8 +192,12 @@ async function main() {
   }
 
   console.log("Seed: criando usuário administrador...")
-  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@bebianoimoveis.com.br"
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "TrocarEssaSenha123"
+  // Sem padrão de propósito: uma senha escrita no código é uma senha pública.
+  const adminEmail = process.env.SEED_ADMIN_EMAIL
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD
+  if (!adminEmail || !adminPassword || adminPassword.length < 12) {
+    throw new Error("Defina SEED_ADMIN_EMAIL e SEED_ADMIN_PASSWORD (12+ caracteres) para criar o administrador.")
+  }
   const adminRole = await prisma.role.findUniqueOrThrow({
     where: { name: "ADMIN" },
   })

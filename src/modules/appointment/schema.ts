@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { queryBoolean } from "@/lib/query-boolean"
 
 export const APPOINTMENT_STATUSES = [
   "SCHEDULED",
@@ -13,7 +14,7 @@ export const APPOINTMENT_TYPES = ["VISIT", "CALL", "RETURN", "OTHER"] as const
 export const appointmentInputSchema = z.object({
   realtorId: z.string().min(1, "Selecione o corretor."),
   scheduledAt: z.coerce.date(),
-  durationMinutes: z.coerce.number().int().positive().default(60),
+  durationMinutes: z.coerce.number().int().positive().max(24 * 60).default(60),
   type: z.enum(APPOINTMENT_TYPES).default("VISIT"),
   // Só faz sentido (e só é exigido) quando type = "OTHER" — a validação
   // condicional fica na action, não aqui, pra manter o schema simples.
@@ -36,7 +37,7 @@ export const appointmentFiltersSchema = z.object({
   // "Meu Dia" — força o escopo pro corretor logado mesmo quando ele tem
   // appointment.view.all (por padrão só filtra a visão, não muda quem
   // pode ver o quê).
-  mine: z.coerce.boolean().optional(),
+  mine: queryBoolean.optional(),
 })
 
 export type AppointmentFilters = z.infer<typeof appointmentFiltersSchema>

@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { updateClientInteraction, deleteClientInteraction } from "@/modules/client/actions"
 import { formatDateTimeBR } from "@/lib/format"
-import type { ClientDetail } from "@/modules/client/repository"
+import type { AdminClientDetail as ClientDetail } from "@/modules/client/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 const TYPE_ICONS = {
   CALL: Phone,
@@ -76,7 +77,7 @@ export function ClientInteractionList({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar interação.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar interação."))
       }
     })
   }
@@ -89,7 +90,7 @@ export function ClientInteractionList({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir interação.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir interação."))
       }
     })
   }

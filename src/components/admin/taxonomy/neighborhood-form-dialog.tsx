@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { createNeighborhood } from "@/modules/taxonomy/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function NeighborhoodFormDialog({
   trigger,
@@ -39,7 +40,7 @@ export function NeighborhoodFormDialog({
       setName("")
       onCreated()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar bairro.")
+      toast.error(actionErrorMessage(error, "Erro ao cadastrar bairro."))
     } finally {
       setIsSubmitting(false)
     }

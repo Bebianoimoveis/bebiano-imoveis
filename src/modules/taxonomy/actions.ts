@@ -11,6 +11,7 @@ import {
   createPropertyFeatureSchema,
   createPropertyTypeSchema,
 } from "@/modules/taxonomy/schema"
+import { UserError } from "@/lib/user-error"
 
 // Listas de taxonomia (cidade, bairro, tipo, característica) não contêm
 // dado sensível — são usadas tanto pelos selects do painel quanto pelos
@@ -52,7 +53,7 @@ export async function listPropertyFeatures() {
 export async function createCity(input: unknown) {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar cidades.")
+    throw new UserError("Sem permissão para gerenciar cidades.")
   }
 
   const data = createCitySchema.parse(input)
@@ -111,7 +112,7 @@ export async function deleteCity(id: string): Promise<{ error: string } | undefi
 export async function createNeighborhood(input: unknown) {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar bairros.")
+    throw new UserError("Sem permissão para gerenciar bairros.")
   }
 
   const data = createNeighborhoodSchema.parse(input)
@@ -152,7 +153,7 @@ export async function deleteNeighborhood(id: string): Promise<{ error: string } 
 export async function createPropertyType(input: unknown) {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar tipos de imóvel.")
+    throw new UserError("Sem permissão para gerenciar tipos de imóvel.")
   }
 
   const data = createPropertyTypeSchema.parse(input)
@@ -165,7 +166,7 @@ export async function createPropertyType(input: unknown) {
 export async function createPropertyFeature(input: unknown) {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar características.")
+    throw new UserError("Sem permissão para gerenciar características.")
   }
 
   const data = createPropertyFeatureSchema.parse(input)
@@ -183,7 +184,7 @@ export async function createPropertyFeature(input: unknown) {
 export async function togglePropertyTypeActive(id: string, active: boolean) {
   const session = await auth()
   if (!(await can(session?.user, "segment.manage"))) {
-    throw new Error("Sem permissão para gerenciar tipos de imóvel.")
+    throw new UserError("Sem permissão para gerenciar tipos de imóvel.")
   }
 
   await prisma.propertyType.update({ where: { id }, data: { active } })
@@ -197,7 +198,7 @@ export async function togglePropertyTypeActive(id: string, active: boolean) {
 export async function updatePropertyType(id: string, input: unknown) {
   const session = await auth()
   if (!(await can(session?.user, "taxonomy.manage"))) {
-    throw new Error("Sem permissão para gerenciar tipos de imóvel.")
+    throw new UserError("Sem permissão para gerenciar tipos de imóvel.")
   }
 
   const data = createPropertyTypeSchema.parse(input)

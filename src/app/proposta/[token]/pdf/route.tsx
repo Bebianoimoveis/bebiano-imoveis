@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const { token } = await params
   const proposal = await findProposalByShareToken(token)
-  if (!proposal) {
+  if (!proposal || proposal.status === "CANCELED") {
     return NextResponse.json({ error: "Proposta não encontrada." }, { status: 404 })
   }
 

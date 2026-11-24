@@ -22,12 +22,13 @@ import {
   type GoalScopeType,
   type GoalStatus,
 } from "@/modules/goal/period"
+import { UserError } from "@/lib/user-error"
 
 async function requireFinancialManage() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "financial.manage"))) {
-    throw new Error("Sem permissão para gerenciar metas.")
+    throw new UserError("Sem permissão para gerenciar metas.")
   }
   return session
 }
@@ -228,7 +229,7 @@ async function buildGoalViews(goals: goalRepository.GoalWithRefs[]): Promise<Goa
 // Todas as metas que tocam o ano escolhido, já com o realizado.
 export async function listGoalViews(year: number): Promise<GoalView[]> {
   const access = await getGoalAccess()
-  if (access.mode === "none") throw new Error("Sem permissão para acessar metas.")
+  if (access.mode === "none") throw new UserError("Sem permissão para acessar metas.")
   const goals = await goalRepository.listGoalsOverlapping(
     new Date(Date.UTC(year, 0, 1)),
     new Date(Date.UTC(year, 11, 31)),

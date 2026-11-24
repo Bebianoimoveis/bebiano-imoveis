@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { duplicateFinancialEntry, deleteFinancialEntry, markFinancialEntryStatus } from "@/modules/financial/actions"
 import type { FinancialEntryListItem } from "@/modules/financial/repository"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function FinancialEntryRowActions({
   entry,
@@ -46,7 +47,7 @@ export function FinancialEntryRowActions({
         toast.success(message)
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro inesperado.")
+        toast.error(actionErrorMessage(error, "Erro inesperado."))
       }
     })
   }

@@ -6,6 +6,7 @@ import * as attributionService from "@/modules/attribution/service"
 import type { ResolvedRealtorForLead } from "@/modules/attribution/service"
 import * as propertyRepository from "@/modules/property/repository"
 import * as notificationService from "@/modules/notification/service"
+import { UserError } from "@/lib/user-error"
 
 class SpamRejectedError extends Error {}
 
@@ -101,7 +102,10 @@ export async function submitPublicVisitRequest(input: VisitRequestInput) {
     `${input.preferredDate}T${input.preferredTime}:00-03:00`
   )
   if (Number.isNaN(scheduledAt.getTime())) {
-    throw new Error("Data ou horário inválido.")
+    throw new UserError("Data ou horário inválido.")
+  }
+  if (scheduledAt.getTime() < Date.now()) {
+    throw new UserError("Esse horário já passou. Escolha outro.")
   }
 
   const resolved = await resolveRealtorForLeadInput(input.propertyId)

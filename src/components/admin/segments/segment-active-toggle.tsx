@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { toggleSegmentActive } from "@/modules/segment/actions"
 import { cn } from "@/lib/utils"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function SegmentActiveToggle({ id, active }: { id: string; active: boolean }) {
   const router = useRouter()
@@ -18,7 +19,7 @@ export function SegmentActiveToggle({ id, active }: { id: string; active: boolea
         toast.success(!active ? "Segmento ativado — visível na home." : "Segmento desativado — banner escondido.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar segmento.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar segmento."))
       }
     })
   }

@@ -13,6 +13,7 @@ import { LEAD_STAGE_ORDER } from "@/components/admin/leads/lead-stage"
 import { updateLeadStage } from "@/modules/lead/actions"
 import type { LeadListItem } from "@/modules/lead/repository"
 import type { LeadStage } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 
@@ -57,7 +58,7 @@ export function LeadCrmBoard({
         setLeads((prev) =>
           prev.map((item) => (item.id === leadId ? { ...item, stage: lead.stage } : item))
         )
-        toast.error(error instanceof Error ? error.message : "Erro ao mover lead.")
+        toast.error(actionErrorMessage(error, "Erro ao mover lead."))
       })
   }
 

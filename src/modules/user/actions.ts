@@ -10,12 +10,13 @@ import { logActivity } from "@/lib/activity-log"
 import { invalidatePermissionsCache } from "@/lib/permissions"
 import { createUserSchema, updateUserSchema } from "@/modules/user/schema"
 import * as userRepository from "@/modules/user/repository"
+import { UserError } from "@/lib/user-error"
 
 async function requireUserManage() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "user.manage"))) {
-    throw new Error("Sem permissão para gerenciar usuários.")
+    throw new UserError("Sem permissão para gerenciar usuários.")
   }
   return session
 }
@@ -35,7 +36,7 @@ export async function createUser(input: unknown) {
   const data = createUserSchema.parse(input)
 
   const existing = await userRepository.findUserByEmail(data.email)
-  if (existing) throw new Error("Já existe um usuário com esse e-mail.")
+  if (existing) throw new UserError("Já existe um usuário com esse e-mail.")
 
   const passwordHash = await bcrypt.hash(data.password, 12)
   const user = await userRepository.createUser({
@@ -137,6 +138,7 @@ export async function deleteUser(id: string): Promise<{ error: string } | undefi
 
 export async function setUserActive(id: string, active: boolean) {
   const session = await requireUserManage()
+  if (!active && session.user.id === id) throw new UserError("Você não pode desativar sua própria conta.")
   const user = await userRepository.setUserActive(id, active)
 
   await logActivity({

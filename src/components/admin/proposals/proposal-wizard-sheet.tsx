@@ -21,12 +21,12 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { formatCurrency, formatDateOnlyBR } from "@/lib/format"
-import { createProposalWizard } from "@/modules/proposal/actions"
+import { createProposalWizard, getProposalRealtorLock } from "@/modules/proposal/actions"
 import { suggestClients, createClientManually, getClientDealContext } from "@/modules/client/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
 import { PAYMENT_METHODS, paymentFields } from "@/modules/proposal/payment"
 import { PropertyPicker } from "@/components/admin/property-picker"
-import type { PropertyListItem } from "@/modules/property/repository"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 type ClientChoice = { id: string; label: string; detail?: string }
@@ -71,7 +71,7 @@ function ClientHistory({ context }: { context: ClientContext | null }) {
   )
 }
 
-function coverUrl(property: PropertyListItem) {
+function coverUrl(property: { images: { url: string; isCover: boolean }[] }) {
   return property.images.find((image) => image.isCover)?.url ?? property.images[0]?.url ?? null
 }
 
@@ -112,11 +112,18 @@ export function ProposalWizardSheet({
   const [newClientPhone, setNewClientPhone] = useState("")
 
   // Passo 2 — Imóvel
-  const [property, setProperty] = useState<PropertyListItem | null>(null)
+  const [property, setProperty] = useState<NonNullable<Awaited<ReturnType<typeof findPropertyByCode>>> | null>(null)
   const [propertyError, setPropertyError] = useState<string | null>(null)
 
   // Passo 3 — Valores
-  const [realtorId, setRealtorId] = useState(realtors[0]?.id ?? "")
+  const [pickedRealtorId, setRealtorId] = useState(realtors[0]?.id ?? "")
+  // Corretor cria sempre em nome próprio (o servidor garante); admin escolhe.
+  const [lockedRealtorId, setLockedRealtorId] = useState<string | null>(null)
+  const realtorId = lockedRealtorId ?? pickedRealtorId
+  useEffect(() => {
+    if (!open) return
+    getProposalRealtorLock().then(setLockedRealtorId).catch(() => null)
+  }, [open])
   const [value, setValue] = useState("")
   const [originalValue, setOriginalValue] = useState("")
   const [downPayment, setDownPayment] = useState("")
@@ -211,7 +218,7 @@ export function ProposalWizardSheet({
       setNewClientPhone("")
       toast.success("Cliente cadastrado.")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar cliente.")
+      toast.error(actionErrorMessage(error, "Erro ao cadastrar cliente."))
     }
   }
 
@@ -309,7 +316,7 @@ export function ProposalWizardSheet({
       router.refresh()
       return result
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao criar proposta.")
+      toast.error(actionErrorMessage(error, "Erro ao criar proposta."))
     } finally {
       setIsSubmitting(false)
     }
@@ -503,7 +510,7 @@ export function ProposalWizardSheet({
             <h3 className="font-heading text-base font-semibold">Valores</h3>
             <div className="space-y-1.5">
               <Label>Corretor</Label>
-              <Select value={realtorId} onValueChange={setRealtorId}>
+              <Select value={realtorId} onValueChange={setRealtorId} disabled={lockedRealtorId !== null}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>

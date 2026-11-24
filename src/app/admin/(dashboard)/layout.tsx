@@ -14,7 +14,7 @@ export default async function AdminDashboardLayout({
   // Segunda camada de proteção além do middleware — Server Components
   // nunca devem confiar apenas na checagem feita antes da rota.
   if (!session?.user) {
-    redirect("/admin/login")
+    redirect("/admin/login?sessao=encerrada")
   }
 
   // Cópia (o Set original é cache por perfil): "goal.view" não existe no

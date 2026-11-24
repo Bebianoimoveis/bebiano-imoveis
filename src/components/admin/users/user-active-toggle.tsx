@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { setUserActive } from "@/modules/user/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function UserActiveToggle({
   userId,
@@ -24,7 +25,7 @@ export function UserActiveToggle({
         toast.success(active ? "Usuário desativado." : "Usuário ativado.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar."))
       }
     })
   }

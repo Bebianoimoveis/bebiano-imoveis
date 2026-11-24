@@ -32,7 +32,11 @@ export default auth((req) => {
   const isOnAdmin = pathname.startsWith("/admin")
 
   if (isOnLoginPage) {
-    if (isLoggedIn) {
+    // O cookie ainda é válido pro middleware (que não acessa o banco), mas o
+    // painel já encerrou a sessão (conta desativada ou senha trocada). Sem
+    // esta exceção as duas páginas ficariam se redirecionando.
+    const sessionEnded = req.nextUrl.searchParams.get("sessao") === "encerrada"
+    if (isLoggedIn && !sessionEnded) {
       return NextResponse.redirect(new URL("/admin", req.nextUrl))
     }
     return NextResponse.next()

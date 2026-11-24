@@ -12,6 +12,7 @@ import { appointmentTypeDot } from "@/components/admin/agenda/appointment-type-b
 import { updateAppointmentStatus } from "@/modules/appointment/actions"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
 import type { AppointmentStatus } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 const COLUMNS: { status: AppointmentStatus; label: string; dot: string }[] = [
   { status: "SCHEDULED", label: "Agendado", dot: "bg-muted-foreground" },
@@ -143,7 +144,7 @@ export function AppointmentKanban({
         setAppointments((prev) =>
           prev.map((a) => (a.id === appointment.id ? { ...a, status: previousStatus } : a))
         )
-        toast.error(error instanceof Error ? error.message : "Erro ao mover.")
+        toast.error(actionErrorMessage(error, "Erro ao mover."))
       })
   }
 

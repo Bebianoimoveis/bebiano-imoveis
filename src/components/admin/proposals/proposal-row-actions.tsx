@@ -25,11 +25,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
-import { duplicateProposal, deleteProposal, updateProposalStatus } from "@/modules/proposal/actions"
+import { duplicateProposal, deleteProposal, markProposalSent, updateProposalStatus } from "@/modules/proposal/actions"
 import { formatCurrency } from "@/lib/format"
 import { siteConfig } from "@/config/site"
 import type { ProposalListItem } from "@/modules/proposal/repository"
 import { ConvertToContractDialog, canConvertProposal } from "@/components/admin/proposals/convert-to-contract-dialog"
+import { actionErrorMessage } from "@/lib/action-error"
+import { whatsappNumber } from "@/lib/phone"
 
 export function ProposalRowActions({
   proposal,
@@ -49,7 +51,7 @@ export function ProposalRowActions({
         toast.success(message)
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro inesperado.")
+        toast.error(actionErrorMessage(error, "Erro inesperado."))
       }
     })
   }
@@ -86,7 +88,12 @@ export function ProposalRowActions({
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <a
-              href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappMessage)}`}
+              href={`https://wa.me/${whatsappNumber(phone)}?text=${encodeURIComponent(whatsappMessage)}`}
+              onClick={
+                proposal.status === "DRAFT"
+                  ? () => runAction(() => markProposalSent(proposal.id), "Proposta marcada como enviada.")
+                  : undefined
+              }
               target="_blank"
               rel="noopener noreferrer"
             >

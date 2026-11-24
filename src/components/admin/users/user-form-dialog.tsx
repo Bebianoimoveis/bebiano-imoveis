@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { createUser, updateUser } from "@/modules/user/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RoleOption = { id: string; name: string }
 
@@ -86,7 +87,7 @@ export function UserFormDialog({
       form.reset()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar usuário.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar usuário."))
     } finally {
       setIsSubmitting(false)
     }

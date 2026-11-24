@@ -34,6 +34,8 @@ import { AppointmentFormSheet } from "@/components/admin/agenda/appointment-form
 import { updateAppointmentStatus, deleteAppointment } from "@/modules/appointment/actions"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
 import type { AppointmentStatus } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
+import { whatsappNumber } from "@/lib/phone"
 
 const STATUS_OPTIONS: AppointmentStatus[] = ["SCHEDULED", "CONFIRMED", "DONE", "CANCELED", "NO_SHOW"]
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
@@ -71,7 +73,7 @@ export function AppointmentDetailPanel({
         toast.success("Status atualizado.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar."))
       }
     })
   }
@@ -85,7 +87,7 @@ export function AppointmentDetailPanel({
         onClose()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir."))
       }
     })
   }
@@ -200,7 +202,7 @@ export function AppointmentDetailPanel({
                   </Button>
                   <Button asChild size="sm" variant="outline" className="gap-1.5">
                     <a
-                      href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+                      href={`https://wa.me/${whatsappNumber(phone)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

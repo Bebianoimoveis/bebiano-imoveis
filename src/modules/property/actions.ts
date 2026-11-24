@@ -14,12 +14,17 @@ import type { PropertyImageInput } from "@/modules/property/types"
 import * as propertyRepository from "@/modules/property/repository"
 import * as propertyService from "@/modules/property/service"
 import * as notificationService from "@/modules/notification/service"
+import { UserError } from "@/lib/user-error"
+import { toCsvValue } from "@/lib/csv"
+import { assertOwnFileUrl } from "@/lib/own-file"
+import { serializeDecimals } from "@/lib/serialize"
+import { brazilDateRange } from "@/lib/date"
 
 const PAGE_SIZE = 20
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
@@ -34,13 +39,39 @@ function revalidatePropertyPaths(slug?: string) {
   if (slug) revalidatePath(`/imoveis/${slug}`)
 }
 
+type Session = Awaited<ReturnType<typeof requireSession>>
+
+// Corretor vê o portfólio inteiro, mas só edita o que é dele: imóvel sob
+// sua responsabilidade ou que ele mesmo cadastrou.
+async function canEditProperty(
+  session: Session,
+  property: { realtorId: string | null; createdById: string }
+): Promise<boolean> {
+  if (!(await can(session.user, "property.edit"))) return false
+  if (await can(session.user, "property.view.all")) return true
+  if (property.createdById === session.user.id) return true
+  return Boolean(session.user.realtorId) && property.realtorId === session.user.realtorId
+}
+
+async function assertCanEditProperty(session: Session, id: string) {
+  const property = await propertyRepository.findPropertyOwnership(id)
+  if (!property) throw new UserError("Imóvel não encontrado.")
+  if (!(await canEditProperty(session, property))) {
+    throw new UserError("Este imóvel é de outro corretor. Só o responsável ou um administrador pode alterar.")
+  }
+  return property
+}
+
 export async function createProperty(input: unknown) {
   const session = await requireSession()
   if (!(await can(session.user, "property.create"))) {
-    throw new Error("Sem permissão para cadastrar imóveis.")
+    throw new UserError("Sem permissão para cadastrar imóveis.")
   }
 
   const data = propertyInputSchema.parse(input)
+  if (!(await can(session.user, "property.view.all"))) {
+    data.realtorId = session.user.realtorId ?? undefined
+  }
   const property = await propertyService.createDraftProperty(data, session.user.id)
 
   await logActivity({
@@ -67,10 +98,15 @@ export async function createProperty(input: unknown) {
 export async function updateProperty(id: string, input: unknown) {
   const session = await requireSession()
   if (!(await can(session.user, "property.edit"))) {
-    throw new Error("Sem permissão para editar imóveis.")
+    throw new UserError("Sem permissão para editar imóveis.")
   }
+  const current = await assertCanEditProperty(session, id)
 
   const data = propertyInputSchema.parse(input)
+  // Só quem vê tudo troca o corretor responsável.
+  if (!(await can(session.user, "property.view.all"))) {
+    data.realtorId = current.realtorId ?? undefined
+  }
   const property = await propertyService.updatePropertyDetails(id, data)
 
   await logActivity({
@@ -84,13 +120,19 @@ export async function updateProperty(id: string, input: unknown) {
   return { id: property.id }
 }
 
+function statusPermission(status: PropertyStatus): Parameters<typeof can>[1] {
+  if (status === "PUBLISHED") return "property.publish"
+  if (status === "ARCHIVED") return "property.delete"
+  return "property.edit"
+}
+
 export async function changePropertyStatus(id: string, status: PropertyStatus) {
   const session = await requireSession()
 
-  const requiredPermission = status === "PUBLISHED" ? "property.publish" : "property.edit"
-  if (!(await can(session.user, requiredPermission))) {
-    throw new Error("Sem permissão para alterar o status deste imóvel.")
+  if (!(await can(session.user, statusPermission(status)))) {
+    throw new UserError("Sem permissão para alterar o status deste imóvel.")
   }
+  await assertCanEditProperty(session, id)
 
   const property = await propertyService.changePropertyStatus(id, status)
 
@@ -107,7 +149,7 @@ export async function changePropertyStatus(id: string, status: PropertyStatus) {
 export async function archiveProperty(id: string) {
   const session = await requireSession()
   if (!(await can(session.user, "property.delete"))) {
-    throw new Error("Sem permissão para arquivar imóveis.")
+    throw new UserError("Sem permissão para arquivar imóveis.")
   }
 
   const property = await propertyService.archiveProperty(id)
@@ -125,7 +167,7 @@ export async function archiveProperty(id: string) {
 export async function deleteProperty(id: string) {
   const session = await requireSession()
   if (!(await can(session.user, "property.delete"))) {
-    throw new Error("Sem permissão para excluir imóveis.")
+    throw new UserError("Sem permissão para excluir imóveis.")
   }
 
   await propertyService.deleteProperty(id)
@@ -143,10 +185,19 @@ export async function deleteProperty(id: string) {
 export async function duplicateProperty(id: string) {
   const session = await requireSession()
   if (!(await can(session.user, "property.create"))) {
-    throw new Error("Sem permissão para cadastrar imóveis.")
+    throw new UserError("Sem permissão para cadastrar imóveis.")
   }
 
-  const duplicate = await propertyService.duplicateProperty(id, session.user.id)
+  const canViewAll = await can(session.user, "property.view.all")
+  const source = await propertyRepository.findPropertyOwnership(id)
+  if (!source || (source.isLaunch && !canViewAll)) throw new UserError("Imóvel não encontrado.")
+
+  // A cópia de um imóvel de colega fica com quem duplicou.
+  const duplicate = await propertyService.duplicateProperty(
+    id,
+    session.user.id,
+    canViewAll ? undefined : session.user.realtorId
+  )
 
   await logActivity({
     userId: session.user.id,
@@ -166,7 +217,15 @@ export async function addPropertyImages(
 ) {
   const session = await requireSession()
   if (!(await can(session.user, "property.edit"))) {
-    throw new Error("Sem permissão para editar imagens deste imóvel.")
+    throw new UserError("Sem permissão para editar imagens deste imóvel.")
+  }
+  await assertCanEditProperty(session, propertyId)
+  for (const image of images) {
+    assertOwnFileUrl(image.url)
+    // O publicId é usado depois pra apagar o arquivo: tem que ser o da URL.
+    if (!image.publicId.startsWith("bebiano-imoveis/properties/") || !image.url.includes(image.publicId)) {
+      throw new UserError("Arquivo inválido. Envie a foto de novo.")
+    }
   }
 
   const currentCount = await propertyRepository.countImages(propertyId)
@@ -188,17 +247,22 @@ export async function addPropertyImages(
 export async function removePropertyImage(imageId: string) {
   const session = await requireSession()
   if (!(await can(session.user, "property.edit"))) {
-    throw new Error("Sem permissão para editar imagens deste imóvel.")
+    throw new UserError("Sem permissão para editar imagens deste imóvel.")
   }
 
   const image = await propertyRepository.findPropertyImage(imageId)
-  if (!image) throw new Error("Imagem não encontrada.")
+  if (!image) throw new UserError("Imagem não encontrada.")
+  await assertCanEditProperty(session, image.propertyId)
 
   await propertyRepository.removePropertyImage(imageId)
-  await cloudinary.uploader.destroy(image.publicId).catch(() => {
-    // Falha ao remover do Cloudinary não deve impedir a remoção no banco;
-    // o arquivo órfão pode ser limpo depois via job de manutenção.
-  })
+  // Imóvel duplicado usa o mesmo arquivo do original: só apaga do
+  // Cloudinary quando nenhum outro imóvel usa a foto.
+  if ((await propertyRepository.countImagesByPublicId(image.publicId)) === 0) {
+    await cloudinary.uploader.destroy(image.publicId).catch(() => {
+      // Falha ao remover do Cloudinary não deve impedir a remoção no banco;
+      // o arquivo órfão pode ser limpo depois via job de manutenção.
+    })
+  }
 
   revalidatePropertyPaths()
 }
@@ -206,8 +270,12 @@ export async function removePropertyImage(imageId: string) {
 export async function setCoverImage(propertyId: string, imageId: string) {
   const session = await requireSession()
   if (!(await can(session.user, "property.edit"))) {
-    throw new Error("Sem permissão para editar imagens deste imóvel.")
+    throw new UserError("Sem permissão para editar imagens deste imóvel.")
   }
+
+  await assertCanEditProperty(session, propertyId)
+  const image = await propertyRepository.findPropertyImage(imageId)
+  if (!image || image.propertyId !== propertyId) throw new UserError("Imagem não encontrada.")
 
   await propertyRepository.setCoverImage(propertyId, imageId)
   revalidatePropertyPaths()
@@ -219,9 +287,10 @@ export async function reorderPropertyImages(
 ) {
   const session = await requireSession()
   if (!(await can(session.user, "property.edit"))) {
-    throw new Error("Sem permissão para editar imagens deste imóvel.")
+    throw new UserError("Sem permissão para editar imagens deste imóvel.")
   }
 
+  await assertCanEditProperty(session, propertyId)
   await propertyRepository.reorderPropertyImages(propertyId, orderedImageIds)
   revalidatePropertyPaths()
 }
@@ -251,10 +320,7 @@ function buildCommonWhere(
       filters.minPrice || filters.maxPrice
         ? { gte: filters.minPrice, lte: filters.maxPrice }
         : undefined,
-    createdAt:
-      filters.createdFrom || filters.createdTo
-        ? { gte: filters.createdFrom, lte: filters.createdTo }
-        : undefined,
+    createdAt: brazilDateRange(filters.createdFrom, filters.createdTo),
     // Busca única casando título, código, cidade, bairro ou nome do
     // corretor — antes só olhava pra título.
     ...(filters.search
@@ -363,47 +429,75 @@ async function assertBulkPermission(
   permission: Parameters<typeof can>[1]
 ) {
   if (!(await can(session.user, permission))) {
-    throw new Error("Sem permissão para executar esta ação.")
+    throw new UserError("Sem permissão para executar esta ação.")
   }
 }
 
-// Ações em massa reaproveitam as mesmas checagens de permissão das
-// versões unitárias — só trocam "um id" por "vários ids" num updateMany.
-export async function bulkChangePropertyStatus(ids: string[], status: PropertyStatus) {
-  const session = await requireSession()
-  await assertBulkPermission(session, status === "PUBLISHED" ? "property.publish" : "property.edit")
+export type BulkResult = { done: number; failures: string[] }
 
-  await propertyRepository.bulkUpdateStatus(ids, status)
+// Ações em massa passam pelas mesmas regras da versão unitária, imóvel por
+// imóvel. Os que não podem mudar voltam na lista com o motivo; os outros
+// seguem.
+async function runBulk(
+  session: Session,
+  ids: string[],
+  action: (id: string) => Promise<unknown>
+): Promise<BulkResult> {
+  const codes = await propertyRepository.findCodesByIds(ids)
+  const result: BulkResult = { done: 0, failures: [] }
+  for (const id of ids) {
+    try {
+      await assertCanEditProperty(session, id)
+      await action(id)
+      result.done += 1
+    } catch (error) {
+      if (!(error instanceof UserError)) throw error
+      result.failures.push(`${codes.get(id) ?? "Imóvel"}: ${error.message}`)
+    }
+  }
+  return result
+}
+
+export async function bulkChangePropertyStatus(ids: string[], status: PropertyStatus): Promise<BulkResult> {
+  const session = await requireSession()
+  await assertBulkPermission(session, statusPermission(status))
+
+  const result = await runBulk(session, ids, (id) => propertyService.changePropertyStatus(id, status))
   await logActivity({
     userId: session.user.id,
     action: `property.bulk_status.${status.toLowerCase()}`,
     entityType: "Property",
     entityId: ids.join(","),
-    metadata: { count: ids.length },
+    metadata: { count: result.done },
   })
 
   revalidatePropertyPaths()
+  return result
 }
 
-export async function bulkArchiveProperties(ids: string[]) {
+export async function bulkArchiveProperties(ids: string[]): Promise<BulkResult> {
   const session = await requireSession()
   await assertBulkPermission(session, "property.delete")
 
-  await propertyRepository.bulkArchive(ids)
+  const result = await runBulk(session, ids, (id) => propertyService.archiveProperty(id))
   await logActivity({
     userId: session.user.id,
     action: "property.bulk_archive",
     entityType: "Property",
     entityId: ids.join(","),
-    metadata: { count: ids.length },
+    metadata: { count: result.done },
   })
 
   revalidatePropertyPaths()
+  return result
 }
 
 export async function bulkReassignPropertyRealtor(ids: string[], realtorId: string | null) {
   const session = await requireSession()
   await assertBulkPermission(session, "property.edit")
+  if (!(await can(session.user, "property.view.all"))) {
+    throw new UserError("Só um administrador ou gerente troca o corretor responsável.")
+  }
 
   await propertyRepository.bulkReassignRealtor(ids, realtorId)
   await logActivity({
@@ -415,11 +509,6 @@ export async function bulkReassignPropertyRealtor(ids: string[], realtorId: stri
   })
 
   revalidatePropertyPaths()
-}
-
-function toCsvValue(value: string | number) {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 
 // Exporta o resultado filtrado atual (ou só os ids selecionados) como CSV
@@ -536,10 +625,10 @@ export async function getAdminProperty(id: string) {
 
   const canViewAll = await can(session.user, "property.view.all")
   if (!canViewAll && property.isLaunch) {
-    throw new Error("Sem permissão para visualizar este imóvel.")
+    throw new UserError("Sem permissão para visualizar este imóvel.")
   }
 
-  return property
+  return { ...property, canEdit: await canEditProperty(session, property), canReassign: canViewAll }
 }
 
 // Uso público — sem autenticação, apenas imóveis publicados.
@@ -630,5 +719,5 @@ export async function findPropertyByCode(code: string) {
     skip: 0,
     take: 1,
   })
-  return items[0] ?? null
+  return items[0] ? serializeDecimals(items[0]) : null
 }

@@ -20,6 +20,7 @@ import { AppointmentDetailPanel } from "@/components/admin/agenda/appointment-de
 import { rescheduleAppointment } from "@/modules/appointment/actions"
 import type { AppointmentListItem } from "@/modules/appointment/repository"
 import type { AppointmentView } from "@/components/admin/agenda/appointment-view-toggle"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 
@@ -95,7 +96,8 @@ export function AppointmentBoard({
     const [year, month, day] = dayIso.split("-").map(Number)
     const newDate = new Date(appointment.scheduledAt)
     newDate.setFullYear(year, month - 1, day)
-    newDate.setHours(hour, 0, 0, 0)
+    // A grade é por hora: mantém os minutos (14:30 arrastado pras 16h = 16:30).
+    newDate.setHours(hour, newDate.getMinutes(), 0, 0)
 
     if (newDate.getTime() === new Date(appointment.scheduledAt).getTime()) return
 
@@ -121,7 +123,7 @@ export function AppointmentBoard({
         setAppointments((prev) =>
           prev.map((a) => (a.id === appointment.id ? { ...a, scheduledAt: previous } : a))
         )
-        toast.error(error instanceof Error ? error.message : "Erro ao reagendar.")
+        toast.error(actionErrorMessage(error, "Erro ao reagendar."))
       })
   }
 

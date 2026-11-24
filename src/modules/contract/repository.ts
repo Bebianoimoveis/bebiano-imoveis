@@ -53,8 +53,8 @@ export async function addContractAttachment(input: {
   return prisma.contractAttachment.create({ data: input })
 }
 
-export async function deleteContractAttachment(id: string) {
-  return prisma.contractAttachment.delete({ where: { id } })
+export async function deleteContractAttachment(contractId: string, id: string) {
+  return prisma.contractAttachment.deleteMany({ where: { id, contractId } })
 }
 
 // Anexos não têm significado próprio fora do contrato (só arquivo) —

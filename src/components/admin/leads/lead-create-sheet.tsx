@@ -22,6 +22,7 @@ import { LEAD_STAGE_LABELS, LEAD_STAGE_ORDER } from "@/components/admin/leads/le
 import { createLeadManually } from "@/modules/lead/actions"
 import { findPropertyByCode } from "@/modules/property/actions"
 import type { LeadStage, LeadTemperature } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 
@@ -95,7 +96,7 @@ export function LeadCreateSheet({
       onOpenChange(false)
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar lead.")
+      toast.error(actionErrorMessage(error, "Erro ao cadastrar lead."))
     } finally {
       setIsSubmitting(false)
     }

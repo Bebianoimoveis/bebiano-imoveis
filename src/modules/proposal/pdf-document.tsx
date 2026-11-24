@@ -1,6 +1,6 @@
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer"
 
-import { formatCurrency, formatDateOnlyBR, getDisplayAddress } from "@/lib/format"
+import { formatCurrency, formatDateBR, formatDateOnlyBR, getDisplayAddress } from "@/lib/format"
 import { PROPOSAL_STATUS_LABELS } from "@/components/admin/proposals/proposal-status-badge"
 import type { ProposalDetail } from "@/modules/proposal/repository"
 
@@ -43,7 +43,7 @@ export function ProposalPdfDocument({
 
         <Text style={styles.title}>Proposta comercial</Text>
         <Text style={styles.subtitle}>
-          Preparada para {proposal.client.name} · {new Date(proposal.createdAt).toLocaleDateString("pt-BR")}
+          Preparada para {proposal.client.name} · {formatDateBR(proposal.createdAt)}
         </Text>
 
         {cover ? <Image src={cover} style={styles.coverImage} /> : null}

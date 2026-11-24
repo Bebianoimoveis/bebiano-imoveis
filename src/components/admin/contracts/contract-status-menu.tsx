@@ -15,6 +15,7 @@ import {
 import { ContractStatusBadge, CONTRACT_STATUS_LABELS } from "@/components/admin/contracts/contract-status-badge"
 import { updateContractStatus } from "@/modules/contract/actions"
 import type { ContractStatus } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 const ORDER: ContractStatus[] = ["DRAFT", "ACTIVE", "COMPLETED", "CANCELED"]
 
@@ -46,7 +47,7 @@ export function ContractStatusMenu({
         onChanged?.(next)
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar o status.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar o status."))
       }
     })
   }

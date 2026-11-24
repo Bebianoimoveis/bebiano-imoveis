@@ -31,6 +31,7 @@ import { createSegment, updateSegment } from "@/modules/segment/actions"
 import { createSegmentImageUploadSignature } from "@/modules/upload/actions"
 import { uploadPropertyImage } from "@/modules/upload/client"
 import type { SegmentFormValues } from "@/modules/segment/schema"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type PropertyTypeOption = { id: string; name: string }
 
@@ -91,7 +92,7 @@ export function SegmentFormDialog({
       const uploaded = await uploadPropertyImage(file, signature)
       form.setValue("imageUrl", uploaded.url)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar imagem.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar imagem."))
     } finally {
       setIsUploading(false)
       e.target.value = ""
@@ -119,7 +120,7 @@ export function SegmentFormDialog({
       if (mode === "create") form.reset()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar segmento.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar segmento."))
     } finally {
       setIsSubmitting(false)
     }

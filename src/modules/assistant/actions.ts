@@ -8,6 +8,8 @@ import { logActivity } from "@/lib/activity-log"
 import { getGeminiClient, isGeminiConfigured, GEMINI_MODEL, withGeminiRetry } from "@/lib/gemini"
 import { ASSISTANT_TOOL_DECLARATIONS, executeAssistantTool } from "@/modules/assistant/tools"
 import { askAssistantSchema } from "@/modules/assistant/schema"
+import { UserError } from "@/lib/user-error"
+import { isRateLimited } from "@/lib/rate-limit"
 
 const SYSTEM_INSTRUCTION = `Você é a Bebiano IA, copiloto operacional e comercial da Bebiano Imóveis. Você ajuda administradores, gestores e corretores a entender o negócio, encontrar informações e decidir o que fazer em seguida — não é um chatbot genérico.
 
@@ -35,15 +37,19 @@ const MAX_TOOL_ITERATIONS = 5
 
 async function requireAssistantAccess() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "assistant.use"))) {
-    throw new Error("Sem permissão para usar o assistente.")
+    throw new UserError("Sem permissão para usar o assistente.")
   }
   return session
 }
 
 export async function askAssistant(input: unknown): Promise<{ role: "model"; content: string }> {
   const session = await requireAssistantAccess()
+
+  if (await isRateLimited(`assistant:${session.user.id}`, { maxAttempts: 30, windowMs: 10 * 60 * 1000 })) {
+    return { role: "model", content: "Muitas perguntas em pouco tempo. Aguarde alguns minutos." }
+  }
 
   // Auditoria mínima: quem usou o assistente e quando, sem guardar a
   // pergunta/resposta (minimização de dados) — suficiente pra saber que

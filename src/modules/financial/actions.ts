@@ -15,18 +15,23 @@ import {
   financialFiltersSchema,
 } from "@/modules/financial/schema"
 import * as financialRepository from "@/modules/financial/repository"
-import { brazilDateOnly } from "@/lib/date"
+import { addMonthsDateOnly, brazilDateOnly } from "@/lib/date"
+import { formatDateOnlyBR } from "@/lib/format"
+import { isRateLimited } from "@/lib/rate-limit"
+import { assertOwnFileUrl } from "@/lib/own-file"
+import { UserError } from "@/lib/user-error"
+import { toCsvValue } from "@/lib/csv"
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
 async function requireFinancialView() {
   const session = await requireSession()
   if (!(await can(session.user, "financial.view"))) {
-    throw new Error("Sem permissão para acessar o financeiro.")
+    throw new UserError("Sem permissão para acessar o financeiro.")
   }
   return session
 }
@@ -34,7 +39,7 @@ async function requireFinancialView() {
 async function requireFinancialManage() {
   const session = await requireSession()
   if (!(await can(session.user, "financial.manage"))) {
-    throw new Error("Sem permissão para gerenciar o financeiro.")
+    throw new UserError("Sem permissão para gerenciar o financeiro.")
   }
   return session
 }
@@ -42,7 +47,7 @@ async function requireFinancialManage() {
 function buildEntryWhere(filters: ReturnType<typeof financialFiltersSchema.parse>): Prisma.FinancialEntryWhereInput {
   return {
     type: filters.type,
-    status: filters.overdue ? { in: ["PENDING", "SCHEDULED"] } : filters.status,
+    status: filters.overdue ? { in: ["PENDING", "SCHEDULED", "PARTIAL"] } : filters.status,
     category: filters.category,
     paymentMethod: filters.paymentMethod,
     realtorId: filters.realtorId,
@@ -126,11 +131,6 @@ export async function getFinancialCommissionsByRealtor() {
   return financialRepository.getCommissionsByRealtor()
 }
 
-function toCsvValue(value: string | number) {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-}
-
 export async function exportFinancialEntriesCsv(rawFilters: unknown = {}) {
   await requireFinancialView()
   const filters = financialFiltersSchema.parse(rawFilters ?? {})
@@ -148,7 +148,7 @@ export async function exportFinancialEntriesCsv(rawFilters: unknown = {}) {
     entry.realtor?.user.name ?? "",
     entry.property ? `${entry.property.code} - ${entry.property.title}` : "",
     entry.amount.toString(),
-    entry.dueDate.toLocaleDateString("pt-BR"),
+    formatDateOnlyBR(entry.dueDate),
     entry.status,
     entry.paymentMethod ?? "",
   ])
@@ -172,6 +172,7 @@ function splitAmountIntoInstallments(total: number, installments: number): numbe
 export async function createFinancialEntry(input: unknown) {
   const session = await requireFinancialManage()
   const data = financialEntryInputSchema.parse(input)
+  assertOwnFileUrl(data.attachmentUrl)
 
   if (data.installments <= 1) {
     const entry = await financialRepository.createEntry({
@@ -210,8 +211,7 @@ export async function createFinancialEntry(input: unknown) {
   // aplicados de uma vez em parcelas futuras que ainda vão vencer.
   const amounts = splitAmountIntoInstallments(data.amount, data.installments)
   const entriesData = amounts.map((amount, index) => {
-    const dueDate = new Date(data.dueDate)
-    dueDate.setMonth(dueDate.getMonth() + index)
+    const dueDate = addMonthsDateOnly(data.dueDate, index)
     return {
       type: data.type,
       category: data.category,
@@ -247,6 +247,7 @@ export async function createFinancialEntry(input: unknown) {
 export async function updateFinancialEntry(id: string, input: unknown) {
   const session = await requireFinancialManage()
   const data = financialEntryInputSchema.partial().parse(input)
+  assertOwnFileUrl(data.attachmentUrl)
 
   await financialRepository.updateEntry(id, {
     category: data.category,
@@ -260,7 +261,7 @@ export async function updateFinancialEntry(id: string, input: unknown) {
     attachmentName: data.attachmentName,
     dueDate: data.dueDate,
     paidAt: data.status === "PAID" ? (data.paidAt ?? new Date()) : data.status ? null : undefined,
-    contract: data.contractId ? { connect: { id: data.contractId } } : undefined,
+    contract: data.contractId ? { connect: { id: data.contractId } } : data.contractId === "" ? { disconnect: true } : undefined,
     client: data.clientId ? { connect: { id: data.clientId } } : data.clientId === "" ? { disconnect: true } : undefined,
     realtor: data.realtorId ? { connect: { id: data.realtorId } } : data.realtorId === "" ? { disconnect: true } : undefined,
     property: data.propertyId ? { connect: { id: data.propertyId } } : data.propertyId === "" ? { disconnect: true } : undefined,
@@ -383,13 +384,17 @@ SUGESTÕES DE UMA ESPECIALISTA: de 3 a 5 ações concretas e priorizadas (a mais
 export async function generateFinancialInsights(): Promise<
   { text: string; generatedAt: Date } | { error: string }
 > {
-  await requireFinancialView()
+  const session = await requireFinancialView()
 
   if (!isGeminiConfigured()) {
     return {
       error:
         "A IA ainda não foi configurada neste sistema. Peça para o administrador adicionar a chave GEMINI_API_KEY nas variáveis de ambiente do projeto.",
     }
+  }
+
+  if (await isRateLimited(`insights:${session.user.id}`, { maxAttempts: 10, windowMs: 10 * 60 * 1000 })) {
+    return { error: "Muitas análises em pouco tempo. Aguarde alguns minutos." }
   }
 
   const [kpis, monthlySeries, expenseByCategory, commissions, incomeByRealtor, incomeByCity, topProperties, forecast] =

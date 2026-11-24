@@ -18,6 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteTestimonial } from "@/modules/testimonial/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function TestimonialDeleteButton({ id }: { id: string }) {
   const router = useRouter()
@@ -30,7 +31,7 @@ export function TestimonialDeleteButton({ id }: { id: string }) {
         toast.success("Depoimento excluído.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir."))
       }
     })
   }

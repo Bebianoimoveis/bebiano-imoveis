@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { queryBoolean } from "@/lib/query-boolean"
 
 export const CLIENT_TYPES = ["BUYER", "SELLER", "TENANT", "INVESTOR"] as const
 export const CLIENT_STATUSES = ["ACTIVE", "INACTIVE"] as const
@@ -54,7 +55,7 @@ export const clientFiltersSchema = z.object({
   origin: z.string().optional(),
   realtorId: z.string().optional(),
   status: z.enum(CLIENT_STATUSES).optional(),
-  vip: z.coerce.boolean().optional(),
+  vip: queryBoolean.optional(),
   createdFrom: z.coerce.date().optional(),
   createdTo: z.coerce.date().optional(),
   lastInteractionFrom: z.coerce.date().optional(),

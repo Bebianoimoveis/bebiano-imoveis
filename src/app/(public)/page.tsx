@@ -14,18 +14,20 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group"
 import { listFeaturedProperties } from "@/modules/property/actions"
 import { listCities, listPublicPropertyTypes } from "@/modules/taxonomy/actions"
 import { getPublicRentalEnabled, getPublicHeroImage } from "@/modules/settings/actions"
-import { siteConfig } from "@/config/site"
+import { getPublicWhatsapp } from "@/modules/settings/whatsapp"
 import { Building2 } from "lucide-react"
 import { SectionBackdrop } from "@/components/public/section-backdrop"
 import { ScrollProgress } from "@/components/motion/scroll-progress"
+import { whatsappNumber } from "@/lib/phone"
 
 export default async function HomePage() {
-  const [featured, cities, propertyTypes, rentalEnabled, heroImageUrl] = await Promise.all([
+  const [featured, cities, propertyTypes, rentalEnabled, heroImageUrl, whatsapp] = await Promise.all([
     listFeaturedProperties(6),
     listCities(),
     listPublicPropertyTypes(),
     getPublicRentalEnabled(),
     getPublicHeroImage(),
+    getPublicWhatsapp(),
   ])
 
   return (
@@ -100,14 +102,14 @@ export default async function HomePage() {
             Fale com os nossos especialistas, receba um atendimento
             personalizado, rápido, transparente e humanizado.
           </p>
-          {siteConfig.whatsapp ? (
+          {whatsapp ? (
             <Button
               asChild
               size="lg"
               className="mt-2 bg-gold text-black hover:bg-gold-light"
             >
               <a
-                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                href={`https://wa.me/${whatsappNumber(whatsapp)}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

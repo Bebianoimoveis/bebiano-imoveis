@@ -15,18 +15,22 @@ import {
 import { paymentFields } from "@/modules/proposal/payment"
 import * as proposalRepository from "@/modules/proposal/repository"
 import * as contractRepository from "@/modules/contract/repository"
-import { brazilDayWindow } from "@/lib/date"
+import { brazilDateOnly, brazilDayWindow } from "@/lib/date"
+import { formatDateBR } from "@/lib/format"
+import { prisma } from "@/lib/prisma"
+import { UserError } from "@/lib/user-error"
+import { toCsvValue } from "@/lib/csv"
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
 async function requireProposalManage() {
   const session = await requireSession()
   if (!(await can(session.user, "proposal.manage"))) {
-    throw new Error("Sem permissão para gerenciar propostas.")
+    throw new UserError("Sem permissão para gerenciar propostas.")
   }
   return session
 }
@@ -38,12 +42,12 @@ async function buildProposalScopeWhere(
   const canViewAll = await can(session.user, "proposal.view.all")
 
   const expiringUntil = filters.expiringDays
-    ? new Date(Date.now() + filters.expiringDays * 24 * 60 * 60 * 1000)
+    ? new Date(brazilDateOnly().getTime() + filters.expiringDays * 24 * 60 * 60 * 1000)
     : null
 
   return {
     status: filters.status ?? (expiringUntil ? { notIn: ["ACCEPTED", "REJECTED", "COMPLETED", "CANCELED"] } : undefined),
-    validUntil: expiringUntil ? { gte: new Date(), lte: expiringUntil } : undefined,
+    validUntil: expiringUntil ? { gte: brazilDateOnly(), lte: expiringUntil } : undefined,
     realtorId: canViewAll ? filters.realtorId : (session.user.realtorId ?? "__none__"),
     value:
       filters.minValue || filters.maxValue
@@ -79,7 +83,8 @@ async function buildProposalScopeWhere(
 export async function listAdminProposalsExpiringSoon(daysAhead = 7) {
   const session = await requireSession()
   const canViewAll = await can(session.user, "proposal.view.all")
-  const now = new Date()
+  // validUntil é dia puro: a que vence hoje ainda vale.
+  const now = brazilDateOnly()
   const until = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000)
 
   return proposalRepository.listProposals({
@@ -105,11 +110,6 @@ export async function getProposalCrmStats(rawFilters: unknown = {}) {
   return proposalRepository.getProposalStats(where)
 }
 
-function toCsvValue(value: string | number) {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-}
-
 export async function exportProposalsCsv(rawFilters: unknown = {}) {
   const session = await requireSession()
   const filters = proposalFiltersSchema.parse(rawFilters ?? {})
@@ -125,7 +125,7 @@ export async function exportProposalsCsv(rawFilters: unknown = {}) {
     proposal.originalValue ? proposal.originalValue.toString() : "",
     proposal.value.toString(),
     proposal.status,
-    proposal.createdAt.toLocaleDateString("pt-BR"),
+    formatDateBR(proposal.createdAt),
   ])
 
   return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
@@ -153,9 +153,32 @@ function paymentData(
   }
 }
 
+// Corretor fixo da proposta pra quem só cria em nome próprio; null = livre.
+export async function getProposalRealtorLock(): Promise<string | null> {
+  const session = await requireSession()
+  if (await can(session.user, "proposal.view.all")) return null
+  return session.user.realtorId
+}
+
 export async function createProposalWizard(input: unknown) {
   const session = await requireProposalManage()
   const data = proposalInputSchema.parse(input)
+
+  // Quem não vê tudo cria sempre em nome próprio e só com cliente/lead seu.
+  let realtorId = data.realtorId
+  if (!(await can(session.user, "proposal.view.all"))) {
+    if (!session.user.realtorId) throw new UserError("Sua conta não está ligada a um corretor.")
+    realtorId = session.user.realtorId
+
+    const [client, lead] = await Promise.all([
+      prisma.client.findFirst({ where: { id: data.clientId, deletedAt: null }, select: { realtorId: true } }),
+      data.leadId
+        ? prisma.lead.findFirst({ where: { id: data.leadId, deletedAt: null }, select: { realtorId: true } })
+        : null,
+    ])
+    if (client?.realtorId !== realtorId) throw new UserError("Este cliente é de outro corretor.")
+    if (data.leadId && lead?.realtorId !== realtorId) throw new UserError("Este lead é de outro corretor.")
+  }
 
   const proposal = await proposalRepository.createProposal({
     value: data.value,
@@ -168,7 +191,7 @@ export async function createProposalWizard(input: unknown) {
     status: data.status ?? "DRAFT",
     property: { connect: { id: data.propertyId } },
     client: { connect: { id: data.clientId } },
-    realtor: { connect: { id: data.realtorId } },
+    realtor: { connect: { id: realtorId } },
     lead: data.leadId ? { connect: { id: data.leadId } } : undefined,
   })
 
@@ -196,7 +219,7 @@ export async function getAdminProposal(id: string) {
 
   const canViewAll = await can(session.user, "proposal.view.all")
   if (!canViewAll && proposal.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para visualizar esta proposta.")
+    throw new UserError("Sem permissão para visualizar esta proposta.")
   }
 
   return serializeDecimals(proposal)
@@ -212,7 +235,7 @@ async function assertCanManageProposal(
   proposalId: string
 ) {
   if (!(await can(session.user, "proposal.manage"))) {
-    throw new Error("Sem permissão para gerenciar propostas.")
+    throw new UserError("Sem permissão para gerenciar propostas.")
   }
 
   const canViewAll = await can(session.user, "proposal.view.all")
@@ -220,7 +243,7 @@ async function assertCanManageProposal(
 
   const proposal = await proposalRepository.findProposalById(proposalId)
   if (!proposal || proposal.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para gerenciar esta proposta.")
+    throw new UserError("Sem permissão para gerenciar esta proposta.")
   }
 }
 

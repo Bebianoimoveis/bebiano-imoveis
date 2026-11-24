@@ -36,6 +36,7 @@ import { GoalFormSheet } from "@/components/admin/goals/goal-form-sheet"
 import { deleteGoal, type GoalView } from "@/modules/goal/actions"
 import { METRIC_LABELS, STATUS_LABELS, type GoalStatus } from "@/modules/goal/period"
 import { cn } from "@/lib/utils"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 type CityOption = { id: string; name: string; state: string }
@@ -379,7 +380,7 @@ export function GoalsBoard({
         toast.success("Meta excluída.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir."))
       }
     })
   }

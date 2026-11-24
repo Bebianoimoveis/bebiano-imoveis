@@ -9,12 +9,13 @@ import { prisma } from "@/lib/prisma"
 import { logActivity } from "@/lib/activity-log"
 import { ensureRealtorSlug } from "@/modules/realtor/service"
 import { createRealtorSchema, updateRealtorSchema } from "@/modules/realtor/schema"
+import { UserError } from "@/lib/user-error"
 
 async function requireRealtorManage() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "realtor.manage"))) {
-    throw new Error("Sem permissão para gerenciar corretores.")
+    throw new UserError("Sem permissão para gerenciar corretores.")
   }
   return session
 }
@@ -23,7 +24,7 @@ async function requireRealtorManage() {
 // de imóveis.
 export async function listRealtors() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
 
   return prisma.realtor.findMany({
     where: { active: true, deletedAt: null },
@@ -222,7 +223,16 @@ export async function updateRealtor(
 // esse corretor.
 export async function setRealtorActive(id: string, active: boolean) {
   const session = await requireRealtorManage()
-  await prisma.realtor.update({ where: { id }, data: { active } })
+  const realtor = await prisma.realtor.update({
+    where: { id },
+    data: { active },
+    select: { userId: true, user: { select: { role: { select: { name: true } } } } },
+  })
+  // Conta só de corretor perde (ou recupera) o acesso junto. Quem também é
+  // admin/gerente continua entrando no painel, só sai do site.
+  if (realtor.user.role.name === "REALTOR") {
+    await prisma.user.update({ where: { id: realtor.userId }, data: { active } })
+  }
 
   await logActivity({
     userId: session.user.id,
@@ -254,7 +264,7 @@ export async function deleteRealtor(id: string) {
     where: { id },
     select: { id: true, deletedAt: true, userId: true, user: { select: { email: true } } },
   })
-  if (!realtor || realtor.deletedAt) throw new Error("Corretor não encontrado.")
+  if (!realtor || realtor.deletedAt) throw new UserError("Corretor não encontrado.")
 
   await prisma.$transaction([
     prisma.realtor.update({

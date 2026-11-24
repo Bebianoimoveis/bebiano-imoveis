@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { convertLeadToClient } from "@/modules/lead/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function LeadConvertClientButton({ leadId }: { leadId: string }) {
   const router = useRouter()
@@ -18,7 +19,7 @@ export function LeadConvertClientButton({ leadId }: { leadId: string }) {
         toast.success("Lead convertido em cliente.")
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao converter lead.")
+        toast.error(actionErrorMessage(error, "Erro ao converter lead."))
       }
     })
   }

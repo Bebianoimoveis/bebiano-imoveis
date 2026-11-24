@@ -16,10 +16,15 @@ import {
 } from "@/modules/client/schema"
 import * as clientRepository from "@/modules/client/repository"
 import { clientMatchWhere } from "@/modules/client/document-search"
+import { UserError } from "@/lib/user-error"
+import { toCsvValue } from "@/lib/csv"
+import { formatDateBR } from "@/lib/format"
+import { serializeDecimals } from "@/lib/serialize"
+import { brazilDateRange } from "@/lib/date"
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
@@ -51,14 +56,8 @@ async function buildClientScopeWhere(
     status: filters.status,
     vip: filters.vip,
     types: filters.type ? { has: filters.type } : undefined,
-    createdAt:
-      filters.createdFrom || filters.createdTo
-        ? { gte: filters.createdFrom, lte: filters.createdTo }
-        : undefined,
-    lastInteractionAt:
-      filters.lastInteractionFrom || filters.lastInteractionTo
-        ? { gte: filters.lastInteractionFrom, lte: filters.lastInteractionTo }
-        : undefined,
+    createdAt: brazilDateRange(filters.createdFrom, filters.createdTo),
+    lastInteractionAt: brazilDateRange(filters.lastInteractionFrom, filters.lastInteractionTo),
     OR: filters.search
       ? [
           { name: { contains: filters.search, mode: "insensitive" } },
@@ -106,11 +105,6 @@ export async function getClientCrmStats(rawFilters: unknown, periodDays = 30) {
   return clientRepository.getClientStats(where, periodFrom)
 }
 
-function toCsvValue(value: string | number) {
-  const text = String(value)
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
-}
-
 export async function exportClientsCsv(rawFilters: unknown) {
   const session = await requireSession()
   const filters = clientFiltersSchema.parse(rawFilters ?? {})
@@ -127,7 +121,7 @@ export async function exportClientsCsv(rawFilters: unknown) {
     client.city?.name ?? "",
     client.realtor?.user.name ?? "",
     client.status,
-    client.createdAt.toLocaleDateString("pt-BR"),
+    formatDateBR(client.createdAt),
   ])
 
   return [header, ...rows].map((row) => row.map(toCsvValue).join(",")).join("\n")
@@ -136,11 +130,17 @@ export async function exportClientsCsv(rawFilters: unknown) {
 export async function createClientManually(input: unknown) {
   const session = await requireSession()
   if (!(await can(session.user, "client.manage"))) {
-    throw new Error("Sem permissão para cadastrar clientes.")
+    throw new UserError("Sem permissão para cadastrar clientes.")
   }
 
   const data = clientCreateSchema.parse(input)
-  const client = await clientRepository.createClient(data)
+  const canViewAll = await can(session.user, "client.view.all")
+  const client = await clientRepository.createClient({
+    ...data,
+    // Quem não vê tudo cadastra sempre em nome próprio. Sem corretor, o
+    // cliente sumia da lista de quem acabou de cadastrar.
+    realtorId: canViewAll ? data.realtorId : session.user.realtorId,
+  })
 
   await logActivity({
     userId: session.user.id,
@@ -150,7 +150,7 @@ export async function createClientManually(input: unknown) {
   })
 
   revalidatePath("/admin/clientes")
-  return client
+  return { id: client.id, name: client.name, phone: client.phone }
 }
 
 export async function getAdminClient(id: string) {
@@ -160,11 +160,14 @@ export async function getAdminClient(id: string) {
 
   const canViewAll = await can(session.user, "client.view.all")
   if (!canViewAll && client.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para visualizar este cliente.")
+    throw new UserError("Sem permissão para visualizar este cliente.")
   }
 
-  return client
+  return serializeDecimals(client)
 }
+
+// Cliente como chega na tela (Decimal já virou texto).
+export type AdminClientDetail = NonNullable<Awaited<ReturnType<typeof getAdminClient>>>
 
 // Imóveis que já apareceram ligados a esse cliente — o(s) que ele
 // demonstrou interesse (via lead que virou esse cliente) e o(s) que já
@@ -249,7 +252,7 @@ async function assertCanManageClient(
   clientId: string
 ) {
   if (!(await can(session.user, "client.manage"))) {
-    throw new Error("Sem permissão para gerenciar clientes.")
+    throw new UserError("Sem permissão para gerenciar clientes.")
   }
 
   const canViewAll = await can(session.user, "client.view.all")
@@ -257,7 +260,7 @@ async function assertCanManageClient(
 
   const client = await clientRepository.findClientById(clientId)
   if (!client || client.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para gerenciar este cliente.")
+    throw new UserError("Sem permissão para gerenciar este cliente.")
   }
 }
 
@@ -301,7 +304,6 @@ export async function updateClient(clientId: string, input: unknown) {
   })
 
   revalidatePath("/admin/clientes")
-  return client
 }
 
 export async function deleteClient(clientId: string) {
@@ -339,8 +341,9 @@ export async function updateClientInteraction(clientId: string, interactionId: s
   const session = await requireSession()
   await assertCanManageClient(session, clientId)
 
-  if (!description.trim()) throw new Error("Descreva a interação.")
-  await clientRepository.updateClientInteraction(interactionId, description)
+  if (!description.trim()) throw new UserError("Descreva a interação.")
+  const { count } = await clientRepository.updateClientInteraction(clientId, interactionId, description)
+  if (count === 0) throw new UserError("Interação não encontrada.")
 
   revalidatePath("/admin/clientes")
 }
@@ -349,7 +352,8 @@ export async function deleteClientInteraction(clientId: string, interactionId: s
   const session = await requireSession()
   await assertCanManageClient(session, clientId)
 
-  await clientRepository.deleteClientInteraction(interactionId)
+  const { count } = await clientRepository.deleteClientInteraction(clientId, interactionId)
+  if (count === 0) throw new UserError("Interação não encontrada.")
 
   revalidatePath("/admin/clientes")
 }
@@ -359,7 +363,7 @@ export async function saveClientPreference(clientId: string, input: unknown) {
   await assertCanManageClient(session, clientId)
 
   const data = clientPreferenceSchema.parse(input)
-  const preference = await clientRepository.upsertClientPreference(clientId, {
+  await clientRepository.upsertClientPreference(clientId, {
     propertyTypeId: data.propertyTypeId ?? null,
     purpose: data.purpose ?? null,
     minValue: data.minValue ?? null,
@@ -374,5 +378,4 @@ export async function saveClientPreference(clientId: string, input: unknown) {
   })
 
   revalidatePath("/admin/clientes")
-  return preference
 }

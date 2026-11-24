@@ -36,11 +36,14 @@ type SessionUser = {
   roleId: string
 }
 
-const permissionsByRoleCache = new Map<string, Set<string>>()
+// Validade curta: cada instância do servidor tem o próprio cache, e sem
+// prazo uma mudança de permissão nunca chegava nas outras.
+const CACHE_TTL_MS = 60_000
+const permissionsByRoleCache = new Map<string, { keys: Set<string>; expiresAt: number }>()
 
 async function getPermissionsForRole(roleId: string): Promise<Set<string>> {
   const cached = permissionsByRoleCache.get(roleId)
-  if (cached) return cached
+  if (cached && cached.expiresAt > Date.now()) return cached.keys
 
   const rolePermissions = await prisma.rolePermission.findMany({
     where: { roleId },
@@ -48,7 +51,7 @@ async function getPermissionsForRole(roleId: string): Promise<Set<string>> {
   })
 
   const keys = new Set(rolePermissions.map((rp) => rp.permission.key))
-  permissionsByRoleCache.set(roleId, keys)
+  permissionsByRoleCache.set(roleId, { keys, expiresAt: Date.now() + CACHE_TTL_MS })
   return keys
 }
 

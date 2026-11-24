@@ -14,7 +14,7 @@ import {
 
 import { formatCurrency, formatDateTimeBR } from "@/lib/format"
 import { LEAD_STAGE_LABELS } from "@/components/admin/leads/lead-stage"
-import type { ClientDetail } from "@/modules/client/repository"
+import type { AdminClientDetail as ClientDetail } from "@/modules/client/actions"
 
 type TimelineEvent = {
   id: string

@@ -23,6 +23,7 @@ import {
 } from "@/modules/property/actions"
 import { resolveAttributedRealtor } from "@/modules/attribution/service"
 import { formatCurrency, getDisplayAddress } from "@/lib/format"
+import { whatsappNumber } from "@/lib/phone"
 
 const PURPOSE_LABEL: Record<string, string> = {
   SALE: "Venda",
@@ -91,7 +92,7 @@ export default async function PropertyDetailPage({
       : null
 
   const whatsappHref = consultant
-    ? `https://wa.me/${consultant.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+    ? `https://wa.me/${whatsappNumber(consultant.phone)}?text=${encodeURIComponent(
         `Olá! Tenho interesse no imóvel ${property.code} - ${property.title}`
       )}`
     : null

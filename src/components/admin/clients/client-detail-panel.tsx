@@ -41,7 +41,9 @@ import { ContractStatusBadge } from "@/components/admin/contracts/contract-statu
 import { ManualContractFormDialog } from "@/components/admin/contracts/manual-contract-form-dialog"
 import { getAdminClient, deleteClient } from "@/modules/client/actions"
 import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
-import type { ClientDetail } from "@/modules/client/repository"
+import type { AdminClientDetail as ClientDetail } from "@/modules/client/actions"
+import { actionErrorMessage } from "@/lib/action-error"
+import { whatsappNumber } from "@/lib/phone"
 
 type RealtorOption = { id: string; user: { name: string } }
 type CityOption = { id: string; name: string; state: string }
@@ -90,7 +92,7 @@ export function ClientDetailPanel({
         onClose()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir cliente.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir cliente."))
       }
     })
   }
@@ -158,7 +160,7 @@ export function ClientDetailPanel({
               </Button>
               <Button asChild size="sm" variant="outline" className="gap-1.5">
                 <a
-                  href={`https://wa.me/${client.phone.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${whatsappNumber(client.phone)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

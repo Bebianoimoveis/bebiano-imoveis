@@ -1,11 +1,11 @@
 "use server"
 
-import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import { logActivity } from "@/lib/activity-log"
+import { getClientIp } from "@/lib/client-ip"
 import { isRateLimited } from "@/lib/rate-limit"
 import type { Prisma, AppointmentStatus, LeadStage } from "@/generated/prisma/client"
 import {
@@ -19,6 +19,7 @@ import * as clientRepository from "@/modules/client/repository"
 import { visitRequestSchema } from "@/modules/lead/schema"
 import { submitPublicVisitRequest } from "@/modules/lead/service"
 import { SpamRejectedError } from "@/modules/lead/service"
+import { UserError } from "@/lib/user-error"
 
 const VISIT_SUCCESS_MESSAGE =
   "Visita solicitada! Em breve um corretor confirma o horário com você."
@@ -33,10 +34,9 @@ export type SubmitVisitState = {
 export async function submitVisitRequest(
   input: unknown
 ): Promise<SubmitVisitState> {
-  const headerList = await headers()
-  const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+  const ip = await getClientIp()
 
-  if (isRateLimited(`visit:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
+  if (await isRateLimited(`visit:${ip}`, { maxAttempts: 5, windowMs: 10 * 60 * 1000 })) {
     return {
       status: "error",
       message: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
@@ -55,6 +55,7 @@ export async function submitVisitRequest(
     if (error instanceof SpamRejectedError) {
       return { status: "success", message: VISIT_SUCCESS_MESSAGE }
     }
+    if (error instanceof UserError) return { status: "error", message: error.message }
 
     console.error("submitVisitRequest failed", error)
     return {
@@ -66,14 +67,14 @@ export async function submitVisitRequest(
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
 async function requireAppointmentManage() {
   const session = await requireSession()
   if (!(await can(session.user, "appointment.manage"))) {
-    throw new Error("Sem permissão para gerenciar a agenda.")
+    throw new UserError("Sem permissão para gerenciar a agenda.")
   }
   return session
 }
@@ -90,7 +91,7 @@ async function assertCanManageAppointment(
 
   const appointment = await appointmentRepository.findAppointmentById(id)
   if (!appointment || appointment.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para gerenciar este compromisso.")
+    throw new UserError("Sem permissão para gerenciar este compromisso.")
   }
 }
 
@@ -186,34 +187,38 @@ export async function checkAppointmentConflict(input: {
   return conflicts
 }
 
+// Sem isso, um Corretor sem appointment.view.all podia criar ou editar um
+// compromisso em nome de outro corretor (realtorId livre vindo do
+// client) e vincular lead/cliente que não são dele — o "connect" só
+// falha se o id não existir, então também servia pra confirmar por
+// tentativa e erro se um determinado lead/cliente de outro corretor
+// existe. Vínculo que já estava no compromisso continua valendo.
+async function resolveAppointmentOwnership(
+  session: Awaited<ReturnType<typeof requireAppointmentManage>>,
+  data: { realtorId: string; leadId?: string; clientId?: string },
+  current?: { leadId: string | null; clientId: string | null } | null
+): Promise<string> {
+  if (await can(session.user, "appointment.view.all")) return data.realtorId
+
+  const realtorId = session.user.realtorId
+  if (!realtorId) throw new UserError("Sem permissão para agendar em nome de outro corretor.")
+
+  if (data.leadId && data.leadId !== current?.leadId) {
+    const lead = await leadRepository.findLeadById(data.leadId)
+    if (lead?.realtorId !== realtorId) throw new UserError("Sem permissão para vincular este lead.")
+  }
+  if (data.clientId && data.clientId !== current?.clientId) {
+    const client = await clientRepository.findClientById(data.clientId)
+    if (client?.realtorId !== realtorId) throw new UserError("Sem permissão para vincular este cliente.")
+  }
+  return realtorId
+}
+
 export async function createAppointment(input: unknown) {
   const session = await requireAppointmentManage()
   const data = appointmentInputSchema.parse(input)
 
-  // Sem isso, um Corretor sem appointment.view.all podia criar um
-  // compromisso em nome de outro corretor (realtorId livre vindo do
-  // client) e vincular lead/cliente que não são dele — o "connect" só
-  // falha se o id não existir, então também servia pra confirmar por
-  // tentativa e erro se um determinado lead/cliente de outro corretor
-  // existe.
-  const canViewAll = await can(session.user, "appointment.view.all")
-  const realtorId = canViewAll ? data.realtorId : (session.user.realtorId ?? data.realtorId)
-  if (!canViewAll && realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para agendar em nome de outro corretor.")
-  }
-
-  if (!canViewAll && data.leadId) {
-    const lead = await leadRepository.findLeadById(data.leadId)
-    if (!lead || lead.realtorId !== session.user.realtorId) {
-      throw new Error("Sem permissão para vincular este lead.")
-    }
-  }
-  if (!canViewAll && data.clientId) {
-    const client = await clientRepository.findClientById(data.clientId)
-    if (!client || client.realtorId !== session.user.realtorId) {
-      throw new Error("Sem permissão para vincular este cliente.")
-    }
-  }
+  const realtorId = await resolveAppointmentOwnership(session, data)
 
   const result = await appointmentRepository.withRealtorScheduleLock(realtorId, async (tx) => {
     const conflict = await findBlockingConflict(tx, {
@@ -274,11 +279,12 @@ export async function updateAppointment(id: string, input: unknown) {
   const data = appointmentInputSchema.parse(input)
 
   const current = await appointmentRepository.findAppointmentById(id)
-  const result = await appointmentRepository.withRealtorScheduleLock(data.realtorId, async (tx) => {
+  const realtorId = await resolveAppointmentOwnership(session, data, current)
+  const result = await appointmentRepository.withRealtorScheduleLock(realtorId, async (tx) => {
     // Cancelado/realizado não ocupa a agenda — só checa se ele está ativo.
     if (current && ACTIVE_STATUSES.includes(current.status)) {
       const conflict = await findBlockingConflict(tx, {
-        realtorId: data.realtorId,
+        realtorId,
         scheduledAt: data.scheduledAt,
         durationMinutes: data.durationMinutes,
         excludeId: id,
@@ -292,7 +298,7 @@ export async function updateAppointment(id: string, input: unknown) {
         type: data.type,
         typeLabel: data.type === "OTHER" ? data.typeLabel || null : null,
         notes: data.notes,
-        realtor: { connect: { id: data.realtorId } },
+        realtor: { connect: { id: realtorId } },
         lead: data.leadId ? { connect: { id: data.leadId } } : { disconnect: true },
         client: data.clientId ? { connect: { id: data.clientId } } : { disconnect: true },
         property: data.propertyId ? { connect: { id: data.propertyId } } : { disconnect: true },

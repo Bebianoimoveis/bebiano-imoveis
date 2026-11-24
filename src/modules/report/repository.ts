@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
-import { startOfDayBrazil } from "@/lib/date"
+import { brazilDateOnly, brazilMonthWindow } from "@/lib/date"
 
 type Scope = { realtorId?: string }
 
@@ -120,9 +120,8 @@ export async function recentActivity(take: number, where?: Prisma.ActivityLogWhe
 }
 
 export async function salesByMonth(scope: Scope, months: number) {
-  const since = startOfDayBrazil()
-  since.setUTCMonth(since.getUTCMonth() - months + 1)
-  since.setUTCDate(1)
+  const today = brazilDateOnly()
+  const since = brazilMonthWindow(today.getUTCFullYear(), today.getUTCMonth() + 2 - months).from
 
   const contracts = await prisma.contract.findMany({
     where: {
@@ -135,7 +134,8 @@ export async function salesByMonth(scope: Scope, months: number) {
 
   const buckets = new Map<string, { total: number; count: number }>()
   for (const contract of contracts) {
-    const key = `${contract.createdAt.getFullYear()}-${String(contract.createdAt.getMonth() + 1).padStart(2, "0")}`
+    const day = brazilDateOnly(contract.createdAt)
+    const key = `${day.getUTCFullYear()}-${String(day.getUTCMonth() + 1).padStart(2, "0")}`
     const bucket = buckets.get(key) ?? { total: 0, count: 0 }
     bucket.total += Number(contract.value)
     bucket.count += 1

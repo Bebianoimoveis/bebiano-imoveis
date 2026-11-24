@@ -2,7 +2,12 @@ import Image from "next/image"
 
 import { LoginForm } from "@/components/admin/login-form"
 
-export default function AdminLoginPage() {
+export default async function AdminLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sessao?: string }>
+}) {
+  const { sessao } = await searchParams
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4">
       <div className="w-full max-w-sm space-y-8">
@@ -19,6 +24,11 @@ export default function AdminLoginPage() {
             Acesse o painel administrativo
           </p>
         </div>
+        {sessao === "encerrada" ? (
+          <p className="rounded-lg border border-gold/30 bg-gold/5 p-3 text-center text-sm">
+            Sua sessão foi encerrada. Entre de novo.
+          </p>
+        ) : null}
         <LoginForm />
       </div>
     </div>

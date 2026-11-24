@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
 import * as attributionRepository from "@/modules/attribution/repository"
 import { ensureRealtorSlug } from "@/modules/realtor/service"
+import { UserError } from "@/lib/user-error"
 
 export type RealtorLinkStat = {
   id: string
@@ -22,9 +23,9 @@ export type RealtorLinkStat = {
 // sem formulário de edição que já cuidasse disso).
 export async function listRealtorLinkStats(): Promise<RealtorLinkStat[]> {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "realtor.manage"))) {
-    throw new Error("Sem permissão para visualizar os links dos corretores.")
+    throw new UserError("Sem permissão para visualizar os links dos corretores.")
   }
 
   const realtors = await attributionRepository.listRealtorLinkStats()

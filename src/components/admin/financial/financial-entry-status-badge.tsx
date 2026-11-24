@@ -4,7 +4,7 @@ import type { FinancialEntryStatus, FinancialEntryType } from "@/generated/prism
 import { brazilDateOnly } from "@/lib/date"
 
 export function isEntryOverdue(entry: { status: FinancialEntryStatus; dueDate: Date | string }) {
-  if (entry.status !== "PENDING" && entry.status !== "SCHEDULED") return false
+  if (entry.status === "PAID" || entry.status === "CANCELED") return false
   // dueDate é um dia puro (meia-noite UTC), não um instante: comparar com
   // "agora" marcava como atrasado já no começo do próprio dia do vencimento.
   // Atrasado = o dia do vencimento (em Brasília) já passou.

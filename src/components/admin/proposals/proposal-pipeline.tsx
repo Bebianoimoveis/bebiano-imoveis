@@ -26,6 +26,7 @@ import { updateProposalStatus } from "@/modules/proposal/actions"
 import { formatCurrency } from "@/lib/format"
 import type { ProposalListItem } from "@/modules/proposal/repository"
 import type { ProposalStatus } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 function PipelineCard({
   proposal,
@@ -131,7 +132,7 @@ export function ProposalPipeline({
       })
       .catch((error) => {
         setProposals((prev) => prev.map((p) => (p.id === proposal.id ? { ...p, status: previousStatus } : p)))
-        toast.error(error instanceof Error ? error.message : "Erro ao mover.")
+        toast.error(actionErrorMessage(error, "Erro ao mover."))
       })
   }
 

@@ -8,7 +8,9 @@ import { getFinancialKpis, getFinancialCashFlowTimeline, getFinancialMonthlySeri
 import { getProposalCrmStats, listAdminProposals } from "@/modules/proposal/actions"
 import { getAppointmentStats, listAdminAppointments } from "@/modules/appointment/actions"
 import { getPublicAboutText, getPublicContactInfo } from "@/modules/settings/actions"
-import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
+import { brazilDateOnly, startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
+import { formatTimeBR } from "@/lib/format"
+import { UserError } from "@/lib/user-error"
 
 // Cada ferramenta é só uma casca fina em cima de uma action que já existe
 // e já aplica a mesma permissão/escopo por corretor do resto do painel —
@@ -103,6 +105,12 @@ export const ASSISTANT_TOOL_DECLARATIONS: FunctionDeclaration[] = [
 
 type ToolArgs = { periodDays?: number; limit?: number }
 
+// O valor vem do modelo: pode chegar negativo, gigante ou nem ser número.
+function clampArg(value: unknown, fallback: number, max: number) {
+  const n = Math.trunc(Number(value))
+  return Number.isFinite(n) && n >= 1 ? Math.min(n, max) : fallback
+}
+
 async function safeCall(label: string, fn: () => Promise<unknown>) {
   try {
     return await fn()
@@ -110,7 +118,7 @@ async function safeCall(label: string, fn: () => Promise<unknown>) {
     // Ferramenta indisponível pra esse usuário (ex.: sem financial.view) —
     // devolve um erro estruturado pro modelo explicar em vez de travar a
     // resposta inteira.
-    return { error: error instanceof Error ? error.message : `Não foi possível obter ${label}.` }
+    return { error: error instanceof UserError ? error.message : `Não foi possível obter ${label}.` }
   }
 }
 
@@ -152,7 +160,6 @@ async function getLeadsNeedingAttention(limit: number) {
       return {
         id: lead.id,
         name: lead.name,
-        phone: lead.phone,
         stage: lead.stage,
         daysSinceLastInteraction,
         nextActionOverdue,
@@ -185,9 +192,9 @@ export async function getFinancialForecast() {
     getFinancialMonthlySeries({}),
   ])
 
-  const now = new Date()
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-  const dayOfMonth = now.getDate()
+  const today = brazilDateOnly()
+  const daysInMonth = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 0)).getUTCDate()
+  const dayOfMonth = today.getUTCDate()
 
   const elapsed = timeline.slice(0, dayOfMonth)
   const incomeSoFar = elapsed.reduce((sum, day) => sum + day.income, 0)
@@ -234,7 +241,7 @@ async function getTodayAgendaDetail() {
 
   return appointments.map((appointment) => ({
     id: appointment.id,
-    time: new Date(appointment.scheduledAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    time: formatTimeBR(appointment.scheduledAt),
     type: appointment.type,
     status: appointment.status,
     with: appointment.lead?.name ?? appointment.client?.name ?? null,
@@ -246,13 +253,13 @@ async function getTodayAgendaDetail() {
 export async function executeAssistantTool(name: string, args: ToolArgs): Promise<unknown> {
   switch (name) {
     case "get_dashboard_overview":
-      return safeCall("a visão geral", () => getDashboardMetrics(args.periodDays ?? 30))
+      return safeCall("a visão geral", () => getDashboardMetrics(clampArg(args.periodDays, 30, 365)))
     case "get_leads_stats":
-      return safeCall("as estatísticas de leads", () => getLeadCrmStats({}, args.periodDays ?? 30))
+      return safeCall("as estatísticas de leads", () => getLeadCrmStats({}, clampArg(args.periodDays, 30, 365)))
     case "get_leads_needing_attention":
-      return safeCall("os leads que precisam de atenção", () => getLeadsNeedingAttention(args.limit ?? 10))
+      return safeCall("os leads que precisam de atenção", () => getLeadsNeedingAttention(clampArg(args.limit, 10, 50)))
     case "get_clients_stats":
-      return safeCall("as estatísticas de clientes", () => getClientCrmStats({}, args.periodDays ?? 30))
+      return safeCall("as estatísticas de clientes", () => getClientCrmStats({}, clampArg(args.periodDays, 30, 365)))
     case "get_properties_stats":
       return safeCall("as estatísticas de imóveis", () => getPropertyPortfolioStats({}))
     case "get_financial_kpis":

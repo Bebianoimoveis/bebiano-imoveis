@@ -10,6 +10,7 @@ import { WhatsAppIcon } from "@/components/shared/whatsapp-icon"
 import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
+import { whatsappNumber } from "@/lib/phone"
 
 // Mesmo padrão do MobileFiltersSheet/MobileNav: portal pro body evita que
 // um backdrop-filter de algum ancestral vire containing block do `fixed`.
@@ -33,7 +34,7 @@ export function ContactSheet({
   }, [])
 
   const whatsappHref = phone
-    ? `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+    ? `https://wa.me/${whatsappNumber(phone)}?text=${encodeURIComponent(
         realtorName
           ? `Olá ${realtorName}! Vim pelo site da Bebiano Imóveis e gostaria de mais informações.`
           : "Olá! Vim pelo site da Bebiano Imóveis e gostaria de mais informações."

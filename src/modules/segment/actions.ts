@@ -8,12 +8,13 @@ import { logActivity } from "@/lib/activity-log"
 import { prisma } from "@/lib/prisma"
 import { segmentInputSchema } from "@/modules/segment/schema"
 import * as segmentRepository from "@/modules/segment/repository"
+import { UserError } from "@/lib/user-error"
 
 async function requireSegmentManage() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "segment.manage"))) {
-    throw new Error("Sem permissão para gerenciar segmentos.")
+    throw new UserError("Sem permissão para gerenciar segmentos.")
   }
   return session
 }

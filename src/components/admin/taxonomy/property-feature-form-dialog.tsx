@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { createPropertyFeature } from "@/modules/taxonomy/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function PropertyFeatureFormDialog({ trigger }: { trigger: React.ReactNode }) {
   const router = useRouter()
@@ -33,7 +34,7 @@ export function PropertyFeatureFormDialog({ trigger }: { trigger: React.ReactNod
       setName("")
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar característica.")
+      toast.error(actionErrorMessage(error, "Erro ao cadastrar característica."))
     } finally {
       setIsSubmitting(false)
     }

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
 import { brazilDateOnly } from "@/lib/date"
+import { receivedAmount } from "@/modules/financial/amounts"
 
 const entryListInclude = {
   contract: {
@@ -59,7 +60,7 @@ export async function createEntryInstallments(entries: Prisma.FinancialEntryCrea
 
 // Widgets "Vencimentos Hoje"/"Alertas" do Dashboard — mesma definição de
 // atrasado usada em isEntryOverdue (financial-entry-status-badge.tsx):
-// status pendente/agendado com dueDate no passado, calculado na hora.
+// status pendente/agendado/parcial com dueDate no passado, calculado na hora.
 export async function listEntriesDueToday(): Promise<FinancialEntryListItem[]> {
   const start = brazilDateOnly()
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
@@ -95,7 +96,7 @@ export async function listEntriesDueSoon(days: number): Promise<FinancialEntryLi
 
 export async function countOverdueEntries(): Promise<number> {
   return prisma.financialEntry.count({
-    where: { status: { in: ["PENDING", "SCHEDULED"] }, dueDate: { lt: brazilDateOnly() } },
+    where: { status: { in: ["PENDING", "SCHEDULED", "PARTIAL"] }, dueDate: { lt: brazilDateOnly() } },
   })
 }
 
@@ -138,7 +139,9 @@ export async function markEntryStatus(
     data: {
       status,
       paidAt: status === "PAID" ? new Date() : null,
-      paidAmount: status === "PAID" ? (paidAmount ?? undefined) : undefined,
+      // Cancelado mantém o que já tinha sido pago em parte; voltar pra
+      // pendente/agendado zera.
+      paidAmount: status === "PAID" ? (paidAmount ?? null) : status === "CANCELED" ? undefined : null,
     },
     include: entryListInclude,
   })
@@ -157,6 +160,29 @@ export async function createEntryInteraction(input: {
 // Agregações para KPIs, gráficos e relatórios
 // ---------------------------------------------------------------------------
 
+// Cancelado não entra em soma nenhuma. AND (e não spread) pra não
+// atropelar o filtro de status escolhido na tela.
+function notCanceled(where: Prisma.FinancialEntryWhereInput): Prisma.FinancialEntryWhereInput {
+  return { AND: [where, { status: { not: "CANCELED" } }] }
+}
+
+const OPEN_STATUSES = ["PENDING", "SCHEDULED", "PARTIAL"] as const
+
+// Quanto falta receber/pagar: no parcial, só o que ainda não entrou.
+async function sumPending(where: Prisma.FinancialEntryWhereInput, type: "INCOME" | "EXPENSE") {
+  const [open, partial] = await Promise.all([
+    prisma.financialEntry.aggregate({
+      where: { AND: [where, { type, status: { in: [...OPEN_STATUSES] } }] },
+      _sum: { amount: true },
+    }),
+    prisma.financialEntry.aggregate({
+      where: { AND: [where, { type, status: "PARTIAL" }] },
+      _sum: { paidAmount: true },
+    }),
+  ])
+  return Number(open._sum.amount ?? 0) - Number(partial._sum.paidAmount ?? 0)
+}
+
 function monthRange(year: number, month: number) {
   const start = new Date(Date.UTC(year, month - 1, 1))
   const end = new Date(Date.UTC(year, month, 1))
@@ -169,11 +195,11 @@ export async function sumByTypeInRange(
 ) {
   const [income, expense] = await Promise.all([
     prisma.financialEntry.aggregate({
-      where: { ...where, type: "INCOME", dueDate: range },
+      where: notCanceled({ ...where, type: "INCOME", dueDate: range }),
       _sum: { amount: true },
     }),
     prisma.financialEntry.aggregate({
-      where: { ...where, type: "EXPENSE", dueDate: range },
+      where: notCanceled({ ...where, type: "EXPENSE", dueDate: range }),
       _sum: { amount: true },
     }),
   ])
@@ -184,7 +210,8 @@ export async function sumByTypeInRange(
 }
 
 export async function getKpiData(where: Prisma.FinancialEntryWhereInput) {
-  const now = new Date()
+  // Dia em Brasília: no fim do mês, depois das 21h, em UTC já era outro mês.
+  const now = brazilDateOnly()
   const currentMonth = monthRange(now.getUTCFullYear(), now.getUTCMonth() + 1)
   const prevDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
   const previousMonth = monthRange(prevDate.getUTCFullYear(), prevDate.getUTCMonth() + 1)
@@ -198,17 +225,11 @@ export async function getKpiData(where: Prisma.FinancialEntryWhereInput) {
       sumByTypeInRange(where, currentMonth),
       sumByTypeInRange(where, previousMonth),
       sumByTypeInRange(where, yearRange),
+      sumPending(where, "INCOME"),
+      sumPending(where, "EXPENSE"),
+      prisma.financialEntry.count({ where: { AND: [where, { type: "INCOME", status: "PAID" }] } }),
       prisma.financialEntry.aggregate({
-        where: { ...where, type: "INCOME", status: { in: ["PENDING", "SCHEDULED", "PARTIAL"] } },
-        _sum: { amount: true },
-      }),
-      prisma.financialEntry.aggregate({
-        where: { ...where, type: "EXPENSE", status: { in: ["PENDING", "SCHEDULED", "PARTIAL"] } },
-        _sum: { amount: true },
-      }),
-      prisma.financialEntry.count({ where: { ...where, type: "INCOME", status: "PAID" } }),
-      prisma.financialEntry.aggregate({
-        where: { ...where, type: "INCOME", status: "PAID" },
+        where: { AND: [where, { type: "INCOME", status: "PAID" }] },
         _sum: { amount: true },
       }),
     ])
@@ -217,19 +238,20 @@ export async function getKpiData(where: Prisma.FinancialEntryWhereInput) {
     currentMonth: currentMonthTotals,
     previousMonth: previousMonthTotals,
     year: yearTotals,
-    pendingIncome: Number(pendingIncome._sum.amount ?? 0),
-    pendingExpense: Number(pendingExpense._sum.amount ?? 0),
+    pendingIncome,
+    pendingExpense,
     averageTicket: paidCount > 0 ? Number(paidSum._sum.amount ?? 0) / paidCount : 0,
   }
 }
 
 // Últimos `months` meses (incluindo o atual), receita e despesa somadas por dueDate.
 export async function getMonthlySeries(where: Prisma.FinancialEntryWhereInput, months = 12) {
-  const now = new Date()
+  // Dia em Brasília: no fim do mês, depois das 21h, em UTC já era outro mês.
+  const now = brazilDateOnly()
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1), 1))
 
   const entries = await prisma.financialEntry.findMany({
-    where: { ...where, dueDate: { gte: start } },
+    where: notCanceled({ ...where, dueDate: { gte: start } }),
     select: { type: true, amount: true, dueDate: true },
   })
 
@@ -255,7 +277,7 @@ export async function getMonthlySeries(where: Prisma.FinancialEntryWhereInput, m
 export async function getExpenseByCategory(where: Prisma.FinancialEntryWhereInput) {
   const rows = await prisma.financialEntry.groupBy({
     by: ["category"],
-    where: { ...where, type: "EXPENSE" },
+    where: notCanceled({ ...where, type: "EXPENSE" }),
     _sum: { amount: true },
   })
   return rows
@@ -266,7 +288,7 @@ export async function getExpenseByCategory(where: Prisma.FinancialEntryWhereInpu
 export async function getIncomeByRealtor(where: Prisma.FinancialEntryWhereInput) {
   const rows = await prisma.financialEntry.groupBy({
     by: ["realtorId"],
-    where: { ...where, type: "INCOME", realtorId: { not: null } },
+    where: notCanceled({ AND: [where, { type: "INCOME", realtorId: { not: null } }] }),
     _sum: { amount: true },
   })
   const realtorIds = rows.map((row) => row.realtorId).filter((id): id is string => Boolean(id))
@@ -288,7 +310,7 @@ export async function getIncomeByRealtor(where: Prisma.FinancialEntryWhereInput)
 export async function getIncomeByCity(where: Prisma.FinancialEntryWhereInput) {
   const rows = await prisma.financialEntry.groupBy({
     by: ["propertyId"],
-    where: { ...where, type: "INCOME", propertyId: { not: null } },
+    where: notCanceled({ AND: [where, { type: "INCOME", propertyId: { not: null } }] }),
     _sum: { amount: true },
   })
   const propertyIds = rows.map((row) => row.propertyId).filter((id): id is string => Boolean(id))
@@ -312,7 +334,7 @@ export async function getIncomeByCity(where: Prisma.FinancialEntryWhereInput) {
 export async function getTopProperties(where: Prisma.FinancialEntryWhereInput, take = 5) {
   const rows = await prisma.financialEntry.groupBy({
     by: ["propertyId"],
-    where: { ...where, type: "INCOME", propertyId: { not: null } },
+    where: notCanceled({ AND: [where, { type: "INCOME", propertyId: { not: null } }] }),
     _sum: { amount: true },
   })
   const sorted = rows
@@ -335,12 +357,13 @@ export async function getTopProperties(where: Prisma.FinancialEntryWhereInput, t
 
 // Saldo diário acumulado no mês corrente — base do "Fluxo de Caixa".
 export async function getCashFlowTimeline(where: Prisma.FinancialEntryWhereInput) {
-  const now = new Date()
+  // Dia em Brasília: no fim do mês, depois das 21h, em UTC já era outro mês.
+  const now = brazilDateOnly()
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
   const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1))
 
   const entries = await prisma.financialEntry.findMany({
-    where: { ...where, dueDate: { gte: start, lt: end }, status: { not: "CANCELED" } },
+    where: notCanceled({ ...where, dueDate: { gte: start, lt: end } }),
     select: { type: true, amount: true, dueDate: true },
   })
 
@@ -367,32 +390,27 @@ export async function getCommissionsByRealtor() {
     include: { user: { select: { id: true, name: true } } },
   })
 
-  const [soldContracts, commissionEntries, pendingCommissionEntries] = await Promise.all([
+  const [soldContracts, commissionEntries] = await Promise.all([
     prisma.contract.groupBy({
       by: ["realtorId"],
       where: { status: { in: ["ACTIVE", "COMPLETED"] } },
       _sum: { value: true },
     }),
-    prisma.financialEntry.groupBy({
-      by: ["realtorId"],
-      where: { category: "Comissão", type: "INCOME", status: "PAID", realtorId: { not: null } },
-      _sum: { amount: true },
-    }),
-    prisma.financialEntry.groupBy({
-      by: ["realtorId"],
-      where: {
-        category: "Comissão",
-        type: "INCOME",
-        status: { in: ["PENDING", "SCHEDULED", "PARTIAL"] },
-        realtorId: { not: null },
-      },
-      _sum: { amount: true },
+    prisma.financialEntry.findMany({
+      where: { category: "Comissão", type: "INCOME", status: { not: "CANCELED" }, realtorId: { not: null } },
+      select: { realtorId: true, status: true, amount: true, paidAmount: true },
     }),
   ])
 
   const soldByRealtor = new Map(soldContracts.map((r) => [r.realtorId, Number(r._sum.value ?? 0)]))
-  const paidByRealtor = new Map(commissionEntries.map((r) => [r.realtorId, Number(r._sum.amount ?? 0)]))
-  const pendingByRealtor = new Map(pendingCommissionEntries.map((r) => [r.realtorId, Number(r._sum.amount ?? 0)]))
+  const paidByRealtor = new Map<string, number>()
+  const pendingByRealtor = new Map<string, number>()
+  for (const entry of commissionEntries) {
+    const id = entry.realtorId as string
+    const paid = receivedAmount(entry)
+    paidByRealtor.set(id, (paidByRealtor.get(id) ?? 0) + paid)
+    pendingByRealtor.set(id, (pendingByRealtor.get(id) ?? 0) + Number(entry.amount) - paid)
+  }
 
   return realtors.map((realtor) => ({
     realtorId: realtor.id,

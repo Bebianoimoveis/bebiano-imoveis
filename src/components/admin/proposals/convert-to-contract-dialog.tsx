@@ -18,6 +18,7 @@ import { createContractFileUploadSignature } from "@/modules/upload/actions"
 import { uploadContractFile } from "@/modules/upload/client"
 import { fileViewUrl } from "@/lib/file-url"
 import { formatCurrency } from "@/lib/format"
+import { actionErrorMessage } from "@/lib/action-error"
 
 // Qualquer proposta que não foi recusada/cancelada pode virar contrato —
 // inclusive "Rascunho": quem manda a proposta pelo WhatsApp/PDF nem
@@ -96,7 +97,7 @@ export function ConvertToContractDialog({
         router.refresh()
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao converter em contrato.")
+      toast.error(actionErrorMessage(error, "Erro ao converter em contrato."))
     } finally {
       setWorking(false)
     }
@@ -124,7 +125,7 @@ export function ConvertToContractDialog({
       onConverted?.()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao anexar o arquivo.")
+      toast.error(actionErrorMessage(error, "Erro ao anexar o arquivo."))
     } finally {
       setUploading(false)
       e.target.value = ""

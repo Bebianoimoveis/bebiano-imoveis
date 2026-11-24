@@ -42,12 +42,14 @@ export default async function EditPropertyPage({
     cityId: property.cityId,
     neighborhoodId: property.neighborhoodId,
     addressVisibility: property.addressVisibility,
+    zipCode: property.zipCode ?? "",
     street: property.street ?? "",
     number: property.number ?? "",
     latitude: property.latitude ? Number(property.latitude) : undefined,
     longitude: property.longitude ? Number(property.longitude) : undefined,
     builtArea: property.builtArea ? Number(property.builtArea) : undefined,
     totalArea: property.totalArea ? Number(property.totalArea) : undefined,
+    availableUnits: property.availableUnits ?? undefined,
     bedrooms: property.bedrooms,
     suites: property.suites,
     bathrooms: property.bathrooms,
@@ -82,8 +84,17 @@ export default async function EditPropertyPage({
         <PropertyRowActions propertyId={property.id} status={property.status} slug={property.slug} title={property.title} />
       </div>
 
+      {property.canEdit ? null : (
+        <p className="rounded-xl border border-gold/30 bg-gold/5 p-4 text-sm">
+          Somente leitura: este imóvel é de {property.realtor?.user.name ?? "outra pessoa"}. Só o
+          responsável ou um administrador pode alterar.
+        </p>
+      )}
+
       <PropertyForm
         mode="edit"
+        readOnly={!property.canEdit}
+        canReassign={property.canReassign}
         propertyId={property.id}
         defaultValues={defaultValues}
         cities={cities}

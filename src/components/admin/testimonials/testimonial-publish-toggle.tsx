@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { updateTestimonial } from "@/modules/testimonial/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function TestimonialPublishToggle({ id, published }: { id: string; published: boolean }) {
   const router = useRouter()
@@ -18,7 +19,7 @@ export function TestimonialPublishToggle({ id, published }: { id: string; publis
       toast.success(published ? "Depoimento ocultado." : "Depoimento publicado no site.")
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+      toast.error(actionErrorMessage(error, "Erro ao atualizar."))
     } finally {
       setIsPending(false)
     }

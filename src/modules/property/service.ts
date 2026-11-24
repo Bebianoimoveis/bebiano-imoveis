@@ -3,8 +3,10 @@ import { buildPropertySlug } from "@/lib/slug"
 import type { Prisma, PropertyStatus } from "@/generated/prisma/client"
 import type { PropertyInput } from "@/modules/property/schema"
 import * as propertyRepository from "@/modules/property/repository"
+import { PROPERTY_STATUS_LABELS } from "@/modules/property/types"
+import { UserError } from "@/lib/user-error"
 
-class PropertyServiceError extends Error {}
+class PropertyServiceError extends UserError {}
 
 const ALLOWED_TRANSITIONS: Record<PropertyStatus, PropertyStatus[]> = {
   DRAFT: ["IN_REVIEW", "PUBLISHED", "ARCHIVED"],
@@ -123,18 +125,16 @@ export async function createDraftProperty(
   createdById: string
 ) {
   const { type, city, neighborhood } = await resolveTaxonomyNames(input)
-  const code = await propertyRepository.getNextPropertyCode()
-  const slug = buildPropertySlug({
-    typeName: type.name,
-    purpose: input.purpose,
-    neighborhoodName: neighborhood.name,
-    cityName: city.name,
-    code,
+  const property = await propertyRepository.withNextPropertyCode((code) => {
+    const slug = buildPropertySlug({
+      typeName: type.name,
+      purpose: input.purpose,
+      neighborhoodName: neighborhood.name,
+      cityName: city.name,
+      code,
+    })
+    return propertyRepository.createProperty(toPropertyCreateData(input, { code, slug, createdById }))
   })
-
-  const property = await propertyRepository.createProperty(
-    toPropertyCreateData(input, { code, slug, createdById })
-  )
 
   if (input.featureIds.length > 0) {
     await propertyRepository.replacePropertyFeatures(property.id, input.featureIds)
@@ -165,7 +165,7 @@ export async function changePropertyStatus(id: string, nextStatus: PropertyStatu
   const allowed = ALLOWED_TRANSITIONS[existing.status]
   if (!allowed.includes(nextStatus)) {
     throw new PropertyServiceError(
-      `Não é possível mudar o status de ${existing.status} para ${nextStatus}.`
+      `Não é possível mudar o status de ${PROPERTY_STATUS_LABELS[existing.status]} para ${PROPERTY_STATUS_LABELS[nextStatus]}.`
     )
   }
 
@@ -177,6 +177,10 @@ export async function changePropertyStatus(id: string, nextStatus: PropertyStatu
       )
     }
   }
+
+  // Arquivar é sempre a exclusão lógica; só o status deixava o imóvel
+  // arquivado aparecendo nas listas.
+  if (nextStatus === "ARCHIVED") return propertyRepository.softDeleteProperty(id)
 
   return propertyRepository.updateProperty(id, {
     status: nextStatus,
@@ -219,22 +223,21 @@ export async function deleteProperty(id: string) {
   return propertyRepository.hardDeleteProperty(id)
 }
 
-export async function duplicateProperty(id: string, createdById: string) {
+// realtorId undefined = mantém o corretor do original.
+export async function duplicateProperty(id: string, createdById: string, realtorId?: string | null) {
   const source = await propertyRepository.findPropertyById(id)
   if (!source) throw new PropertyServiceError("Imóvel não encontrado.")
 
-  const code = await propertyRepository.getNextPropertyCode()
-  const slug = buildPropertySlug({
-    typeName: source.type.name,
-    purpose: source.purpose,
-    neighborhoodName: source.neighborhood.name,
-    cityName: source.city.name,
+  const ownerId = realtorId === undefined ? source.realtorId : realtorId
+  const duplicate = await propertyRepository.withNextPropertyCode((code) => propertyRepository.createProperty({
     code,
-  })
-
-  const duplicate = await propertyRepository.createProperty({
-    code,
-    slug,
+    slug: buildPropertySlug({
+      typeName: source.type.name,
+      purpose: source.purpose,
+      neighborhoodName: source.neighborhood.name,
+      cityName: source.city.name,
+      code,
+    }),
     title: `${source.title} (cópia)`,
     description: source.description,
     purpose: source.purpose,
@@ -265,9 +268,9 @@ export async function duplicateProperty(id: string, createdById: string) {
     gatedCommunity: source.gatedCommunity,
     pool: source.pool,
     videoUrl: source.videoUrl,
-    realtor: source.realtorId ? { connect: { id: source.realtorId } } : undefined,
+    realtor: ownerId ? { connect: { id: ownerId } } : undefined,
     createdBy: { connect: { id: createdById } },
-  })
+  }))
 
   const featureIds = source.features.map((f) => f.featureId)
   if (featureIds.length > 0) {

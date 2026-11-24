@@ -34,6 +34,7 @@ import { createContractFileUploadSignature } from "@/modules/upload/actions"
 import { uploadContractFile } from "@/modules/upload/client"
 import type { ContractStatus } from "@/generated/prisma/client"
 import { fileViewUrl } from "@/lib/file-url"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 type PropertyOption = {
@@ -142,7 +143,7 @@ export function ManualContractFormDialog({
       setFileName(uploaded.name)
       toast.success("Contrato anexado.")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar o contrato.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar o contrato."))
     } finally {
       setIsUploading(false)
       e.target.value = ""
@@ -170,7 +171,7 @@ export function ManualContractFormDialog({
       reset()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar contrato.")
+      toast.error(actionErrorMessage(error, "Erro ao cadastrar contrato."))
     } finally {
       setIsSubmitting(false)
     }

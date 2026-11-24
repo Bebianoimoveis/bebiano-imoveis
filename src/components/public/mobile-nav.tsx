@@ -28,6 +28,7 @@ import { useAttributedWhatsapp } from "@/hooks/use-attributed-whatsapp"
 import { countPublicProperties } from "@/modules/property/actions"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
+import { whatsappNumber } from "@/lib/phone"
 
 const BASE_NAV_ITEMS = [
   { href: "/", label: "Início", icon: Home },
@@ -109,7 +110,7 @@ export function MobileNav({
   if (!mounted) return null
 
   const whatsappHref = phone
-    ? `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+    ? `https://wa.me/${whatsappNumber(phone)}?text=${encodeURIComponent(
         realtorName
           ? `Olá ${realtorName}! Vim pelo site da Bebiano Imóveis e gostaria de mais informações.`
           : "Olá! Vim pelo site da Bebiano Imóveis e gostaria de mais informações."

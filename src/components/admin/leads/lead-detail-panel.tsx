@@ -47,6 +47,8 @@ import { ContractStatusBadge } from "@/components/admin/contracts/contract-statu
 import { getAdminLead, updateLeadStage, deleteLead, getLeadContract } from "@/modules/lead/actions"
 import { formatCurrency, formatDateBR, formatDateTimeBR } from "@/lib/format"
 import type { LeadStage } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
+import { whatsappNumber } from "@/lib/phone"
 
 type RealtorOption = { id: string; user: { name: string } }
 type ContractDetail = Awaited<ReturnType<typeof getLeadContract>>
@@ -96,7 +98,7 @@ export function LeadDetailPanel({
         refetch()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao mover lead.")
+        toast.error(actionErrorMessage(error, "Erro ao mover lead."))
       }
     })
   }
@@ -110,7 +112,7 @@ export function LeadDetailPanel({
         onClose()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir lead.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir lead."))
       }
     })
   }
@@ -161,7 +163,7 @@ export function LeadDetailPanel({
               </Button>
               <Button asChild size="sm" variant="outline" className="gap-1.5">
                 <a
-                  href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${whatsappNumber(lead.phone)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

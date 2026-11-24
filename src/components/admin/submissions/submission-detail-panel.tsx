@@ -30,6 +30,8 @@ import {
 } from "@/modules/submission/actions"
 import { formatCurrency } from "@/lib/format"
 import { fileViewUrl } from "@/lib/file-url"
+import { actionErrorMessage } from "@/lib/action-error"
+import { whatsappNumber } from "@/lib/phone"
 
 type PropertyOption = { id: string; code: string; title: string }
 
@@ -106,7 +108,7 @@ export function SubmissionDetailPanel({
         refetch()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar."))
       }
     })
   }
@@ -120,7 +122,7 @@ export function SubmissionDetailPanel({
         refetch()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao vincular imóvel.")
+        toast.error(actionErrorMessage(error, "Erro ao vincular imóvel."))
       }
     })
   }
@@ -168,7 +170,7 @@ export function SubmissionDetailPanel({
               </Button>
               <Button asChild size="sm" variant="outline" className="gap-1.5">
                 <a
-                  href={`https://wa.me/${submission.phone.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${whatsappNumber(submission.phone)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

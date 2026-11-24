@@ -20,6 +20,7 @@ import { LEAD_ORIGIN_OPTIONS } from "@/components/admin/leads/lead-origin-badge"
 import { CLIENT_TYPE_OPTIONS } from "@/components/admin/clients/client-type-badge"
 import { createClientManually } from "@/modules/client/actions"
 import type { ClientType } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 type CityOption = { id: string; name: string; state: string }
@@ -86,7 +87,7 @@ export function ClientCreateSheet({
       onOpenChange(false)
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao cadastrar cliente.")
+      toast.error(actionErrorMessage(error, "Erro ao cadastrar cliente."))
     } finally {
       setIsSubmitting(false)
     }

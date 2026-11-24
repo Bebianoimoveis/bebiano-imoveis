@@ -2,16 +2,17 @@
 
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
-import { formatCurrency } from "@/lib/format"
-import { startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
+import { formatCurrency, formatDateOnlyBR, formatTimeBR } from "@/lib/format"
+import { brazilDateOnly, startOfDayBrazil, endOfDayBrazil } from "@/lib/date"
 import * as notificationRepository from "@/modules/notification/repository"
 import * as financialRepository from "@/modules/financial/repository"
 import { listAdminAppointments } from "@/modules/appointment/actions"
 import { APPOINTMENT_STATUS_LABELS } from "@/components/admin/agenda/appointment-status-badge"
+import { UserError } from "@/lib/user-error"
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
@@ -47,10 +48,7 @@ async function buildLiveReminders(
       if (appointment.status === "CANCELED" || appointment.status === "DONE" || appointment.status === "NO_SHOW") {
         continue
       }
-      const time = new Date(appointment.scheduledAt).toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      const time = formatTimeBR(appointment.scheduledAt)
       const withWho = appointment.lead?.name ?? appointment.client?.name ?? "sem contato vinculado"
       reminders.push({
         id: `appointment:${appointment.id}`,
@@ -98,11 +96,12 @@ async function buildLiveReminders(
   if (await can(session.user, "financial.view")) {
     const dueSoon = await financialRepository.listEntriesDueSoon(DUE_SOON_DAYS)
     for (const entry of dueSoon) {
-      const isOverdue = new Date(entry.dueDate) < startOfDay
+      // dueDate é dia puro: vence hoje ainda não está atrasado.
+      const isOverdue = new Date(entry.dueDate) < brazilDateOnly()
       reminders.push({
         id: `financial:${entry.id}`,
         title: isOverdue ? "Vencimento atrasado" : "Vencimento próximo",
-        message: `${entry.category} · ${formatCurrency(entry.amount.toString())} · vence em ${new Date(entry.dueDate).toLocaleDateString("pt-BR")}`,
+        message: `${entry.category} · ${formatCurrency(entry.amount.toString())} · vence em ${formatDateOnlyBR(entry.dueDate)}`,
         read: false,
         createdAt: new Date(entry.dueDate),
         kind: "reminder",

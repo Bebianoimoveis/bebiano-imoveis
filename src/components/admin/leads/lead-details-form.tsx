@@ -20,6 +20,7 @@ import {
 import { LEAD_TEMPERATURE_OPTIONS } from "@/components/admin/leads/lead-temperature-badge"
 import { updateLead } from "@/modules/lead/actions"
 import type { LeadTemperature } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 
@@ -73,7 +74,7 @@ export function LeadDetailsForm({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar lead.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar lead."))
       }
     })
   }

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { addClientInteraction } from "@/modules/client/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 const TYPE_LABELS: Record<string, string> = {
   CALL: "Ligação",
@@ -47,7 +48,7 @@ export function ClientInteractionForm({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao registrar.")
+        toast.error(actionErrorMessage(error, "Erro ao registrar."))
       }
     })
   }

@@ -31,10 +31,12 @@ export const submissionInputSchema = z.object({
   parkingSpots: quantity,
   builtArea: area,
   totalArea: area,
-  images: z.array(z.string()).default([]),
+  images: z.array(z.string()).max(60).default([]),
   documents: z.array(fileSchema).max(20).default([]),
   features: z.array(z.enum(SUBMISSION_FEATURES as [SubmissionFeature, ...SubmissionFeature[]])).default([]),
   videos: z.array(fileSchema).max(10).default([]),
+  // Campo-armadilha invisível: preenchido = robô (ver createPropertySubmission).
+  company: z.string().optional(),
 })
 
 export type SubmissionFormValues = z.input<typeof submissionInputSchema>

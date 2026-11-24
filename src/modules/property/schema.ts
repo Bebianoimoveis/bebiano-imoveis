@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { queryBoolean } from "@/lib/query-boolean"
 
 // z.coerce.number() converte "" em 0 (Number("") === 0), o que faria um
 // campo numérico opcional deixado em branco virar zero em vez de ausente.
@@ -88,13 +89,13 @@ export const propertyFiltersSchema = z.object({
   parkingSpots: z.coerce.number().int().nonnegative().optional(),
   minArea: z.coerce.number().nonnegative().optional(),
   code: z.string().optional(),
-  featured: z.coerce.boolean().optional(),
-  isLaunch: z.coerce.boolean().optional(),
-  acceptsFinancing: z.coerce.boolean().optional(),
-  acceptsFgts: z.coerce.boolean().optional(),
-  furnished: z.coerce.boolean().optional(),
-  gatedCommunity: z.coerce.boolean().optional(),
-  pool: z.coerce.boolean().optional(),
+  featured: queryBoolean.optional(),
+  isLaunch: queryBoolean.optional(),
+  acceptsFinancing: queryBoolean.optional(),
+  acceptsFgts: queryBoolean.optional(),
+  furnished: queryBoolean.optional(),
+  gatedCommunity: queryBoolean.optional(),
+  pool: queryBoolean.optional(),
   search: z.string().optional(),
   createdFrom: z.coerce.date().optional(),
   createdTo: z.coerce.date().optional(),

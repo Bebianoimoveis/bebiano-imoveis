@@ -14,17 +14,19 @@ import { manualContractInputSchema, contractAttachmentInputSchema } from "@/modu
 import { clientMatchWhere } from "@/modules/client/document-search"
 import { renderProposalPdf } from "@/modules/proposal/pdf-render"
 import { cloudinary } from "@/lib/cloudinary"
+import { UserError } from "@/lib/user-error"
+import { assertOwnFileUrl } from "@/lib/own-file"
 
 async function requireSession() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   return session
 }
 
 async function requireContractManage() {
   const session = await requireSession()
   if (!(await can(session.user, "contract.manage"))) {
-    throw new Error("Sem permissão para gerenciar contratos.")
+    throw new UserError("Sem permissão para gerenciar contratos.")
   }
   return session
 }
@@ -189,9 +191,9 @@ export async function generateContractFromProposal(proposalId: string) {
   const session = await requireContractManage()
 
   const proposal = await proposalRepository.findProposalById(proposalId)
-  if (!proposal) throw new Error("Proposta não encontrada.")
+  if (!proposal) throw new UserError("Proposta não encontrada.")
   if (!["ACCEPTED", "SIGNING", "COMPLETED"].includes(proposal.status)) {
-    throw new Error("Só é possível gerar contrato para propostas aceitas, assinando ou concluídas.")
+    throw new UserError("Só é possível gerar contrato para propostas aceitas, assinando ou concluídas.")
   }
 
   const existing = await contractRepository.findContractByProposalId(proposalId)
@@ -226,6 +228,7 @@ export async function generateContractFromProposal(proposalId: string) {
 export async function createManualContract(input: unknown) {
   const session = await requireContractManage()
   const data = manualContractInputSchema.parse(input)
+  assertOwnFileUrl(data.fileUrl)
 
   const contract = await contractRepository.createContract({
     value: data.value,
@@ -280,7 +283,7 @@ export async function getAdminContract(id: string) {
   const contract = await contractRepository.findContractById(id)
   if (!contract) return null
   if (!canViewAll && contract.realtorId !== session.user.realtorId) {
-    throw new Error("Sem permissão para visualizar este contrato.")
+    throw new UserError("Sem permissão para visualizar este contrato.")
   }
 
   return serializeDecimals(contract)
@@ -289,6 +292,7 @@ export async function getAdminContract(id: string) {
 export async function addContractAttachment(contractId: string, input: unknown) {
   const session = await requireContractManage()
   const data = contractAttachmentInputSchema.parse(input)
+  assertOwnFileUrl(data.url)
 
   await contractRepository.addContractAttachment({
     contractId,
@@ -309,7 +313,8 @@ export async function addContractAttachment(contractId: string, input: unknown) 
 
 export async function deleteContractAttachment(contractId: string, attachmentId: string) {
   const session = await requireContractManage()
-  await contractRepository.deleteContractAttachment(attachmentId)
+  const { count } = await contractRepository.deleteContractAttachment(contractId, attachmentId)
+  if (count === 0) throw new UserError("Anexo não encontrado.")
 
   await logActivity({
     userId: session.user.id,

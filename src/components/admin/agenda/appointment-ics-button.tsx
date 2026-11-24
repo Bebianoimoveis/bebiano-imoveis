@@ -7,6 +7,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { exportAppointmentsIcs } from "@/modules/appointment/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 function downloadIcs(content: string, filename: string) {
   const blob = new Blob([content], { type: "text/calendar;charset=utf-8;" })
@@ -32,7 +33,7 @@ export function AppointmentIcsButton() {
       const ics = await exportAppointmentsIcs(filters)
       downloadIcs(ics, `agenda-${Date.now()}.ics`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao exportar.")
+      toast.error(actionErrorMessage(error, "Erro ao exportar."))
     } finally {
       setIsExporting(false)
     }

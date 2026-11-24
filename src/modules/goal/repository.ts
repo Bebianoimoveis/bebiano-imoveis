@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@/generated/prisma/client"
 import { brazilDateOnly, brazilDayWindow } from "@/lib/date"
+import { receivedAmount } from "@/modules/financial/amounts"
 
 const goalInclude = {
   realtor: { include: { user: { select: { id: true, name: true } } } },
@@ -78,15 +79,16 @@ export async function listSaleEvents(from: Date, to: Date): Promise<GoalEvent[]>
   }))
 }
 
-// Faturamento = receita marcada como recebida, pelo vencimento.
+// Faturamento = receita recebida (no parcial, a parte que entrou), pelo
+// vencimento.
 export async function listRevenueEvents(from: Date, to: Date): Promise<GoalEvent[]> {
   const entries = await prisma.financialEntry.findMany({
-    where: { type: "INCOME", status: "PAID", dueDate: { gte: from, lte: to } },
-    select: { dueDate: true, amount: true, realtorId: true, property: { select: { cityId: true } } },
+    where: { type: "INCOME", status: { in: ["PAID", "PARTIAL"] }, dueDate: { gte: from, lte: to } },
+    select: { dueDate: true, status: true, amount: true, paidAmount: true, realtorId: true, property: { select: { cityId: true } } },
   })
   return entries.map((entry) => ({
     day: entry.dueDate,
-    amount: Number(entry.amount),
+    amount: receivedAmount(entry),
     realtorId: entry.realtorId,
     cityId: entry.property?.cityId ?? null,
   }))

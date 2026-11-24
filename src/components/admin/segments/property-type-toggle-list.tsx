@@ -19,6 +19,7 @@ import {
 import { PropertyTypeFormDialog } from "@/components/admin/taxonomy/property-type-form-dialog"
 import { togglePropertyTypeActive, deletePropertyType } from "@/modules/taxonomy/actions"
 import { cn } from "@/lib/utils"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type PropertyTypeItem = {
   id: string
@@ -41,7 +42,7 @@ export function PropertyTypeToggleList({ types }: { types: PropertyTypeItem[] })
         )
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar tipo de imóvel.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar tipo de imóvel."))
       }
     })
   }

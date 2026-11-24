@@ -29,7 +29,9 @@ import {
   bulkChangePropertyStatus,
   bulkReassignPropertyRealtor,
   exportPropertiesCsv,
+  type BulkResult,
 } from "@/modules/property/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type RealtorOption = { id: string; user: { name: string } }
 
@@ -46,10 +48,12 @@ function downloadCsv(csv: string, filename: string) {
 export function PropertyBulkToolbar({
   selectedIds,
   realtors,
+  canReassign,
   onClear,
 }: {
   selectedIds: string[]
   realtors: RealtorOption[]
+  canReassign: boolean
   onClear: () => void
 }) {
   const router = useRouter()
@@ -59,12 +63,19 @@ export function PropertyBulkToolbar({
   function run(action: () => Promise<unknown>, successMessage: string) {
     startTransition(async () => {
       try {
-        await action()
-        toast.success(successMessage)
+        const result = (await action()) as BulkResult | undefined
+        const failures = result?.failures ?? []
+        if (failures.length === 0) toast.success(successMessage)
+        else {
+          toast.warning(
+            `${result?.done ?? 0} alterado(s). ${failures.length} não: ${failures.slice(0, 3).join(" ")}${failures.length > 3 ? " (e outros)" : ""}`,
+            { duration: 12000 }
+          )
+        }
         onClear()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro inesperado.")
+        toast.error(actionErrorMessage(error, "Erro inesperado."))
       }
     })
   }
@@ -75,7 +86,7 @@ export function PropertyBulkToolbar({
       const csv = await exportPropertiesCsv({ ids: selectedIds })
       downloadCsv(csv, `imoveis-selecionados-${Date.now()}.csv`)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao exportar.")
+      toast.error(actionErrorMessage(error, "Erro ao exportar."))
     } finally {
       setIsExporting(false)
     }
@@ -110,6 +121,7 @@ export function PropertyBulkToolbar({
               <Sparkles className="size-4" /> Publicar
             </Button>
 
+            {canReassign ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" disabled={isPending} className="gap-1.5">
@@ -132,6 +144,7 @@ export function PropertyBulkToolbar({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            ) : null}
 
             <Button
               variant="ghost"

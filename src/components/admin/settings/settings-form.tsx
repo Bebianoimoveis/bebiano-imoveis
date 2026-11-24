@@ -30,6 +30,7 @@ import { updateSettings } from "@/modules/settings/actions"
 import { createSiteImageUploadSignature } from "@/modules/upload/actions"
 import { uploadPropertyImage } from "@/modules/upload/client"
 import { siteSettingsInputSchema, type SiteSettingsInput } from "@/modules/settings/schema"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInput }) {
   const router = useRouter()
@@ -55,7 +56,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
       const uploaded = await uploadPropertyImage(file, signature)
       form.setValue(field, uploaded.url)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar imagem.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar imagem."))
     } finally {
       setUploadingField(null)
       e.target.value = ""
@@ -69,7 +70,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: SiteSettingsInp
       toast.success("Configurações salvas.")
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar."))
     } finally {
       setIsSubmitting(false)
     }

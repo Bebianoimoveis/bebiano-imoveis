@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { updateContractStatus, deleteContract } from "@/modules/contract/actions"
 import type { ContractStatus } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 // Qualquer status pode ir pra qualquer outro — inclusive voltar atrás
 // (ex: Concluído → Ativo, se marcou errado).
@@ -61,7 +62,7 @@ export function ContractRowActions({
         onStatusChanged?.()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar."))
       }
     })
   }

@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { changePropertyStatus, duplicateProperty } from "@/modules/property/actions"
 import { siteConfig } from "@/config/site"
 import type { PropertyStatus } from "@/generated/prisma/client"
+import { actionErrorMessage } from "@/lib/action-error"
 
 function QuickActionButton({
   label,
@@ -74,7 +75,7 @@ export function PropertyQuickActions({
         toast.success(successMessage)
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro inesperado.")
+        toast.error(actionErrorMessage(error, "Erro inesperado."))
       }
     })
   }

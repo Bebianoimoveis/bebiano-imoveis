@@ -20,6 +20,7 @@ import {
 import { PAYMENT_METHODS, paymentFields } from "@/modules/proposal/payment"
 import { updateProposal } from "@/modules/proposal/actions"
 import type { AdminProposalDetail } from "@/modules/proposal/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 export function ProposalEditSheet({
   open,
@@ -78,7 +79,7 @@ export function ProposalEditSheet({
       router.refresh()
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao atualizar.")
+      toast.error(actionErrorMessage(error, "Erro ao atualizar."))
     } finally {
       setIsSubmitting(false)
     }

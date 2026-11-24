@@ -37,6 +37,7 @@ import { FilterNotice } from "@/components/admin/filter-notice"
 import { formatDateOnlyBR } from "@/lib/format"
 import { auth } from "@/lib/auth"
 import { can } from "@/lib/permissions"
+import { receivedAmount } from "@/modules/financial/amounts"
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -130,12 +131,11 @@ export default async function AdminFinancialPage({
 
   const overdueCount = allEntries.filter(isEntryOverdue).length
   const availableBalance = allEntries.reduce((sum, entry) => {
-    if (entry.status !== "PAID") return sum
-    const amount = Number(entry.amount)
+    const amount = receivedAmount(entry)
     return entry.type === "INCOME" ? sum + amount : sum - amount
   }, 0)
   const potentialCommission = proposals
-    .filter((p) => p.status === "ACCEPTED" || p.status === "COMPLETED")
+    .filter((p) => p.status === "ACCEPTED" || p.status === "SIGNING" || p.status === "COMPLETED")
     .reduce((sum, p) => sum + (Number(p.commissionPercent ?? 0) / 100) * Number(p.value), 0)
   const goalsHit = goals.filter((g) => g.progress.status === "HIT").length
 

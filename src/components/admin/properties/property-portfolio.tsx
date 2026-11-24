@@ -13,10 +13,12 @@ export function PropertyPortfolio({
   properties,
   view,
   realtors,
+  canReassign,
 }: {
   properties: PropertyWithMetrics[]
   view: "list" | "grid"
   realtors: RealtorOption[]
+  canReassign: boolean
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
@@ -51,6 +53,7 @@ export function PropertyPortfolio({
       <PropertyBulkToolbar
         selectedIds={[...selectedIds]}
         realtors={realtors}
+        canReassign={canReassign}
         onClear={() => setSelectedIds(new Set())}
       />
     </>

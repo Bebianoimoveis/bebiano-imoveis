@@ -5,6 +5,7 @@ declare module "next-auth" {
     roleId: string
     roleName: string
     realtorId: string | null
+    stamp: string
   }
 
   interface Session {
@@ -22,5 +23,6 @@ declare module "next-auth/jwt" {
     roleId: string
     roleName: string
     realtorId: string | null
+    stamp?: string
   }
 }

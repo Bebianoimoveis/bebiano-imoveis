@@ -31,6 +31,7 @@ import { createContractFileUploadSignature } from "@/modules/upload/actions"
 import { uploadContractFile } from "@/modules/upload/client"
 import { formatCurrency, formatDateBR } from "@/lib/format"
 import { fileViewUrl } from "@/lib/file-url"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type ContractDetail = NonNullable<Awaited<ReturnType<typeof getAdminContract>>>
 
@@ -77,7 +78,7 @@ export function ContractDetailPanel({
       refetch()
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar o arquivo.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar o arquivo."))
     } finally {
       setIsUploading(false)
       e.target.value = ""
@@ -93,7 +94,7 @@ export function ContractDetailPanel({
         refetch()
         router.refresh()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao remover anexo.")
+        toast.error(actionErrorMessage(error, "Erro ao remover anexo."))
       }
     })
   }

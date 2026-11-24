@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import NextImage from "next/image"
+import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { Check, Download, ImageOff, MapPin } from "lucide-react"
 
@@ -7,6 +8,8 @@ import { findProposalByShareToken, markProposalViewed } from "@/modules/proposal
 import { PROPOSAL_STATUS_LABELS } from "@/components/admin/proposals/proposal-status-badge"
 import { formatCurrency, formatDateOnlyBR, getDisplayAddress } from "@/lib/format"
 import { siteConfig } from "@/config/site"
+import { auth } from "@/lib/auth"
+import { whatsappNumber } from "@/lib/phone"
 
 // Sem isso, o link compartilhado (WhatsApp, iMessage etc.) não tinha
 // nenhuma imagem/descrição pra montar uma prévia rica — cada app cai
@@ -19,7 +22,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { token } = await params
   const proposal = await findProposalByShareToken(token)
-  if (!proposal) return { robots: { index: false, follow: false } }
+  if (!proposal || proposal.status === "CANCELED") return { robots: { index: false, follow: false } }
 
   const cover =
     proposal.property.images.find((image) => image.isCover)?.url ??
@@ -44,11 +47,14 @@ export default async function PublicProposalPage({
 }) {
   const { token } = await params
   const proposal = await findProposalByShareToken(token)
-  if (!proposal) notFound()
+  if (!proposal || proposal.status === "CANCELED") notFound()
 
   // Marca a primeira visualização de verdade — só aqui, nunca no admin.
-  // Idempotente: não sobrescreve viewedAt se já existir.
-  if (!proposal.viewedAt) {
+  // Idempotente: não sobrescreve viewedAt se já existir. Prévia de link
+  // (WhatsApp, redes) e alguém da equipe conferindo não contam.
+  const userAgent = (await headers()).get("user-agent") ?? ""
+  const isPreviewBot = !userAgent || /bot|crawler|spider|preview|whatsapp|facebookexternalhit|telegram|slack|discord|skype|curl|wget/i.test(userAgent)
+  if (!proposal.viewedAt && !isPreviewBot && !(await auth())?.user) {
     await markProposalViewed(proposal.id, proposal.status, false)
   }
 
@@ -154,7 +160,7 @@ export default async function PublicProposalPage({
           <p className="font-medium">{proposal.realtor.user.name}</p>
           {proposal.realtor.phone ? (
             <a
-              href={`https://wa.me/${proposal.realtor.phone.replace(/\D/g, "")}`}
+              href={`https://wa.me/${whatsappNumber(proposal.realtor.phone)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 inline-block text-gold hover:underline"

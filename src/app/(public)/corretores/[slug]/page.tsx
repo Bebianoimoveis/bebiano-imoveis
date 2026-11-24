@@ -16,6 +16,7 @@ import { getPublicRealtorBySlug } from "@/modules/realtor/actions"
 import { listPublicPropertiesByRealtor } from "@/modules/property/actions"
 import { getPublicContactInfo } from "@/modules/settings/actions"
 import { siteConfig } from "@/config/site"
+import { whatsappNumber } from "@/lib/phone"
 
 export async function generateMetadata({
   params,
@@ -46,7 +47,7 @@ export default async function RealtorProfilePage({
     getPublicContactInfo(),
   ])
 
-  const whatsappHref = `https://wa.me/${realtor.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+  const whatsappHref = `https://wa.me/${whatsappNumber(realtor.phone)}?text=${encodeURIComponent(
     `Olá ${realtor.user.name}! Vim pelo site da Bebiano Imóveis e gostaria de mais informações.`
   )}`
 

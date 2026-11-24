@@ -21,6 +21,7 @@ import {
 import { updateLeadInteraction, deleteLeadInteraction } from "@/modules/lead/actions"
 import { formatDateTimeBR } from "@/lib/format"
 import type { LeadDetail } from "@/modules/lead/repository"
+import { actionErrorMessage } from "@/lib/action-error"
 
 const TYPE_ICONS = {
   CALL: Phone,
@@ -74,7 +75,7 @@ export function LeadInteractionList({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar interação.")
+        toast.error(actionErrorMessage(error, "Erro ao atualizar interação."))
       }
     })
   }
@@ -87,7 +88,7 @@ export function LeadInteractionList({
         router.refresh()
         onSuccess?.()
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir interação.")
+        toast.error(actionErrorMessage(error, "Erro ao excluir interação."))
       }
     })
   }

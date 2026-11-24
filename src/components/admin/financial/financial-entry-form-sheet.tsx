@@ -39,6 +39,7 @@ import {
   type FinancialEntryInput,
 } from "@/modules/financial/schema"
 import { fileViewUrl } from "@/lib/file-url"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type ClientOption = { id: string; name: string }
 type RealtorOption = { id: string; user: { name: string } }
@@ -173,7 +174,7 @@ export function FinancialEntryFormSheet({
       form.setValue("attachmentName", uploaded.name)
       toast.success("Comprovante anexado.")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar comprovante.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar comprovante."))
     } finally {
       setIsUploading(false)
       e.target.value = ""
@@ -194,7 +195,7 @@ export function FinancialEntryFormSheet({
       router.refresh()
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar lançamento.")
+      toast.error(actionErrorMessage(error, "Erro ao salvar lançamento."))
     } finally {
       setIsSubmitting(false)
     }

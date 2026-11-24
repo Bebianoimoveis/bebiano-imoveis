@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { StarRatingInput } from "@/components/public/star-rating-input"
 import { submitTestimonialReview } from "@/modules/testimonial/actions"
+import { actionErrorMessage } from "@/lib/action-error"
 
 type FormValues = {
   name: string
@@ -56,7 +57,7 @@ export function TestimonialReviewForm({
       await submitTestimonialReview({ ...values, realtorSlug })
       setSubmitted(true)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao enviar sua avaliação.")
+      toast.error(actionErrorMessage(error, "Erro ao enviar sua avaliação."))
     } finally {
       setIsSubmitting(false)
     }

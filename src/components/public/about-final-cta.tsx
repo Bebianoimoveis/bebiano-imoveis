@@ -2,12 +2,14 @@ import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Reveal } from "@/components/motion/reveal"
-import { siteConfig } from "@/config/site"
+import { getPublicWhatsapp } from "@/modules/settings/whatsapp"
 import { SectionBackdrop } from "@/components/public/section-backdrop"
+import { whatsappNumber } from "@/lib/phone"
 
 // Foto de casal com a casinha da casa nova ao fundo — o convite final da
 // página fecha com a mesma ideia de "chegar no lar".
-export function AboutFinalCta() {
+export async function AboutFinalCta() {
+  const whatsapp = await getPublicWhatsapp()
   return (
     <SectionBackdrop imageUrl="/images/about/final-cta.jpg" className="border-t border-border/60 text-primary-foreground">
       <Reveal className="relative mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-20 text-center sm:px-6 sm:py-24">
@@ -22,7 +24,7 @@ export function AboutFinalCta() {
           <Button asChild size="lg" className="bg-gold text-black hover:bg-gold-light">
             <Link href="/imoveis">Ver imóveis</Link>
           </Button>
-          {siteConfig.whatsapp ? (
+          {whatsapp ? (
             <Button
               asChild
               size="lg"
@@ -30,7 +32,7 @@ export function AboutFinalCta() {
               className="border-white/30 bg-white/5 text-white hover:bg-white/15 hover:text-white"
             >
               <a
-                href={`https://wa.me/${siteConfig.whatsapp.replace(/\D/g, "")}`}
+                href={`https://wa.me/${whatsappNumber(whatsapp)}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

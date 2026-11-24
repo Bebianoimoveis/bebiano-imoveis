@@ -30,6 +30,28 @@ export function brazilDayWindow(dateOnly: Date): { from: Date; to: Date } {
   return { from, to: new Date(from.getTime() + DAY_MS - 1) }
 }
 
+// Janela real (UTC) do mês em Brasília. month de 1 a 12; aceita 0 ou 13
+// (mês anterior/seguinte).
+export function brazilMonthWindow(year: number, month: number): { from: Date; to: Date } {
+  const from = new Date(Date.UTC(year, month - 1, 1, 3))
+  return { from, to: new Date(Date.UTC(year, month, 1, 3) - 1) }
+}
+
+// Filtro "de/até" vindo de <input type="date"> (dia puro) aplicado a um
+// campo com hora de verdade: cobre o dia inteiro em Brasília nas duas pontas.
+export function brazilDateRange(from?: Date, to?: Date): { gte?: Date; lte?: Date } | undefined {
+  if (!from && !to) return undefined
+  return { gte: from && brazilDayWindow(from).from, lte: to && brazilDayWindow(to).to }
+}
+
+// Soma meses a um dia puro. 31/01 + 1 mês = 28/02, não 03/03.
+export function addMonthsDateOnly(date: Date, months: number): Date {
+  const year = date.getUTCFullYear()
+  const month = date.getUTCMonth() + months
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+  return new Date(Date.UTC(year, month, Math.min(date.getUTCDate(), lastDay)))
+}
+
 // Atalhos pro caso mais comum: janela do dia (em Brasília) que contém um
 // instante qualquer (por padrão, agora).
 export function startOfDayBrazil(date: Date = new Date()): Date {

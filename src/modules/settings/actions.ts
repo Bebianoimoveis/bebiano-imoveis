@@ -9,12 +9,13 @@ import { siteSettingsInputSchema } from "@/modules/settings/schema"
 import * as settingsRepository from "@/modules/settings/repository"
 import { siteConfig } from "@/config/site"
 import { currentYearBR } from "@/lib/founders-content"
+import { UserError } from "@/lib/user-error"
 
 async function requireSettingsManage() {
   const session = await auth()
-  if (!session?.user) throw new Error("Não autenticado.")
+  if (!session?.user) throw new UserError("Não autenticado.")
   if (!(await can(session.user, "settings.manage"))) {
-    throw new Error("Sem permissão para gerenciar configurações.")
+    throw new UserError("Sem permissão para gerenciar configurações.")
   }
   return session
 }
